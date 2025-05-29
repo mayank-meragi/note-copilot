@@ -1,4 +1,8 @@
 releases:
+  - version: "0.2.5"
+    features:
+      - "update gemini provider"
+      - "update gemini models"
   - version: "0.2.4"
     features:
       - "Added multilingual support, now only support English and Chinese"
