@@ -3,6 +3,7 @@ import Fuse, { FuseResult } from "fuse.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiProvider } from "../../types/llm/model";
+import { InfioSettings } from "../../types/settings";
 // import { PROVIDERS } from '../constants';
 import { GetAllProviders, GetEmbeddingProviderModelIds, GetEmbeddingProviders, GetProviderModelIds } from "../../utils/api";
 
@@ -149,6 +150,7 @@ export type ComboBoxComponentProps = {
 	name: string;
 	provider: ApiProvider;
 	modelId: string;
+	settings?: InfioSettings | null;
 	isEmbedding?: boolean,
 	updateModel: (provider: ApiProvider, modelId: string) => void;
 };
@@ -157,6 +159,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 	name,
 	provider,
 	modelId,
+	settings = null,
 	isEmbedding = false,
 	updateModel,
 }) => {
@@ -177,7 +180,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 		const fetchModelIds = async () => {
 			const ids = isEmbedding
 				? GetEmbeddingProviderModelIds(modelProvider)
-				: await GetProviderModelIds(modelProvider);
+				: await GetProviderModelIds(modelProvider, settings);
 			setModelIds(ids);
 		};
 

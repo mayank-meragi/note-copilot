@@ -1,5 +1,6 @@
-import { OPENROUTER_BASE_URL } from '../constants'
+import { INFIO_BASE_URL, OPENROUTER_BASE_URL } from '../constants'
 import { ApiProvider } from '../types/llm/model'
+import { InfioSettings } from '../types/settings'
 
 export interface ModelInfo {
 	maxTokens?: number
@@ -14,6 +15,15 @@ export interface ModelInfo {
 	description?: string
 	reasoningEffort?: string,
 	thinking?: boolean
+	maxThinkingTokens?: number
+	supportsReasoningBudget?: boolean
+	requiredReasoningBudget?: boolean
+	tiers?: readonly {
+		readonly contextWindow: number,
+		readonly inputPrice: number,
+		readonly outputPrice: number,
+		readonly cacheReadsPrice: number,
+	}[]
 }
 
 export interface EmbeddingModelInfo {
@@ -21,89 +31,13 @@ export interface EmbeddingModelInfo {
 	description?: string
 }
 
-// Infio
-// https://infio.app/pricing
-export type InfioModelId = keyof typeof infioModels
-export const infioDefaultModelId: InfioModelId = "deepseek-chat"
-export const infioModels = {
-	"deepseek-chat": {
-		maxTokens: 8_000,
-		contextWindow: 64_000,
-		supportsImages: false,
-		supportsPromptCache: true, // supports context caching, but not in the way anthropic does it (deepseek reports input tokens and reads/writes in the same usage report) FIXME: we need to show users cache stats how deepseek does it
-		inputPrice: 0, // technically there is no input price, it's all either a cache hit or miss (ApiOptions will not show this)
-		outputPrice: 0.28,
-		cacheWritesPrice: 0.14,
-		cacheReadsPrice: 0.014,
-	},
-	"deepseek-reasoner": {
-		maxTokens: 8_000,
-		contextWindow: 64_000,
-		supportsImages: false,
-		supportsPromptCache: true, // supports context caching, but not in the way anthropic does it (deepseek reports input tokens and reads/writes in the same usage report) FIXME: we need to show users cache stats how deepseek does it
-		inputPrice: 0, // technically there is no input price, it's all either a cache hit or miss (ApiOptions will not show this)
-		outputPrice: 2.19,
-		cacheWritesPrice: 0.55,
-		cacheReadsPrice: 0.14,
-	},
-	"o3-mini": {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: false,
-		supportsPromptCache: false,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-	},
-	// don't support tool use yet
-	o1: {
-		maxTokens: 100_000,
-		contextWindow: 200_000,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 15,
-		outputPrice: 60,
-	},
-	"o1-preview": {
-		maxTokens: 32_768,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 15,
-		outputPrice: 60,
-	},
-	"o1-mini": {
-		maxTokens: 65_536,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 1.1,
-		outputPrice: 4.4,
-	},
-	"gpt-4o": {
-		maxTokens: 4_096,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 2.5,
-		outputPrice: 10,
-	},
-	"gpt-4o-mini": {
-		maxTokens: 16_384,
-		contextWindow: 128_000,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0.15,
-		outputPrice: 0.6,
-	},
-} as const satisfies Record<string, ModelInfo>
-
 // Anthropic
 // https://docs.anthropic.com/en/docs/about-claude/models
 export type AnthropicModelId = keyof typeof anthropicModels
-export const anthropicDefaultModelId: AnthropicModelId = "claude-3-7-sonnet-20250219"
+export const anthropicDefaultModelId: AnthropicModelId = "claude-sonnet-4-20250514"
 export const anthropicModels = {
-	"claude-3-7-sonnet-20250219:thinking": {
-		maxTokens: 128_000,
+	"claude-sonnet-4-20250514": {
+		maxTokens: 64_000, // Overridden to 8k if `enableReasoningEffort` is false.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -112,10 +46,35 @@ export const anthropicModels = {
 		outputPrice: 15.0, // $15 per million output tokens
 		cacheWritesPrice: 3.75, // $3.75 per million tokens
 		cacheReadsPrice: 0.3, // $0.30 per million tokens
-		thinking: true,
+		supportsReasoningBudget: true,
+	},
+	"claude-opus-4-20250514": {
+		maxTokens: 32_000, // Overridden to 8k if `enableReasoningEffort` is false.
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 15.0, // $15 per million input tokens
+		outputPrice: 75.0, // $75 per million output tokens
+		cacheWritesPrice: 18.75, // $18.75 per million tokens
+		cacheReadsPrice: 1.5, // $1.50 per million tokens
+		supportsReasoningBudget: true,
+	},
+	"claude-3-7-sonnet-20250219:thinking": {
+		maxTokens: 128_000, // Unlocked by passing `beta` flag to the model. Otherwise, it's 64k.
+		contextWindow: 200_000,
+		supportsImages: true,
+		supportsComputerUse: true,
+		supportsPromptCache: true,
+		inputPrice: 3.0, // $3 per million input tokens
+		outputPrice: 15.0, // $15 per million output tokens
+		cacheWritesPrice: 3.75, // $3.75 per million tokens
+		cacheReadsPrice: 0.3, // $0.30 per million tokens
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
 	},
 	"claude-3-7-sonnet-20250219": {
-		maxTokens: 8192,
+		maxTokens: 8192, // Since we already have a `:thinking` virtual model we aren't setting `supportsReasoningBudget: true` here.
 		contextWindow: 200_000,
 		supportsImages: true,
 		supportsComputerUse: true,
@@ -124,7 +83,6 @@ export const anthropicModels = {
 		outputPrice: 15.0, // $15 per million output tokens
 		cacheWritesPrice: 3.75, // $3.75 per million tokens
 		cacheReadsPrice: 0.3, // $0.30 per million tokens
-		thinking: false,
 	},
 	"claude-3-5-sonnet-20241022": {
 		maxTokens: 8192,
@@ -167,10 +125,71 @@ export const anthropicModels = {
 		cacheWritesPrice: 0.3,
 		cacheReadsPrice: 0.03,
 	},
-} as const satisfies Record<string, ModelInfo>
+} as const satisfies Record<string, ModelInfo> // as const assertion makes the object 
+
+// Infio
+export const infioDefaultModelId = "deepseek/deepseek-v3" // will always exist 
+export const infioDefaultModelInfo: ModelInfo = {
+	maxTokens: 8192,
+	contextWindow: 65_536,
+	supportsImages: false,
+	supportsComputerUse: true,
+	supportsPromptCache: true,
+	inputPrice: 0.272,
+	outputPrice: 1.088,
+	cacheWritesPrice: 0.14,
+	cacheReadsPrice: 0.014,
+}
+let infioModelsCache: Record<string, ModelInfo> | null = null;
+
+async function fetchInfioModels(apiKey?: string): Promise<Record<string, ModelInfo>> {
+	if (infioModelsCache) {
+		return infioModelsCache;
+	}
+
+	try {
+		const headers: Record<string, string> = {
+			'Content-Type': 'application/json'
+		};
+
+		// 添加Authorization请求头，使用Bearer格式，如果有API密钥的话
+		if (apiKey) {
+			headers['Authorization'] = `Bearer ${apiKey}`;
+		}
+
+		const response = await fetch(INFIO_BASE_URL + "/model_group/info", {
+			method: 'GET',
+			headers: headers
+		});
+		const data = await response.json();
+		const models: Record<string, ModelInfo> = {};
+		if (data?.data) {
+			for (const model of data.data) {
+				models[model.model_group] = {
+					maxTokens: model.max_output_tokens,
+					contextWindow: model.max_input_tokens,
+					supportsImages: false,
+					supportsPromptCache: false,
+					inputPrice: model.input_cost_per_token ? model.input_cost_per_token * 1000000 : 0,
+					outputPrice: model.output_cost_per_token ? model.output_cost_per_token * 1000000 : 0,
+				};
+			}
+		}
+
+		infioModelsCache = models;
+		return models;
+	} catch (error) {
+		console.error('Failed to fetch Infio models:', error);
+		// 如果出错，返回默认模型
+		return {
+			[infioDefaultModelId]: infioDefaultModelInfo
+		};
+	}
+}
+
 // OpenRouter
 // https://openrouter.ai/models?order=newest&supported_parameters=tools
-export const openRouterDefaultModelId = "anthropic/claude-3.5-sonnet" // will always exist in openRouterModels
+export const openRouterDefaultModelId = "anthropic/claude-sonnet-4" // will always exist in openRouterModels
 export const openRouterDefaultModelInfo: ModelInfo = {
 	maxTokens: 8192,
 	contextWindow: 200_000,
@@ -222,8 +241,31 @@ async function fetchOpenRouterModels(): Promise<Record<string, ModelInfo>> {
 // Gemini
 // https://ai.google.dev/gemini-api/docs/models/gemini
 export type GeminiModelId = keyof typeof geminiModels
-export const geminiDefaultModelId: GeminiModelId = "gemini-2.5-flash-preview-04-17"
+export const geminiDefaultModelId: GeminiModelId = "gemini-2.5-flash-preview-05-20"
 export const geminiModels = {
+	"gemini-2.5-flash-preview-05-20:thinking": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.15,
+		outputPrice: 3.5,
+		cacheReadsPrice: 0.0375,
+		cacheWritesPrice: 1.0,
+		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
+	},
+	"gemini-2.5-flash-preview-05-20": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 0.15,
+		outputPrice: 0.6,
+		cacheReadsPrice: 0.0375,
+		cacheWritesPrice: 1.0,
+	},
 	"gemini-2.5-flash-preview-04-17:thinking": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
@@ -231,8 +273,9 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 3.5,
-		thinking: true,
-		// maxThinkingTokens: 24_576,
+		maxThinkingTokens: 24_576,
+		supportsReasoningBudget: true,
+		requiredReasoningBudget: true,
 	},
 	"gemini-2.5-flash-preview-04-17": {
 		maxTokens: 65_535,
@@ -241,7 +284,6 @@ export const geminiModels = {
 		supportsPromptCache: false,
 		inputPrice: 0.15,
 		outputPrice: 0.6,
-		thinking: false,
 	},
 	"gemini-2.5-pro-exp-03-25": {
 		maxTokens: 65_535,
@@ -260,6 +302,44 @@ export const geminiModels = {
 		outputPrice: 15,
 		cacheReadsPrice: 0.625,
 		cacheWritesPrice: 4.5,
+		tiers: [
+			{
+				contextWindow: 200_000,
+				inputPrice: 1.25,
+				outputPrice: 10,
+				cacheReadsPrice: 0.31,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 2.5,
+				outputPrice: 15,
+				cacheReadsPrice: 0.625,
+			},
+		],
+	},
+	"gemini-2.5-pro-preview-05-06": {
+		maxTokens: 65_535,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsPromptCache: true,
+		inputPrice: 2.5, // This is the pricing for prompts above 200k tokens.
+		outputPrice: 15,
+		cacheReadsPrice: 0.625,
+		cacheWritesPrice: 4.5,
+		tiers: [
+			{
+				contextWindow: 200_000,
+				inputPrice: 1.25,
+				outputPrice: 10,
+				cacheReadsPrice: 0.31,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 2.5,
+				outputPrice: 15,
+				cacheReadsPrice: 0.625,
+			},
+		],
 	},
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,
@@ -315,9 +395,25 @@ export const geminiModels = {
 		maxTokens: 8192,
 		contextWindow: 1_048_576,
 		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
+		supportsPromptCache: true,
+		inputPrice: 0.15, // This is the pricing for prompts above 128k tokens.
+		outputPrice: 0.6,
+		cacheReadsPrice: 0.0375,
+		cacheWritesPrice: 1.0,
+		tiers: [
+			{
+				contextWindow: 128_000,
+				inputPrice: 0.075,
+				outputPrice: 0.3,
+				cacheReadsPrice: 0.01875,
+			},
+			{
+				contextWindow: Infinity,
+				inputPrice: 0.15,
+				outputPrice: 0.6,
+				cacheReadsPrice: 0.0375,
+			},
+		],
 	},
 	"gemini-1.5-flash-exp-0827": {
 		maxTokens: 8192,
@@ -360,6 +456,7 @@ export const geminiModels = {
 		outputPrice: 0,
 	},
 } as const satisfies Record<string, ModelInfo>
+
 export const geminiEmbeddingModels = {
 	"text-embedding-004": {
 		dimensions: 768,
@@ -482,8 +579,8 @@ export const deepSeekModels = {
 		contextWindow: 64_000,
 		supportsImages: false,
 		supportsPromptCache: true, // supports context caching, but not in the way anthropic does it (deepseek reports input tokens and reads/writes in the same usage report) FIXME: we need to show users cache stats how deepseek does it
-		inputPrice: 0, // technically there is no input price, it's all either a cache hit or miss (ApiOptions will not show this)
-		outputPrice: 0.28,
+		inputPrice: 0.272, // technically there is no input price, it's all either a cache hit or miss (ApiOptions will not show this)
+		outputPrice: 1.088,
 		cacheWritesPrice: 0.14,
 		cacheReadsPrice: 0.014,
 	},
@@ -1505,10 +1602,46 @@ export const GetEmbeddingProviders = (): ApiProvider[] => {
 }
 
 // Get all models for a provider
-export const GetProviderModels = async (provider: ApiProvider): Promise<Record<string, ModelInfo>> => {
+export const GetProviderModels = async (provider: ApiProvider, settings?: InfioSettings): Promise<Record<string, ModelInfo>> => {
 	switch (provider) {
-		case ApiProvider.Infio:
-			return infioModels
+		case ApiProvider.Infio: {
+			const apiKey = settings?.infioProvider?.apiKey
+			return await fetchInfioModels(apiKey)
+		}
+		case ApiProvider.OpenRouter:
+			return await fetchOpenRouterModels()
+		case ApiProvider.OpenAI:
+			return openAiNativeModels
+		case ApiProvider.AlibabaQwen:
+			return qwenModels
+		case ApiProvider.SiliconFlow:
+			return siliconFlowModels
+		case ApiProvider.Anthropic:
+			return anthropicModels
+		case ApiProvider.Deepseek:
+			return deepSeekModels
+		case ApiProvider.Google:
+			return geminiModels
+		case ApiProvider.Groq:
+			return groqModels
+		case ApiProvider.Grok:
+			return grokModels
+		case ApiProvider.Ollama:
+			return {}
+		case ApiProvider.OpenAICompatible:
+			return {}
+		default:
+			return {}
+	}
+}
+
+// Get all models for a provider with settings (needed for providers that require API keys)
+export const GetProviderModelsWithSettings = async (provider: ApiProvider, settings?: InfioSettings): Promise<Record<string, ModelInfo>> => {
+	switch (provider) {
+		case ApiProvider.Infio: {
+			const apiKey = settings?.infioProvider?.apiKey
+			return await fetchInfioModels(apiKey)
+		}
 		case ApiProvider.OpenRouter:
 			return await fetchOpenRouterModels()
 		case ApiProvider.OpenAI:
@@ -1537,8 +1670,8 @@ export const GetProviderModels = async (provider: ApiProvider): Promise<Record<s
 }
 
 // Get all model ids for a provider
-export const GetProviderModelIds = async (provider: ApiProvider): Promise<string[]> => {
-	const models = await GetProviderModels(provider)
+export const GetProviderModelIds = async (provider: ApiProvider, settings?: InfioSettings): Promise<string[]> => {
+	const models = await GetProviderModels(provider, settings)
 	return Object.keys(models)
 }
 

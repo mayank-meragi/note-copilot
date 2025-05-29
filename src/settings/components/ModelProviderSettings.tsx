@@ -171,6 +171,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			<div className="infio-llm-setting-divider"></div>
 			<ComboBoxComponent
 				name={t("settings.Models.chatModel")}
+				settings={settings}
 				provider={settings.chatModelProvider || currProvider}
 				modelId={settings.chatModelId}
 				updateModel={updateChatModelId}
@@ -178,6 +179,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			<div className="infio-llm-setting-divider"></div>
 			<ComboBoxComponent
 				name={t("settings.Models.autocompleteModel")}
+				settings={settings}
 				provider={settings.applyModelProvider || currProvider}
 				modelId={settings.applyModelId}
 				updateModel={updateApplyModelId}
@@ -185,6 +187,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			<div className="infio-llm-setting-divider"></div>
 			<ComboBoxComponent
 				name={t("settings.Models.embeddingModel")}
+				settings={settings}
 				provider={settings.embeddingModelProvider || ApiProvider.Google}
 				modelId={settings.embeddingModelId}
 				isEmbedding={true}

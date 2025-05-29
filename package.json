@@ -56,6 +56,7 @@
 		"@codemirror/lang-markdown": "^6.3.2",
 		"@codemirror/merge": "^6.10.0",
 		"@electric-sql/pglite": "0.2.14",
+		"@google/genai": "^1.2.0",
 		"@google/generative-ai": "^0.21.0",
 		"@langchain/core": "^0.3.26",
 		"@lexical/clipboard": "^0.17.1",
