@@ -2,6 +2,18 @@
 export default {
 	chat: {
 		stop: "停止",
+		welcome: {
+			title: "欢迎使用 Infio Copilot",
+			subtitle: "探索不同模式来提升您的生产力"
+		},
+		navigation: {
+			commands: "命令",
+			commandsDesc: "创建和管理用于快速操作的自定义命令",
+			customMode: "自定义模式",
+			customModeDesc: "定义具有特定行为的个性化 AI 模式",
+			mcp: "MCP",
+			mcpDesc: "管理模型上下文协议集成"
+		},
 		errors: {
 			failedToLoadConversation: "加载对话失败",
 			failedToSaveHistory: "保存聊天记录失败",

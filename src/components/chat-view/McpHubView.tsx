@@ -1,4 +1,5 @@
 import { AlertTriangle, ChevronDown, ChevronRight, FileText, Folder, Power, RotateCcw, Trash2, Wrench } from 'lucide-react'
+import { Notice } from 'obsidian'
 import React, { useEffect, useState } from 'react'
 
 import { useMcpHub } from '../../contexts/McpHubContext'
@@ -12,6 +13,11 @@ const McpHubView = () => {
 	const [mcpServers, setMcpServers] = useState<McpServer[]>([])
 	const [expandedServers, setExpandedServers] = useState<Record<string, boolean>>({});
 	const [activeServerDetailTab, setActiveServerDetailTab] = useState<Record<string, 'tools' | 'resources' | 'errors'>>({});
+
+	// 新增状态变量用于创建新服务器
+	const [newServerName, setNewServerName] = useState('')
+	const [newServerConfig, setNewServerConfig] = useState('')
+	const [isCreateSectionExpanded, setIsCreateSectionExpanded] = useState(false)
 
 	const fetchServers = async () => {
 		const hub = await getMcpHub()
@@ -67,6 +73,42 @@ const McpHubView = () => {
 		}
 	}
 
+	const handleCreate = async () => {
+		// 验证输入
+		if (newServerName.trim().length === 0) {
+			new Notice("服务器名称不能为空")
+			return
+		}
+
+		if (newServerConfig.trim().length === 0) {
+			new Notice("配置不能为空")
+			return
+		}
+
+		// check config is valid json
+		try {
+			JSON.parse(newServerConfig)
+		} catch (error) {
+			new Notice("配置格式无效，请输入有效的 JSON 格式")
+			return
+		}
+
+		const hub = await getMcpHub();
+		if (hub) {
+			try {
+				await hub.createServer(newServerName, newServerConfig, "global")
+				const updatedServers = hub.getAllServers()
+				setMcpServers(updatedServers)
+
+				// 清空表单
+				setNewServerName('')
+				setNewServerConfig('')
+				new Notice(`服务器 "${newServerName}" 创建成功`)
+			} catch (error) {
+				new Notice(`创建服务器失败: ${error.message}`)
+			}
+		}
+	}
 
 	const toggleServerExpansion = (serverKey: string) => {
 		setExpandedServers(prev => ({ ...prev, [serverKey]: !prev[serverKey] }));
@@ -78,6 +120,10 @@ const McpHubView = () => {
 	const handleDetailTabChange = (serverKey: string, tab: 'tools' | 'resources' | 'errors') => {
 		setActiveServerDetailTab(prev => ({ ...prev, [serverKey]: tab }));
 	};
+
+	const toggleCreateSectionExpansion = () => {
+		setIsCreateSectionExpanded(prev => !prev)
+	}
 
 	const ToolRow = ({ tool }: { tool: McpTool }) => {
 		return (
@@ -168,10 +214,65 @@ const McpHubView = () => {
 						<span className="infio-mcp-setting-text">启用 MCP 服务器</span>
 					</label>
 					<p className="infio-mcp-setting-description">
-						开启后 Roo 可用已连接 MCP 服务器的工具，能力更强。不用这些工具时建议关闭，节省 API Token 费用。
+						开启后可用已连接 MCP 服务器的工具，能力更强。不用这些工具时建议关闭，节省 API Token 费用。
+						<a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer">
+							Learn more about MCP
+						</a>
 					</p>
 				</div>
 			</div>
+
+			{/* Create New Server Section */}
+			{settings.mcpEnabled && (
+				<div className="infio-mcp-create-section">
+					<div className="infio-mcp-create-item">
+						<div className="infio-mcp-create-item-header" onClick={toggleCreateSectionExpansion}>
+							<div className="infio-mcp-create-item-info">
+								<div className="infio-mcp-hub-expander">
+									{isCreateSectionExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+								</div>
+								<h3 className="infio-mcp-create-title">+ 添加新的 MCP 服务器</h3>
+							</div>
+						</div>
+
+						{isCreateSectionExpanded && (
+							<div className="infio-mcp-create-expanded">
+								<div className="infio-mcp-create-label">服务器名称</div>
+								<input
+									type="text"
+									value={newServerName}
+									onChange={(e) => setNewServerName(e.target.value)}
+									placeholder="输入服务器名称"
+									className="infio-mcp-create-input"
+								/>
+								<div className="infio-mcp-create-label">配置 (JSON 格式)</div>
+								<textarea
+									value={newServerConfig}
+									onChange={(e) => setNewServerConfig(e.target.value)}
+									placeholder='example: {
+																"command": "npx",
+																"args": [
+																	"-y",
+																	"@modelcontextprotocol/server-filesystem",
+																	"/Users/username/Desktop",
+																	"/path/to/other/allowed/dir"
+																]
+															}'
+									className="infio-mcp-create-textarea"
+									rows={4}
+								/>
+								<button
+									onClick={handleCreate}
+									className="infio-mcp-create-btn"
+									disabled={!newServerName.trim() || !newServerConfig.trim()}
+								>
+									<span>创建服务器</span>
+								</button>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
 
 			{/* Servers List */}
 			{settings.mcpEnabled && (
@@ -300,8 +401,7 @@ const McpHubView = () => {
 					padding: 16px;
 					gap: 16px;
 					color: var(--text-normal);
-					height: 100%;
-					overflow-y: auto;
+					scroll-behavior: smooth;
 				}
 
 				/* Header Styles */
@@ -376,8 +476,7 @@ const McpHubView = () => {
 					background-color: var(--background-primary);
 					border: 1px solid var(--background-modifier-border);
 					border-radius: var(--radius-s);
-					margin-bottom: 12px;
-					overflow: hidden;
+					margin-bottom: 16px;
 				}
 
 				.infio-mcp-hub-item-header {
@@ -584,7 +683,21 @@ const McpHubView = () => {
 					border-top: 1px solid var(--background-modifier-border);
 					background-color: var(--background-secondary);
 					padding-top: 8px;
-					padding-bottom: 8px;
+					padding-bottom: 16px;
+					animation: expandContent 0.3s ease-out;
+					border-bottom-left-radius: var(--radius-s);
+					border-bottom-right-radius: var(--radius-s);
+				}
+
+				@keyframes expandContent {
+					from {
+						opacity: 0;
+						transform: translateY(-10px);
+					}
+					to {
+						opacity: 1;
+						transform: translateY(0);
+					}
 				}
 
 				.infio-mcp-tabs {
@@ -746,6 +859,139 @@ const McpHubView = () => {
 					text-align: center;
 					padding: 40px 20px;
 					color: var(--text-muted);
+				}
+
+				/* Create New Server Section */
+				.infio-mcp-create-section {
+					background-color: var(--background-primary);
+					border: 1px solid var(--background-modifier-border);
+					border-radius: var(--radius-s);
+					margin-bottom: 16px;
+				}
+
+				.infio-mcp-create-item {
+					/* Remove background and padding since we're restructuring */
+				}
+
+				.infio-mcp-create-item-header {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					padding: 8px;
+					cursor: pointer;
+					transition: all 0.2s ease;
+				}
+
+				.infio-mcp-create-item-header:hover {
+					background-color: var(--background-modifier-hover);
+				}
+
+				.infio-mcp-create-item-info {
+					display: flex;
+					align-items: center;
+					gap: 12px;
+					flex: 1;
+				}
+
+				.infio-mcp-create-title {
+					margin: 0;
+					font-size: 16px;
+					font-weight: 600;
+					color: var(--text-normal);
+				}
+
+				.infio-mcp-create-expanded {
+					border-top: 1px solid var(--background-modifier-border);
+					background-color: var(--background-secondary);
+					padding: 16px;
+					display: flex;
+					flex-direction: column;
+					gap: 12px;
+					animation: expandContent 0.3s ease-out;
+					border-bottom-left-radius: var(--radius-s);
+					border-bottom-right-radius: var(--radius-s);
+				}
+
+				.infio-mcp-create-new {
+					display: flex;
+					flex-direction: column;
+					gap: 12px;
+				}
+
+				.infio-mcp-create-label {
+					font-size: 14px;
+					font-weight: 500;
+					color: var(--text-normal);
+					margin-bottom: 4px;
+				}
+
+				.infio-mcp-create-input {
+					background-color: var(--background-primary);
+					border: 1px solid var(--background-modifier-border);
+					border-radius: var(--radius-s);
+					color: var(--text-normal);
+					padding: 8px 12px;
+					font-size: 14px;
+					width: 100%;
+					box-sizing: border-box;
+					transition: border-color 0.2s ease;
+				}
+
+				.infio-mcp-create-input:focus {
+					outline: none;
+					border-color: var(--interactive-accent);
+				}
+
+				.infio-mcp-create-textarea {
+					background-color: var(--background-primary);
+					border: 1px solid var(--background-modifier-border);
+					border-radius: var(--radius-s);
+					color: var(--text-normal);
+					padding: 8px 12px;
+					font-size: 14px;
+					width: 100%;
+					box-sizing: border-box;
+					font-family: var(--font-monospace);
+					resize: vertical;
+					min-height: 140px;
+					transition: border-color 0.2s ease;
+				}
+
+				.infio-mcp-create-textarea:focus {
+					outline: none;
+					border-color: var(--interactive-accent);
+				}
+
+				.infio-mcp-create-btn {
+					background-color: var(--interactive-accent);
+					color: var(--text-on-accent);
+					border: none;
+					border-radius: var(--radius-s);
+					padding: 10px 16px;
+					font-size: 14px;
+					font-weight: 500;
+					cursor: pointer;
+					transition: all 0.2s ease;
+					align-self: flex-start;
+				}
+
+				.infio-mcp-create-btn:hover:not(:disabled) {
+					background-color: var(--interactive-accent-hover);
+					transform: translateY(-1px);
+				}
+
+				.infio-mcp-create-btn:disabled {
+					opacity: 0.5;
+					cursor: not-allowed;
+					transform: none;
+				}
+
+				/* Servers List */
+				.infio-mcp-hub-list {
+					display: flex;
+					flex-direction: column;
+					gap: 0;
+					margin-bottom: 20px;
 				}
 			`}</style>
 		</div>

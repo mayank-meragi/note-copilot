@@ -1108,6 +1108,84 @@ export class McpHub {
 		}
 	}
 
+	/**
+	 * Creates a new MCP server with the given name and configuration
+	 * @param name The name of the server to create
+	 * @param config JSON string containing the server configuration
+	 * @param source Whether to create in global or project scope (defaults to global)
+	 */
+	public async createServer(
+		name: string, 
+		config: string, 
+		source: "global" | "project" = "global"
+	): Promise<void> {
+		try {
+			// Parse the JSON config string
+			let parsedConfig: unknown
+			try {
+				parsedConfig = JSON.parse(config)
+			} catch (error) {
+				throw new Error(`Invalid JSON format in config: ${error instanceof Error ? error.message : String(error)}`)
+			}
+
+			// Validate the parsed config
+			const validatedConfig = this.validateServerConfig(parsedConfig, name)
+
+			// Determine which config file to update
+			let configPath: string
+			if (source === "project") {
+				const projectMcpPath = normalizePath(".infio_json_db/mcp/mcp.json")
+				if (!await this.app.vault.adapter.exists(projectMcpPath)) {
+					// Create project config file if it doesn't exist
+					await this.app.vault.adapter.write(
+						projectMcpPath,
+						JSON.stringify({ mcpServers: {} }, null, 2)
+					)
+				}
+				configPath = projectMcpPath
+			} else {
+				configPath = await this.getMcpSettingsFilePath()
+			}
+
+			// Read current config
+			const content = await this.app.vault.adapter.read(configPath)
+			const currentConfig = JSON.parse(content)
+
+			// Validate the config structure
+			if (!currentConfig || typeof currentConfig !== "object") {
+				throw new Error("Invalid config file structure")
+			}
+
+			// Ensure mcpServers object exists
+			if (!currentConfig.mcpServers || typeof currentConfig.mcpServers !== "object") {
+				currentConfig.mcpServers = {}
+			}
+
+			// Check if server already exists
+			if (currentConfig.mcpServers[name]) {
+				throw new Error(`Server "${name}" already exists. Use updateServerConfig to modify existing servers.`)
+			}
+
+			// Add the new server to the config
+			currentConfig.mcpServers[name] = validatedConfig
+
+			// Write the updated config back to file
+			const updatedConfig = {
+				mcpServers: currentConfig.mcpServers,
+			}
+
+			await this.app.vault.adapter.write(configPath, JSON.stringify(updatedConfig, null, 2))
+
+			// Update server connections to connect to the new server
+			await this.updateServerConnections(currentConfig.mcpServers, source)
+
+			console.log(`Successfully created and connected to MCP server: ${name}`)
+		} catch (error) {
+			this.showErrorMessage(`Failed to create MCP server "${name}"`, error)
+			throw error
+		}
+	}
+
 	async readResource(serverName: string, uri: string, source: "global" | "project" = "global"): Promise<McpResourceResponse> {
 		const connection = this.findConnection(serverName, source)
 		if (!connection) {

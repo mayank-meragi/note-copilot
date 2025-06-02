@@ -59,12 +59,12 @@ import { editorStateToPlainText } from './chat-input/utils/editor-state-to-plain
 import { ChatHistory } from './ChatHistoryView'
 import CommandsView from './CommandsView'
 import CustomModeView from './CustomModeView'
-import MarkdownReasoningBlock from './Markdown/MarkdownReasoningBlock'
+import HelloInfo from './HelloInfo'
 import McpHubView from './McpHubView' // Moved after MarkdownReasoningBlock
 import QueryProgress, { QueryProgressState } from './QueryProgress'
 import ReactMarkdown from './ReactMarkdown'
-import ShortcutInfo from './ShortcutInfo'
 import SimilaritySearchResults from './SimilaritySearchResults'
+import MarkdownReasoningBlock from './Markdown/MarkdownReasoningBlock'
 
 // Add an empty line here
 const getNewInputMessage = (app: App, defaultMention: string): ChatUserMessage => {
@@ -609,7 +609,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					}
 				} else if (toolArgs.type === 'regex_search_files') {
 					// @ts-expect-error Obsidian API type mismatch
-					const baseVaultPath = app.vault.adapter.getBasePath()
+					const baseVaultPath = String(app.vault.adapter.getBasePath())
 					const ripgrepPath = settings.ripgrepPath
 					const absolutePath = path.join(baseVaultPath, toolArgs.filepath)
 					const results = await regexSearchFiles(absolutePath, toolArgs.regex, ripgrepPath)
@@ -730,7 +730,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 									return item.text
 								}
 								if (item.type === "resource") {
-									const { blob: _, ...rest } = item.resource
+									const { blob: _blob, ...rest } = item.resource
 									return JSON.stringify(rest, null, 2)
 								}
 								return ""
@@ -776,7 +776,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 						role: 'assistant',
 						applyStatus: ApplyStatus.Idle,
 						isToolResult: true,
-						content: `<tool_result>${result.returnMsg.promptContent}</tool_result>`,
+						content: `<tool_result>${typeof result.returnMsg.promptContent === 'string' ? result.returnMsg.promptContent : ''}</tool_result>`,
 						reasoningContent: '',
 						metadata: {
 							usage: undefined,
@@ -1037,7 +1037,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							// If the chat is empty, show a message to start a new chat
 							chatMessages.length === 0 && (
 								<div className="infio-chat-empty-state">
-									<ShortcutInfo />
+									<HelloInfo onNavigate={(tab) => setTab(tab)} />
 								</div>
 							)
 						}

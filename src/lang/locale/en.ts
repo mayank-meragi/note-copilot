@@ -1,6 +1,18 @@
 export default {
 	chat: {
 		stop: "Stop",
+		welcome: {
+			title: "Welcome to Infio Copilot",
+			subtitle: "Explore different modes to enhance your productivity"
+		},
+		navigation: {
+			commands: "Commands",
+			commandsDesc: "Create and manage custom commands for quick actions",
+			customMode: "Custom Mode",
+			customModeDesc: "Define personalized AI modes with specific behaviors",
+			mcp: "MCP",
+			mcpDesc: "Manage Model Context Protocol integrations"
+		},
 		errors: {
 			failedToLoadConversation: "Failed to load conversation",
 			failedToSaveHistory: "Failed to save chat history",

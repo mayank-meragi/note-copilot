@@ -2242,6 +2242,8 @@ button.infio-chat-input-model-select {
 
 /* 禁用Obsidian模态框的滚动 */
 .modal.mod-image-selector .modal-content {
-  overflow: hidden !important;
+  max-width: 80vw;
+  max-height: 80vh;
 }
+
 
