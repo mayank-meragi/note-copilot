@@ -65,7 +65,7 @@ const McpHubView = () => {
 	const handleDelete = async (serverName: string) => {
 		const hub = await getMcpHub();
 		if (hub) {
-			if (confirm(`确定要删除服务器 "${serverName}" 吗？`)) {
+			if (confirm(t('mcpHub.deleteConfirm', { name: serverName }))) {
 				await hub.deleteServer(serverName, "global")
 				const updatedServers = hub.getAllServers()
 				setMcpServers(updatedServers)
@@ -76,12 +76,12 @@ const McpHubView = () => {
 	const handleCreate = async () => {
 		// 验证输入
 		if (newServerName.trim().length === 0) {
-			new Notice("服务器名称不能为空")
+			new Notice(t('mcpHub.serverNameRequired'))
 			return
 		}
 
 		if (newServerConfig.trim().length === 0) {
-			new Notice("配置不能为空")
+			new Notice(t('mcpHub.configRequired'))
 			return
 		}
 
@@ -89,7 +89,7 @@ const McpHubView = () => {
 		try {
 			JSON.parse(newServerConfig)
 		} catch (error) {
-			new Notice("配置格式无效，请输入有效的 JSON 格式")
+			new Notice(t('mcpHub.invalidConfig'))
 			return
 		}
 
@@ -103,9 +103,9 @@ const McpHubView = () => {
 				// 清空表单
 				setNewServerName('')
 				setNewServerConfig('')
-				new Notice(`服务器 "${newServerName}" 创建成功`)
+				new Notice(t('mcpHub.createSuccess', { name: newServerName }))
 			} catch (error) {
-				new Notice(`创建服务器失败: ${error.message}`)
+				new Notice(t('mcpHub.createFailed', { error: error.message }))
 			}
 		}
 	}
@@ -144,7 +144,7 @@ const McpHubView = () => {
 					if (properties && typeof properties === 'object' && Object.keys(properties).length > 0) {
 						return (
 							<div className="infio-mcp-tool-parameters">
-								<h5 className="infio-mcp-parameters-title">{t('parameters')}</h5>
+								<h5 className="infio-mcp-parameters-title">{t('mcpHub.parameters')}</h5>
 								{Object.entries(properties).map(
 									([paramName, paramSchemaUntyped]) => {
 										const paramSchema = paramSchemaUntyped && typeof paramSchemaUntyped === 'object' ? paramSchemaUntyped : {};
@@ -157,7 +157,7 @@ const McpHubView = () => {
 													{isRequired && <span className="infio-mcp-parameter-required">*</span>}
 												</code>
 												<span className="infio-mcp-parameter-description">
-													{paramDescription || t('mcpHub.tool.noDescription')}
+													{paramDescription || t('mcpHub.toolNoDescription')}
 												</span>
 											</div>
 										);
@@ -198,7 +198,7 @@ const McpHubView = () => {
 		<div className="infio-mcp-hub-container">
 			{/* Header Section */}
 			<div className="infio-mcp-hub-header">
-				<h2 className="infio-mcp-hub-title">MCP 服务器</h2>
+				<h2 className="infio-mcp-hub-title">{t('mcpHub.title')}</h2>
 			</div>
 
 			{/* MCP Settings */}
@@ -211,12 +211,12 @@ const McpHubView = () => {
 							onChange={switchMcp}
 							className="infio-mcp-setting-checkbox"
 						/>
-						<span className="infio-mcp-setting-text">启用 MCP 服务器</span>
+						<span className="infio-mcp-setting-text">{t('mcpHub.enableMcp')}</span>
 					</label>
 					<p className="infio-mcp-setting-description">
-						开启后可用已连接 MCP 服务器的工具，能力更强。不用这些工具时建议关闭，节省 API Token 费用。
+						{t('mcpHub.enableMcpDescription')}
 						<a href="https://modelcontextprotocol.io/introduction" target="_blank" rel="noopener noreferrer">
-							Learn more about MCP
+							{t('mcpHub.learnMore')}
 						</a>
 					</p>
 				</div>
@@ -231,33 +231,25 @@ const McpHubView = () => {
 								<div className="infio-mcp-hub-expander">
 									{isCreateSectionExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
 								</div>
-								<h3 className="infio-mcp-create-title">+ 添加新的 MCP 服务器</h3>
+								<h3 className="infio-mcp-create-title">{t('mcpHub.addNewServer')}</h3>
 							</div>
 						</div>
 
 						{isCreateSectionExpanded && (
 							<div className="infio-mcp-create-expanded">
-								<div className="infio-mcp-create-label">服务器名称</div>
+								<div className="infio-mcp-create-label">{t('mcpHub.serverName')}</div>
 								<input
 									type="text"
 									value={newServerName}
 									onChange={(e) => setNewServerName(e.target.value)}
-									placeholder="输入服务器名称"
+									placeholder={t('mcpHub.serverNamePlaceholder')}
 									className="infio-mcp-create-input"
 								/>
-								<div className="infio-mcp-create-label">配置 (JSON 格式)</div>
+								<div className="infio-mcp-create-label">{t('mcpHub.config')}</div>
 								<textarea
 									value={newServerConfig}
 									onChange={(e) => setNewServerConfig(e.target.value)}
-									placeholder='example: {
-																"command": "npx",
-																"args": [
-																	"-y",
-																	"@modelcontextprotocol/server-filesystem",
-																	"/Users/username/Desktop",
-																	"/path/to/other/allowed/dir"
-																]
-															}'
+									placeholder={t('mcpHub.configPlaceholder')}
 									className="infio-mcp-create-textarea"
 									rows={4}
 								/>
@@ -266,7 +258,7 @@ const McpHubView = () => {
 									className="infio-mcp-create-btn"
 									disabled={!newServerName.trim() || !newServerConfig.trim()}
 								>
-									<span>创建服务器</span>
+									<span>{t('mcpHub.createServer')}</span>
 								</button>
 							</div>
 						)}
@@ -296,14 +288,13 @@ const McpHubView = () => {
 											</div>
 											<span className={`infio-mcp-hub-status-indicator ${server.status === 'connected' ? 'connected' : server.status === 'connecting' ? 'connecting' : 'disconnected'} ${server.disabled ? 'disabled' : ''}`}></span>
 											<h3 className="infio-mcp-hub-name">{server.name}</h3>
-											{/* <span className="infio-mcp-hub-source-badge">{server.source}</span> */}
 										</div>
 
 										<div className="infio-mcp-hub-actions" onClick={(e) => e.stopPropagation()}>
 											<button
 												className={`infio-section-btn ${server.disabled ? 'disabled' : 'enabled'}`}
 												onClick={() => handleToggle(server.name, server.disabled)}
-												title={server.disabled ? '启用服务器' : '禁用服务器'}
+												title={server.disabled ? t('mcpHub.enable') : t('mcpHub.disable')}
 											>
 												<Power size={16} />
 											</button>
@@ -311,7 +302,7 @@ const McpHubView = () => {
 											<button
 												className="infio-section-btn"
 												onClick={() => handleRestart(server.name)}
-												title="重启服务器"
+												title={t('mcpHub.restart')}
 											>
 												<RotateCcw size={16} />
 											</button>
@@ -319,7 +310,7 @@ const McpHubView = () => {
 											<button
 												className="infio-section-btn"
 												onClick={() => handleDelete(server.name)}
-												title="删除服务器"
+												title={t('mcpHub.delete')}
 											>
 												<Trash2 size={16} />
 											</button>
@@ -328,7 +319,11 @@ const McpHubView = () => {
 
 									<div className="infio-mcp-hub-status-info">
 										<span className="infio-mcp-status-text">
-											状态: <span className={`status-value ${server.status}`}>{server.status}</span>
+											{t('mcpHub.status')}: <span className={`status-value ${server.status}`}>
+												{server.status === 'connected' ? t('mcpHub.statusConnected') :
+													server.status === 'connecting' ? t('mcpHub.statusConnecting') :
+														t('mcpHub.statusDisconnected')}
+											</span>
 										</span>
 									</div>
 
@@ -351,7 +346,7 @@ const McpHubView = () => {
 															{tabName === 'tools' && <Wrench size={14} />}
 															{tabName === 'resources' && <Folder size={14} />}
 															{tabName === 'errors' && <AlertTriangle size={14} />}
-															{t(`${tabName}`)} ({count})
+															{t(`mcpHub.${tabName}`)} ({count})
 														</button>
 													);
 												})}
