@@ -39,9 +39,9 @@ export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
 	// command: {
 	// 	tools: ["execute_command"],
 	// },
-	// mcp: {
-	// 	tools: ["use_mcp_tool", "access_mcp_resource"],
-	// },
+	mcp: {
+		tools: ["use_mcp_tool", "access_mcp_resource"],
+	},
 	modes: {
 		tools: ["switch_mode"],
 		alwaysAvailable: true,

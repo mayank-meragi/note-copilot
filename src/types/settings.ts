@@ -220,6 +220,9 @@ export const InfioSettingsSchema = z.object({
 	grokProvider: GrokProviderSchema,
 	openaicompatibleProvider: OpenAICompatibleProviderSchema,
 
+	// MCP Servers
+	mcpEnabled: z.boolean().catch(true),
+
 	// Chat Model start list
 	collectedChatModels: z.array(z.object({
 		provider: z.nativeEnum(ApiProvider),

@@ -18,7 +18,9 @@ import MarkdownSearchAndReplace from './Markdown/MarkdownSearchAndReplace'
 import MarkdownSearchWebBlock from './Markdown/MarkdownSearchWebBlock'
 import MarkdownSemanticSearchFilesBlock from './Markdown/MarkdownSemanticSearchFilesBlock'
 import MarkdownSwitchModeBlock from './Markdown/MarkdownSwitchModeBlock'
+import MarkdownToolResult from './Markdown/MarkdownToolResult'
 import MarkdownWithIcons from './Markdown/MarkdownWithIcon'
+import UseMcpToolBlock from './Markdown/UseMcpToolBlock'
 
 function ReactMarkdown({
 	applyStatus,
@@ -177,6 +179,21 @@ function ReactMarkdown({
 						onApply={onApply}
 						urls={block.urls}
 						finish={block.finish}
+					/>
+				) : block.type === 'use_mcp_tool' ? (
+					<UseMcpToolBlock
+						key={"use-mcp-tool-" + index}
+						applyStatus={applyStatus}
+						onApply={onApply}
+						serverName={block.server_name}
+						toolName={block.tool_name}
+						parameters={block.parameters}
+						finish={block.finish}
+					/>
+				) : block.type === 'tool_result' ? (
+					<MarkdownToolResult
+						key={"tool-result-" + index}
+						content={block.content}
 					/>
 				) : (
 					<Markdown key={"markdown-" + index} className="infio-markdown">

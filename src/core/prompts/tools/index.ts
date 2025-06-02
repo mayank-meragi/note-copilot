@@ -28,6 +28,8 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	attempt_completion: () => getAttemptCompletionDescription(),
 	switch_mode: () => getSwitchModeDescription(),
 	insert_content: (args) => getInsertContentDescription(args),
+	use_mcp_tool: (args) => getUseMcpToolDescription(args),
+	access_mcp_resource: (args) => getAccessMcpResourceDescription(args),
 	search_and_replace: (args) => getSearchAndReplaceDescription(args),
 	apply_diff: (args) =>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",

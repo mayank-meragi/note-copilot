@@ -2,7 +2,7 @@ import * as path from 'path'
 
 import { BaseSerializedNode } from '@lexical/clipboard/clipboard'
 import { useMutation } from '@tanstack/react-query'
-import { CircleStop, History, NotebookPen, Plus, SquareSlash } from 'lucide-react'
+import { CircleStop, History, NotebookPen, Plus, Server, SquareSlash } from 'lucide-react'
 import { App, Notice } from 'obsidian'
 import {
 	forwardRef,
@@ -20,6 +20,7 @@ import { APPLY_VIEW_TYPE } from '../../constants'
 import { useApp } from '../../contexts/AppContext'
 import { useDiffStrategy } from '../../contexts/DiffStrategyContext'
 import { useLLM } from '../../contexts/LLMContext'
+import { useMcpHub } from '../../contexts/McpHubContext'
 import { useRAG } from '../../contexts/RAGContext'
 import { useSettings } from '../../contexts/SettingsContext'
 import {
@@ -49,19 +50,22 @@ import {
 import { readTFileContent } from '../../utils/obsidian'
 import { openSettingsModalWithError } from '../../utils/open-settings-modal'
 import { PromptGenerator, addLineNumbers } from '../../utils/prompt-generator'
-import { fetchUrlsContent, webSearch } from '../../utils/web-search'
+// Removed empty line above, added one below for group separation
+import { fetchUrlsContent, onEnt, webSearch } from '../../utils/web-search'
 
-import { ModeSelect } from './chat-input/ModeSelect'
+import { ModeSelect } from './chat-input/ModeSelect' // Start of new group
 import PromptInputWithActions, { ChatUserInputRef } from './chat-input/PromptInputWithActions'
 import { editorStateToPlainText } from './chat-input/utils/editor-state-to-plain-text'
 import { ChatHistory } from './ChatHistoryView'
 import CommandsView from './CommandsView'
 import CustomModeView from './CustomModeView'
 import MarkdownReasoningBlock from './Markdown/MarkdownReasoningBlock'
+import McpHubView from './McpHubView' // Moved after MarkdownReasoningBlock
 import QueryProgress, { QueryProgressState } from './QueryProgress'
 import ReactMarkdown from './ReactMarkdown'
 import ShortcutInfo from './ShortcutInfo'
 import SimilaritySearchResults from './SimilaritySearchResults'
+
 // Add an empty line here
 const getNewInputMessage = (app: App, defaultMention: string): ChatUserMessage => {
 	const mentionables: Mentionable[] = [];
@@ -103,6 +107,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 	const { settings, setSettings } = useSettings()
 	const { getRAGEngine } = useRAG()
 	const diffStrategy = useDiffStrategy()
+	const { getMcpHub } = useMcpHub()
 	const { customModeList, customModePrompts } = useCustomModes()
 
 	const {
@@ -115,9 +120,9 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 	const { streamResponse, chatModel } = useLLM()
 
 	const promptGenerator = useMemo(() => {
-		// @ts-expect-error
-		return new PromptGenerator(getRAGEngine, app, settings, diffStrategy, customModePrompts, customModeList)
-	}, [getRAGEngine, app, settings, diffStrategy, customModePrompts, customModeList])
+		// @ts-expect-error TODO: Review PromptGenerator constructor parameters and types
+		return new PromptGenerator(getRAGEngine, app, settings, diffStrategy, customModePrompts, customModeList, getMcpHub)
+	}, [getRAGEngine, app, settings, diffStrategy, customModePrompts, customModeList, getMcpHub])
 
 	const [inputMessage, setInputMessage] = useState<ChatUserMessage>(() => {
 		const newMessage = getNewInputMessage(app, settings.defaultMention)
@@ -166,7 +171,8 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		}
 	}
 
-	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode'>('chat')
+	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp'>('chat')
+
 	const [selectedSerializedNodes, setSelectedSerializedNodes] = useState<BaseSerializedNode[]>([])
 
 	useEffect(() => {
@@ -189,6 +195,11 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		scrollContainer.addEventListener('scroll', handleScroll)
 		return () => scrollContainer.removeEventListener('scroll', handleScroll)
 	}, [chatMessages])
+
+
+	useEffect(() => {
+		onEnt(`switch_tab/${tab}`)
+	}, [tab])
 
 	const handleCreateCommand = (serializedNodes: BaseSerializedNode[]) => {
 		setSelectedSerializedNodes(serializedNodes)
@@ -217,7 +228,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 			abortActiveStreams()
 			const conversation = await getChatMessagesById(conversationId)
 			if (!conversation) {
-				throw new Error(t('chat.errors.conversationNotFound'))
+				throw new Error(String(t('chat.errors.conversationNotFound')))
 			}
 			setCurrentConversationId(conversationId)
 			setChatMessages(conversation)
@@ -228,8 +239,8 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 				type: 'idle',
 			})
 		} catch (error) {
-			new Notice(t('chat.errors.failedToLoadConversation'))
-			console.error(t('chat.errors.failedToLoadConversation'), error)
+			new Notice(String(t('chat.errors.failedToLoadConversation')))
+			console.error(String(t('chat.errors.failedToLoadConversation')), error)
 		}
 	}
 
@@ -276,7 +287,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 			try {
 				const abortController = new AbortController()
 				activeStreamAbortControllersRef.current.push(abortController)
-
+				onEnt('chat-submit')
 				const { requestMessages, compiledMessages } =
 					await promptGenerator.generateRequestMessages({
 						messages: newChatHistory,
@@ -705,6 +716,42 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							mentionables: [],
 						}
 					}
+				} else if (toolArgs.type === 'use_mcp_tool') {
+					const mcpHub = await getMcpHub()
+					if (!mcpHub) {
+						throw new Error('MCP hub not found')
+					}
+					const toolResult = await mcpHub.callTool(toolArgs.server_name, toolArgs.tool_name, toolArgs.parameters)
+					const toolResultPretty =
+						(toolResult?.isError ? "Error:\n" : "") +
+						toolResult?.content
+							.map((item) => {
+								if (item.type === "text") {
+									return item.text
+								}
+								if (item.type === "resource") {
+									const { blob: _, ...rest } = item.resource
+									return JSON.stringify(rest, null, 2)
+								}
+								return ""
+							})
+							.filter(Boolean)
+							.join("\n\n") || "(No response)"
+
+					const formattedContent = `[use_mcp_tool for '${toolArgs.server_name}'] Result:\n${toolResultPretty}\n`;
+					return {
+						type: 'use_mcp_tool',
+						applyMsgId,
+						applyStatus: ApplyStatus.Applied,
+						returnMsg: {
+							role: 'user',
+							applyStatus: ApplyStatus.Idle,
+							content: null,
+							promptContent: formattedContent,
+							id: uuidv4(),
+							mentionables: [],
+						}
+					}
 				}
 			} catch (error) {
 				console.error('Failed to apply changes', error)
@@ -722,6 +769,21 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							applyStatus: result.applyStatus
 						} : message,
 					);
+				}
+				if (result.returnMsg) {
+					newChatMessages.push({
+						id: uuidv4(),
+						role: 'assistant',
+						applyStatus: ApplyStatus.Idle,
+						isToolResult: true,
+						content: `<tool_result>${result.returnMsg.promptContent}</tool_result>`,
+						reasoningContent: '',
+						metadata: {
+							usage: undefined,
+							model: undefined,
+						},
+					})
+					console.log('Updated chat messages:', newChatMessages);
 				}
 				setChatMessages(newChatMessages);
 
@@ -953,6 +1015,18 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					>
 						<NotebookPen size={18} color={tab === 'custom-mode' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
+					<button
+						onClick={() => {
+							if (tab === 'mcp') {
+								setTab('chat')
+							} else {
+								setTab('mcp')
+							}
+						}}
+						className="infio-chat-list-dropdown"
+					>
+						<Server size={18} color={tab === 'mcp' ? 'var(--text-accent)' : 'var(--text-color)'} />
+					</button>
 				</div>
 			</div>
 			{/* main view */}
@@ -1071,9 +1145,13 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 						selectedSerializedNodes={selectedSerializedNodes}
 					/>
 				</div>
-			) : (
+			) : tab === 'custom-mode' ? (
 				<div className="infio-chat-commands">
 					<CustomModeView />
+				</div>
+			) : (
+				<div className="infio-chat-commands">
+					<McpHubView />
 				</div>
 			)}
 		</div>

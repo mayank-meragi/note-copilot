@@ -3,10 +3,11 @@ import { App, MarkdownView, TAbstractFile, TFile, TFolder, Vault, getLanguage, h
 import { editorStateToPlainText } from '../components/chat-view/chat-input/utils/editor-state-to-plain-text'
 import { QueryProgressState } from '../components/chat-view/QueryProgress'
 import { DiffStrategy } from '../core/diff/DiffStrategy'
+import { McpHub } from '../core/mcp/McpHub'
 import { SystemPrompt } from '../core/prompts/system'
 import { RAGEngine } from '../core/rag/rag-engine'
 import { SelectVector } from '../database/schema'
-import { ChatMessage, ChatUserMessage } from '../types/chat'
+import { ChatAssistantMessage, ChatMessage, ChatUserMessage } from '../types/chat'
 import { ContentPart, RequestMessage } from '../types/llm/request'
 import {
 	MentionableBlock,
@@ -118,6 +119,7 @@ export class PromptGenerator {
 	private systemPrompt: SystemPrompt
 	private customModePrompts: CustomModePrompts | null = null
 	private customModeList: ModeConfig[] | null = null
+	private getMcpHub: () => Promise<McpHub> | null = null
 	private static readonly EMPTY_ASSISTANT_MESSAGE: RequestMessage = {
 		role: 'assistant',
 		content: '',
@@ -130,6 +132,7 @@ export class PromptGenerator {
 		diffStrategy?: DiffStrategy,
 		customModePrompts?: CustomModePrompts,
 		customModeList?: ModeConfig[],
+		getMcpHub?: () => Promise<McpHub>,
 	) {
 		this.getRagEngine = getRagEngine
 		this.app = app
@@ -138,6 +141,7 @@ export class PromptGenerator {
 		this.systemPrompt = new SystemPrompt(this.app)
 		this.customModePrompts = customModePrompts ?? null
 		this.customModeList = customModeList ?? null
+		this.getMcpHub = getMcpHub ?? null
 	}
 
 	public async generateRequestMessages({
@@ -188,7 +192,9 @@ export class PromptGenerator {
 
 		const requestMessages: RequestMessage[] = [
 			systemMessage,
-			...compiledMessages.slice(-19).map((message): RequestMessage => {
+			...compiledMessages.slice(-19)
+				.filter((message) => !(message.role === 'assistant' && message.isToolResult))
+				.map((message): RequestMessage => {
 				if (message.role === 'user') {
 					return {
 						role: 'user',
@@ -473,6 +479,7 @@ export class PromptGenerator {
 	}
 
 	public async getSystemMessageNew(mode: Mode, filesSearchMethod: string, preferredLanguage: string): Promise<RequestMessage> {
+		const mcpHub = await this.getMcpHub?.()
 		const prompt = await this.systemPrompt.getSystemPrompt(
 			this.app.vault.getRoot().path,
 			false,
@@ -482,6 +489,7 @@ export class PromptGenerator {
 			this.diffStrategy,
 			this.customModePrompts,
 			this.customModeList,
+			mcpHub,
 		)
 
 		return {
@@ -627,14 +635,14 @@ ${fileContent}
 
 		const fileContent = await readTFileContent(currentFile, this.app.vault);
 		const lines = fileContent.split('\n');
-		
+
 		// 计算上下文范围，并处理边界情况
 		const contextStartLine = Math.max(1, startLine - 20);
 		const contextEndLine = Math.min(lines.length, endLine + 20);
-		
+
 		// 提取上下文行
 		const contextLines = lines.slice(contextStartLine - 1, contextEndLine);
-		
+
 		// 返回带行号的上下文内容
 		return addLineNumbers(contextLines.join('\n'), contextStartLine);
 	}
@@ -653,10 +661,10 @@ ${fileContent}
 		endLine: number
 	}): Promise<RequestMessage[]> {
 		const systemMessage = this.getSystemMessage(false, 'edit');
-		
+
 		// 获取适当大小的上下文
 		const context = await this.getContextForEdit(currentFile, startLine, endLine);
-		
+
 		let userPrompt = `<task>\n${instruction}\n</task>\n\n
 <selected_content location="${currentFile.path}#L${startLine}-${endLine}">\n${selectedContent}\n</selected_content>`;
 

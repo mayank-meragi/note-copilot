@@ -11,7 +11,7 @@ import {
 	defaultModeSlug,
 	getGroupName,
 	getModeBySlug,
-	modes
+	defaultModes
 } from "../../utils/modes"
 import { DiffStrategy } from "../diff/DiffStrategy"
 import { McpHub } from "../mcp/McpHub"
@@ -88,7 +88,7 @@ export class SystemPrompt {
 		// const effectiveDiffStrategy = diffEnabled ? diffStrategy : undefined
 
 		// Get the full mode config to ensure we have the role definition
-		const modeConfig = getModeBySlug(mode, customModeConfigs) || modes.find((m) => m.slug === mode) || modes[0]
+		const modeConfig = getModeBySlug(mode, customModeConfigs) || defaultModes.find((m) => m.slug === mode) || defaultModes[0]
 		const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
 
 		const [modesSection, mcpServersSection] = await Promise.all([
@@ -175,7 +175,7 @@ ${await addCustomInstructions(this.app, promptComponent?.customInstructions || m
 		const promptComponent = getPromptComponent(customModePrompts?.[mode])
 
 		// Get full mode config from custom modes or fall back to built-in modes
-		const currentMode = getModeBySlug(mode, customModes) || modes.find((m) => m.slug === mode) || modes[0]
+		const currentMode = getModeBySlug(mode, customModes) || defaultModes.find((m) => m.slug === mode) || defaultModes[0]
 
 		// If a file-based custom system prompt exists, use it
 		if (fileCustomSystemPrompt) {

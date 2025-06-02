@@ -79,13 +79,13 @@ export function getToolsForMode(groups: readonly GroupEntry[]): string[] {
 }
 
 // Main modes configuration as an ordered array
-export const modes: readonly ModeConfig[] = [
+export const defaultModes: readonly ModeConfig[] = [
 	{
 		slug: "ask",
 		name: "Ask",
 		roleDefinition:
 			"You are Infio, a versatile assistant dedicated to providing informative responses, thoughtful explanations, and practical guidance on virtually any topic or challenge you face.",
-		groups: ["read"],
+		groups: ["read", "mcp"],
 		customInstructions:
 			"You can analyze information, explain concepts across various domains, and access external resources when helpful. Make sure to address the user's questions thoroughly with thoughtful explanations and practical guidance. Use visual aids like Mermaid diagrams when they help make complex topics clearer. Offer solutions to challenges from diverse fields, not just technical ones, and provide context that helps users better understand the subject matter.",
 	},
@@ -94,7 +94,7 @@ export const modes: readonly ModeConfig[] = [
 		name: "Write",
 		roleDefinition:
 			"You are Infio, a versatile content creator skilled in composing, editing, and organizing various text-based documents. You excel at structuring information clearly, creating well-formatted content, and helping users express their ideas effectively.",
-		groups: ["read", "edit"],
+		groups: ["read", "edit", "mcp"],
 		customInstructions:
 			"You can create and modify any text-based files, with particular expertise in Markdown formatting. Help users organize their thoughts, create documentation, take notes, or draft any written content they need. When appropriate, suggest structural improvements and formatting enhancements that make content more readable and accessible. Consider the purpose and audience of each document to provide the most relevant assistance."
 	},
@@ -103,14 +103,14 @@ export const modes: readonly ModeConfig[] = [
 		name: "Research",
 		roleDefinition:
 			"You are Infio, an advanced research assistant specialized in comprehensive investigation and analytical thinking. You excel at breaking down complex questions, exploring multiple perspectives, and synthesizing information to provide well-reasoned conclusions.",
-		groups: ["research"],
+		groups: ["research", "mcp"],
 		customInstructions:
 			"You can conduct thorough research by analyzing available information, connecting related concepts, and applying structured reasoning methods. Help users explore topics in depth by considering multiple angles, identifying relevant evidence, and evaluating the reliability of sources. Use step-by-step analysis when tackling complex problems, explaining your thought process clearly. Create visual representations like Mermaid diagrams when they help clarify relationships between ideas. Use Markdown tables to present statistical data or comparative information when appropriate. Present balanced viewpoints while highlighting the strength of evidence behind different conclusions.",
 	},
 ] as const
 
 // Export the default mode slug
-export const defaultModeSlug = modes[0].slug
+export const defaultModeSlug = defaultModes[0].slug
 
 // Helper functions
 export function getModeBySlug(slug: string, customModes?: ModeConfig[]): ModeConfig | undefined {
@@ -120,7 +120,7 @@ export function getModeBySlug(slug: string, customModes?: ModeConfig[]): ModeCon
 		return customMode
 	}
 	// Then check built-in modes
-	return modes.find((mode) => mode.slug === slug)
+	return defaultModes.find((mode) => mode.slug === slug)
 }
 
 export function getModeConfig(slug: string, customModes?: ModeConfig[]): ModeConfig {
@@ -134,11 +134,11 @@ export function getModeConfig(slug: string, customModes?: ModeConfig[]): ModeCon
 // Get all available modes, with custom modes overriding built-in modes
 export function getAllModes(customModes?: ModeConfig[]): ModeConfig[] {
 	if (!customModes?.length) {
-		return [...modes]
+		return [...defaultModes]
 	}
 
 	// Start with built-in modes
-	const allModes = [...modes]
+	const allModes = [...defaultModes]
 
 	// Process custom modes
 	customModes.forEach((customMode) => {
@@ -239,7 +239,7 @@ export function isToolAllowedForMode(
 // Create the mode-specific default prompts
 export const defaultPrompts: Readonly<CustomModePrompts> = Object.freeze(
 	Object.fromEntries(
-		modes.map((mode) => [
+		defaultModes.map((mode) => [
 			mode.slug,
 			{
 				roleDefinition: mode.roleDefinition,
@@ -275,7 +275,7 @@ export async function getFullModeDetails(
 	},
 ): Promise<ModeConfig> {
 	// First get the base mode config from custom modes or built-in modes
-	const baseMode = getModeBySlug(modeSlug, customModes) || modes.find((m) => m.slug === modeSlug) || modes[0]
+	const baseMode = getModeBySlug(modeSlug, customModes) || defaultModes.find((m) => m.slug === modeSlug) || defaultModes[0]
 
 	// Check for any prompt component overrides
 	const promptComponent = customModePrompts?.[modeSlug]

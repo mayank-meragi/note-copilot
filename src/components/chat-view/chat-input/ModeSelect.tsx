@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { useSettings } from '../../../contexts/SettingsContext'
 import { useCustomModes } from '../../../hooks/use-custom-mode'
-import { modes } from '../../../utils/modes'
+import { defaultModes } from '../../../utils/modes'
+import { onEnt } from '../../../utils/web-search'
 
 export function ModeSelect() {
 	const { settings, setSettings } = useSettings()
@@ -13,9 +14,10 @@ export function ModeSelect() {
 
 	const { customModeList } = useCustomModes()
 
-	const allModes = useMemo(() => [...modes, ...customModeList], [customModeList])
+	const allModes = useMemo(() => [...defaultModes, ...customModeList], [customModeList])
 
 	useEffect(() => {
+		onEnt(`switch_mode/${settings.mode}`)
 		setMode(settings.mode)
 	}, [settings.mode])
 

@@ -11,7 +11,7 @@ import { CustomMode, GroupEntry, ToolGroup } from '../../database/json/custom-mo
 import { useCustomModes } from '../../hooks/use-custom-mode';
 import { t } from '../../lang/helpers';
 import { PreviewView, PreviewViewState } from '../../PreviewView';
-import { modes as buildinModes } from '../../utils/modes';
+import { defaultModes as buildinModes } from '../../utils/modes';
 import { openOrCreateMarkdownFile } from '../../utils/obsidian';
 import { PromptGenerator, getFullLanguageName } from '../../utils/prompt-generator';
 
@@ -30,7 +30,7 @@ const CustomModeView = () => {
 	const diffStrategy = useDiffStrategy()
 
 	const promptGenerator = useMemo(() => {
-		// @ts-expect-error
+		// @ts-expect-error PromptGenerator constructor parameter types need to be reviewed
 		return new PromptGenerator(getRAGEngine, app, settings, diffStrategy, customModePrompts, customModeList)
 	}, [app, settings, diffStrategy, customModePrompts, customModeList])
 
@@ -76,7 +76,7 @@ const CustomModeView = () => {
 			setModeName(newMode.name);
 			setRoleDefinition(newMode.roleDefinition);
 			setCustomInstructions(newMode.customInstructions || '');
-			setSelectedTools(newMode.groups as GroupEntry[]);
+			setSelectedTools(newMode.groups);
 			setCustomModeId('');
 			return;
 		}
@@ -87,7 +87,7 @@ const CustomModeView = () => {
 			setModeName(builtinMode.slug);
 			setRoleDefinition(builtinMode.roleDefinition);
 			setCustomInstructions(builtinMode.customInstructions || '');
-			setSelectedTools(builtinMode.groups as GroupEntry[]);
+			setSelectedTools(builtinMode.groups);
 			setCustomModeId(''); // Built-in modes don't have custom IDs
 		} else {
 			setIsBuiltinMode(false);
@@ -387,7 +387,7 @@ const CustomModeView = () => {
 											type: PREVIEW_VIEW_TYPE,
 											active: true,
 											state: {
-												content: systemPrompt.content as string,
+												content: typeof systemPrompt.content === 'string' ? systemPrompt.content : '',
 												title: `${modeName} system prompt`,
 											} satisfies PreviewViewState,
 										})

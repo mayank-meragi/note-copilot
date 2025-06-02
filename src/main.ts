@@ -9,10 +9,12 @@ import { ChatProps } from './components/chat-view/ChatView'
 import { APPLY_VIEW_TYPE, CHAT_VIEW_TYPE, PREVIEW_VIEW_TYPE } from './constants'
 import { getDiffStrategy } from "./core/diff/DiffStrategy"
 import { InlineEdit } from './core/edit/inline-edit-processor'
+import { McpHub } from './core/mcp/McpHub'
 import { RAGEngine } from './core/rag/rag-engine'
 import { DBManager } from './database/database-manager'
 import { migrateToJsonDatabase } from './database/json/migrateToJsonDatabase'
 import EventListener from "./event-listener"
+import { t } from './lang/helpers'
 import { PreviewView } from './PreviewView'
 import CompletionKeyWatcher from "./render-plugin/completion-key-watcher"
 import DocumentChangesListener, {
@@ -25,24 +27,26 @@ import RenderSuggestionPlugin from "./render-plugin/render-surgestion-plugin"
 import { InlineSuggestionState } from "./render-plugin/states"
 import { InfioSettingTab } from './settings/SettingTab'
 import StatusBar from "./status-bar"
-import { t } from './lang/helpers'
 import {
 	InfioSettings,
 	parseInfioSettings,
 } from './types/settings'
 import { getMentionableBlockData } from './utils/obsidian'
 import './utils/path'
+import { onEnt } from './utils/web-search'
 
 export default class InfioPlugin extends Plugin {
 	private metadataCacheUnloadFn: (() => void) | null = null
 	private activeLeafChangeUnloadFn: (() => void) | null = null
 	private dbManagerInitPromise: Promise<DBManager> | null = null
 	private ragEngineInitPromise: Promise<RAGEngine> | null = null
+	private mcpHubInitPromise: Promise<McpHub> | null = null
 	settings: InfioSettings
 	settingTab: InfioSettingTab
 	settingsListeners: ((newSettings: InfioSettings) => void)[] = []
 	initChatProps?: ChatProps
 	dbManager: DBManager | null = null
+	mcpHub: McpHub | null = null
 	ragEngine: RAGEngine | null = null
 	inlineEdit: InlineEdit | null = null
 	diffStrategy?: DiffStrategy
@@ -50,6 +54,12 @@ export default class InfioPlugin extends Plugin {
 	async onload() {
 		// load settings
 		await this.loadSettings()
+
+		// migrate to json database
+		setTimeout(() => {
+			void this.migrateToJsonStorage().then(() => { })
+			void onEnt('loaded')
+		}, 100)
 
 		// add settings tab
 		this.settingTab = new InfioSettingTab(this.app, this)
@@ -102,6 +112,14 @@ export default class InfioPlugin extends Plugin {
 				this.settings.experimentalDiffStrategy,
 				this.settings.multiSearchReplaceDiffStrategy,
 			)
+			// Update MCP Hub when settings change
+			if (this.settings.mcpEnabled && !this.mcpHub) {
+				void this.getMcpHub()
+			} else if (!this.settings.mcpEnabled && this.mcpHub) {
+				this.mcpHub.dispose()
+				this.mcpHub = null
+				this.mcpHubInitPromise = null
+			}
 		});
 
 		// setup autocomplete render plugin
@@ -355,22 +373,22 @@ export default class InfioPlugin extends Plugin {
 				editor.replaceRange(customBlock, insertPos);
 			},
 		});
-
-		// migrate to json database
-		void this.migrateToJsonStorage()
 	}
 
 	onunload() {
-		// RagEngine cleanup
-		this.ragEngine?.cleanup()
-		this.ragEngine = null
-
 		// Promise cleanup
 		this.dbManagerInitPromise = null
 		this.ragEngineInitPromise = null
-
+		this.mcpHubInitPromise = null
+		// RagEngine cleanup
+		this.ragEngine?.cleanup()
+		this.ragEngine = null
+		// Database cleanup
 		this.dbManager?.cleanup()
 		this.dbManager = null
+		// MCP Hub cleanup
+		this.mcpHub?.dispose()
+		this.mcpHub = null
 	}
 
 	async loadSettings() {
@@ -466,6 +484,30 @@ export default class InfioPlugin extends Plugin {
 
 		// if initialization is running, wait for it to complete instead of creating a new initialization promise
 		return this.dbManagerInitPromise
+	}
+
+	async getMcpHub(): Promise<McpHub | null> {
+		// MCP is not enabled
+		if (!this.settings.mcpEnabled) {
+			// new Notice('MCP is not enabled')
+			return null
+		}
+
+		// if we already have an instance, return it
+		if (this.mcpHub) {
+			return this.mcpHub
+		}
+
+		if (!this.mcpHubInitPromise) {
+			this.mcpHubInitPromise = (async () => {
+				this.mcpHub = new McpHub(this.app, this)
+				await this.mcpHub.onload()
+				return this.mcpHub
+			})()
+		}
+
+		// if initialization is running, wait for it to complete instead of creating a new initialization promise
+		return this.mcpHubInitPromise
 	}
 
 	async getRAGEngine(): Promise<RAGEngine> {

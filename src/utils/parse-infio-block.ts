@@ -82,6 +82,15 @@ export type ParsedMsgBlock =
 		mode: string
 		reason: string
 		finish: boolean
+	} | {
+		type: 'use_mcp_tool'
+		server_name: string
+		tool_name: string
+		parameters: Record<string, unknown>,
+		finish: boolean
+	} | {
+		type: 'tool_result'
+		content: string
 	}
 
 export function parseMsgBlocks(
@@ -568,6 +577,85 @@ export function parseMsgBlocks(
 					urls,
 					finish: node.sourceCodeLocation.endTag !== undefined
 				})
+				lastEndOffset = endOffset
+			} else if (node.nodeName === 'use_mcp_tool') {
+				if (!node.sourceCodeLocation) {
+					throw new Error('sourceCodeLocation is undefined')
+				}
+				const startOffset = node.sourceCodeLocation.startOffset
+				const endOffset = node.sourceCodeLocation.endOffset
+				if (startOffset > lastEndOffset) {
+					parsedResult.push({
+						type: 'string',
+						content: input.slice(lastEndOffset, startOffset),
+					})
+				}
+
+				let server_name: string = ''
+				let tool_name: string = ''
+				let parameters: Record<string, unknown> = {}
+
+				for (const childNode of node.childNodes) {
+					if (childNode.nodeName === 'server_name' && childNode.childNodes.length > 0) {
+						// @ts-expect-error - 忽略 value 属性的类型错误
+						server_name = childNode.childNodes[0].value
+					} else if (childNode.nodeName === 'tool_name' && childNode.childNodes.length > 0) {
+						// @ts-expect-error - 忽略 value 属性的类型错误
+						tool_name = childNode.childNodes[0].value
+					} else if ((childNode.nodeName === 'parameters'
+						|| childNode.nodeName === 'input'
+						|| childNode.nodeName === 'arguments')
+						&& childNode.childNodes.length > 0) {
+						try {
+							// @ts-expect-error - 忽略 value 属性的类型错误
+							const parametersJson = childNode.childNodes[0].value
+							parameters = JSON5.parse(parametersJson)
+						} catch (error) {
+							console.debug('Failed to parse parameters JSON', error)
+						}
+					}
+				}
+
+				parsedResult.push({
+					type: 'use_mcp_tool',
+					server_name,
+					tool_name,
+					parameters,
+					finish: node.sourceCodeLocation.endTag !== undefined
+				})	
+				lastEndOffset = endOffset
+			} else if (node.nodeName === 'tool_result') {
+				if (!node.sourceCodeLocation) {
+					throw new Error('sourceCodeLocation is undefined')
+				}
+				const startOffset = node.sourceCodeLocation.startOffset
+				const endOffset = node.sourceCodeLocation.endOffset
+				if (startOffset > lastEndOffset) {
+					parsedResult.push({
+						type: 'string',
+						content: input.slice(lastEndOffset, startOffset),
+					})
+				}
+
+				const children = node.childNodes
+				if (children.length === 0) {
+					parsedResult.push({
+						type: 'tool_result',
+						content: '',
+					})
+				} else {
+					const innerContentStartOffset =
+						children[0].sourceCodeLocation?.startOffset
+					const innerContentEndOffset =
+						children[children.length - 1].sourceCodeLocation?.endOffset
+					if (!innerContentStartOffset || !innerContentEndOffset) {
+						throw new Error('sourceCodeLocation is undefined')
+					}
+					parsedResult.push({
+						type: 'tool_result',
+						content: input.slice(innerContentStartOffset, innerContentEndOffset),
+					})
+				}
 				lastEndOffset = endOffset
 			}
 		}

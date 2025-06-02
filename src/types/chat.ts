@@ -26,6 +26,7 @@ export type ChatAssistantMessage = {
 	content: string
 	reasoningContent: string
 	id: string
+	isToolResult?: boolean
 	metadata?: {
 		usage?: ResponseUsage
 		model?: LLMModel

@@ -11,6 +11,7 @@ import { DatabaseProvider } from './contexts/DatabaseContext'
 import { DialogProvider } from './contexts/DialogContext'
 import { DiffStrategyProvider } from './contexts/DiffStrategyContext'
 import { LLMProvider } from './contexts/LLMContext'
+import { McpHubProvider } from './contexts/McpHubContext'
 import { RAGProvider } from './contexts/RAGContext'
 import { SettingsProvider } from './contexts/SettingsContext'
 import InfioPlugin from './main'
@@ -87,15 +88,17 @@ export class ChatView extends ItemView {
 							>
 								<DiffStrategyProvider diffStrategy={this.plugin.diffStrategy}>
 									<RAGProvider getRAGEngine={() => this.plugin.getRAGEngine()}>
-										<QueryClientProvider client={queryClient}>
-											<React.StrictMode>
-												<DialogProvider
-													container={this.containerEl.children[1] as HTMLElement}
-												>
-													<Chat ref={this.chatRef} {...this.initialChatProps} />
-												</DialogProvider>
-											</React.StrictMode>
-										</QueryClientProvider>
+										<McpHubProvider getMcpHub={() => this.plugin.getMcpHub()}>
+											<QueryClientProvider client={queryClient}>
+												<React.StrictMode>
+													<DialogProvider
+														container={this.containerEl.children[1] as HTMLElement}
+													>
+														<Chat ref={this.chatRef} {...this.initialChatProps} />
+													</DialogProvider>
+												</React.StrictMode>
+											</QueryClientProvider>
+										</McpHubProvider>
 									</RAGProvider>
 								</DiffStrategyProvider>
 							</DatabaseProvider>
