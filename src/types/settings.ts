@@ -221,7 +221,7 @@ export const InfioSettingsSchema = z.object({
 	openaicompatibleProvider: OpenAICompatibleProviderSchema,
 
 	// MCP Servers
-	mcpEnabled: z.boolean().catch(true),
+	mcpEnabled: z.boolean().catch(false),
 
 	// Chat Model start list
 	collectedChatModels: z.array(z.object({
