@@ -21,10 +21,8 @@ const McpHubView = () => {
 
 	const fetchServers = async () => {
 		const hub = await getMcpHub()
-		console.log('Fetching MCP Servers from hub:', hub)
 		if (hub) {
 			const serversData = hub.getAllServers()
-			console.log('Fetched MCP Servers:', serversData)
 			setMcpServers(serversData)
 		}
 	}
@@ -65,7 +63,7 @@ const McpHubView = () => {
 	const handleDelete = async (serverName: string) => {
 		const hub = await getMcpHub();
 		if (hub) {
-			if (confirm(t('mcpHub.deleteConfirm', { name: serverName }))) {
+			if (confirm(t('mcpHub.deleteConfirm').replace('{name}', serverName) as string)) {
 				await hub.deleteServer(serverName, "global")
 				const updatedServers = hub.getAllServers()
 				setMcpServers(updatedServers)
@@ -103,9 +101,9 @@ const McpHubView = () => {
 				// 清空表单
 				setNewServerName('')
 				setNewServerConfig('')
-				new Notice(t('mcpHub.createSuccess', { name: newServerName }))
+				new Notice(t('mcpHub.createSuccess').replace('{name}', newServerName) as string)
 			} catch (error) {
-				new Notice(t('mcpHub.createFailed', { error: error.message }))
+				new Notice(t('mcpHub.createFailed').replace('{error}', error.message) as string)
 			}
 		}
 	}

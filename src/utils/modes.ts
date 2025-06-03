@@ -22,7 +22,7 @@ export type ModeConfig = {
 	name: string
 	roleDefinition: string
 	customInstructions?: string
-	groups: readonly GroupEntry[] // Now supports both simple strings and tuples with options
+	groups: GroupEntry[] // Now supports both simple strings and tuples with options
 	source?: "global" | "project" // Where this mode was loaded from
 }
 
@@ -79,7 +79,7 @@ export function getToolsForMode(groups: readonly GroupEntry[]): string[] {
 }
 
 // Main modes configuration as an ordered array
-export const defaultModes: readonly ModeConfig[] = [
+export const defaultModes: ModeConfig[] = [
 	{
 		slug: "ask",
 		name: "Ask",
@@ -107,7 +107,7 @@ export const defaultModes: readonly ModeConfig[] = [
 		customInstructions:
 			"You can conduct thorough research by analyzing available information, connecting related concepts, and applying structured reasoning methods. Help users explore topics in depth by considering multiple angles, identifying relevant evidence, and evaluating the reliability of sources. Use step-by-step analysis when tackling complex problems, explaining your thought process clearly. Create visual representations like Mermaid diagrams when they help clarify relationships between ideas. Use Markdown tables to present statistical data or comparative information when appropriate. Present balanced viewpoints while highlighting the strength of evidence behind different conclusions.",
 	},
-] as const
+]
 
 // Export the default mode slug
 export const defaultModeSlug = defaultModes[0].slug

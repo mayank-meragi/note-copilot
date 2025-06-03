@@ -95,7 +95,6 @@ class LLMManager implements LLMManagerInterface {
 		request: LLMRequestNonStreaming,
 		options?: LLMOptions,
 	): Promise<LLMResponseNonStreaming> {
-		console.log("model", model)
 		switch (model.provider) {
 			case ApiProvider.Infio:
 				return await this.infioProvider.generateResponse(

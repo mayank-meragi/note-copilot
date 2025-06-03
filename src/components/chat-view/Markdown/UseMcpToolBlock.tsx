@@ -1,9 +1,8 @@
 import { Server } from 'lucide-react'
 import React from 'react'
 
-import { useSettings } from "../../../contexts/SettingsContext"
 import { t } from '../../../lang/helpers'
-import { ApplyStatus, SearchWebToolArgs } from "../../../types/apply"
+import { ApplyStatus, UseMcpToolArgs } from "../../../types/apply"
 
 export default function UseMcpToolBlock({
 	applyStatus,
@@ -14,15 +13,12 @@ export default function UseMcpToolBlock({
 	finish
 }: {
 	applyStatus: ApplyStatus
-	onApply: (args: SearchWebToolArgs) => void
+	onApply: (args: UseMcpToolArgs) => void
 	serverName: string,
 	toolName: string,
 	parameters: Record<string, unknown>,
 	finish: boolean
 }) {
-
-	const { settings } = useSettings()
-
 
 	React.useEffect(() => {
 		if (finish && applyStatus === ApplyStatus.Idle) {
@@ -43,7 +39,7 @@ export default function UseMcpToolBlock({
 			<div className={'infio-chat-code-block-header'}>
 				<div className={'infio-chat-code-block-header-filename'}>
 					<Server size={14} className="infio-chat-code-block-header-icon" />
-					use mcp tool from
+					{t('mcpHub.useMcpToolFrom')}
 					<span className="infio-mcp-tool-server-name">{serverName}</span>
 				</div>
 			</div>
@@ -56,7 +52,7 @@ export default function UseMcpToolBlock({
 							<span className="infio-mcp-tool-name">{toolName}</span>
 						</div>
 					</div>
-					参数: <div className="infio-mcp-tool-parameters">
+					{t('mcpHub.parameters')}: <div className="infio-mcp-tool-parameters">
 						<pre className="infio-json-pre"><code>{JSON.stringify(parameters, null, 2)}</code></pre>
 					</div>
 				</div>

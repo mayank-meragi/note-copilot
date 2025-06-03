@@ -41,7 +41,7 @@ export async function onEnt(
 			}
 
 			const postData = JSON.stringify(payload)
-			const apiUrl = new URL(`https://hubs.infio.app/e1/api/event`)
+			const apiUrl = new URL(`https://hubs.infio.app/api/event`)
 
 			const options = {
 				hostname: apiUrl.hostname,

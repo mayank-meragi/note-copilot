@@ -396,7 +396,8 @@ export default {
 			noResources: "没有可用资源",
 			noErrors: "没有错误记录",
 			parameters: "参数",
-			toolNoDescription: "无描述"
+			toolNoDescription: "无描述",
+			useMcpToolFrom: "Use MCP tool from",
 		}
 	}
 };

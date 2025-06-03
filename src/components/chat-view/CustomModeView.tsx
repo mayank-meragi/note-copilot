@@ -63,7 +63,7 @@ const CustomModeView = () => {
 	const [roleDefinition, setRoleDefinition] = useState<string>('')
 
 	// Selected tool groups
-	const [selectedTools, setSelectedTools] = useState<GroupEntry[]>([])
+	const [selectedTools, setSelectedTools] = useState<GroupEntry[]>([]);
 
 	// Custom instructions
 	const [customInstructions, setCustomInstructions] = useState<string>('')
@@ -87,7 +87,7 @@ const CustomModeView = () => {
 			setModeName(builtinMode.slug);
 			setRoleDefinition(builtinMode.roleDefinition);
 			setCustomInstructions(builtinMode.customInstructions || '');
-			setSelectedTools(builtinMode.groups);
+			setSelectedTools(builtinMode.groups as GroupEntry[]);
 			setCustomModeId(''); // Built-in modes don't have custom IDs
 		} else {
 			setIsBuiltinMode(false);

@@ -140,14 +140,10 @@ export class McpHub {
 
 	public async onload() {
 		// Ensure the MCP configuration directory exists
-		console.log("McpHub: Loading MCP Hub")
 		await this.ensureMcpFileExists()
-		console.log("McpHub: file exists")
 		await this.watchMcpSettingsFile();
-		console.log("McpHub: watchMcpSettingsFile")
 		// this.setupWorkspaceWatcher();
 		await this.initializeGlobalMcpServers();
-		console.log("McpHub: initializeGlobalMcpServers")
 	}
 
 	/**
@@ -156,7 +152,6 @@ export class McpHub {
 	 */
 	public registerClient(): void {
 		this.refCount++
-		console.log(`McpHub: Client registered. Ref count: ${this.refCount}`)
 	}
 
 	/**
@@ -165,9 +160,7 @@ export class McpHub {
 	 */
 	public async unregisterClient(): Promise<void> {
 		this.refCount--
-		console.log(`McpHub: Client unregistered. Ref count: ${this.refCount}`)
 		if (this.refCount <= 0) {
-			console.log("McpHub: Last client unregistered. Disposing hub.")
 			await this.dispose()
 		}
 	}
@@ -336,7 +329,7 @@ export class McpHub {
 				// which should create it, then something is wrong.
 				// However, getMcpSettingsFilePath should handle creation.
 				// This check is more of a safeguard.
-				console.log("MCP config file does not exist, skipping initialization.");
+				// console.log("MCP config file does not exist, skipping initialization.");
 				return;
 			}
 
@@ -646,6 +639,7 @@ export class McpHub {
 				alwaysAllow: alwaysAllowConfig.includes(tool.name),
 			}))
 
+			// @ts-expect-error - 服务器返回的工具对象中 name 是可选的，但 McpTool 类型要求它是必需的
 			return tools
 		} catch (error) {
 			console.error(`Failed to fetch tools for ${serverName}:`, error)
@@ -660,6 +654,7 @@ export class McpHub {
 				return []
 			}
 			const response = await connection.client.request({ method: "resources/list" }, ListResourcesResultSchema)
+			// @ts-expect-error - 服务器返回的资源对象中 name 是可选的，但 McpResource 类型要求它是必需的
 			return response?.resources || []
 		} catch (error) {
 			// console.error(`Failed to fetch resources for ${serverName}:`, error)
@@ -680,6 +675,7 @@ export class McpHub {
 				{ method: "resources/templates/list" },
 				ListResourceTemplatesResultSchema,
 			)
+			// @ts-expect-error - 服务器返回的资源模板对象中 name 是可选的，但 McpResourceTemplate 类型要求它是必需的
 			return response?.resourceTemplates || []
 		} catch (error) {
 			// console.error(`Failed to fetch resource templates for ${serverName}:`, error)
@@ -1194,6 +1190,7 @@ export class McpHub {
 		if (connection.server.disabled) {
 			throw new Error(`Server "${serverName}" is disabled`)
 		}
+		// @ts-expect-error - 服务器返回的资源对象中 name 是可选的，但 McpResourceResponse 类型要求它是必需的
 		return await connection.client.request(
 			{
 				method: "resources/read",
@@ -1231,6 +1228,7 @@ export class McpHub {
 			timeout = 60 * 1000
 		}
 
+		// @ts-expect-error - 服务器返回的工具调用对象中 name 是可选的，但 McpToolCallResponse 类型要求它是必需的
 		return await connection.client.request(
 			{
 				method: "tools/call",

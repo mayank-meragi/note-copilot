@@ -783,7 +783,6 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							model: undefined,
 						},
 					})
-					console.log('Updated chat messages:', newChatMessages);
 				}
 				setChatMessages(newChatMessages);
 

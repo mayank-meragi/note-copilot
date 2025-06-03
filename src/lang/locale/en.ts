@@ -381,8 +381,8 @@ export default {
 		disable: "Disable Server",
 		restart: "Restart Server",
 		delete: "Delete Server",
-		deleteConfirm: "Are you sure you want to delete server \"{name}\"?",
-		createSuccess: "Server \"{name}\" created successfully",
+		deleteConfirm: "Are you sure you want to delete server {name}?",
+		createSuccess: "Server {name} created successfully",
 		createFailed: "Failed to create server: {error}",
 		serverNameRequired: "Server name cannot be empty",
 		configRequired: "Configuration cannot be empty",
@@ -396,6 +396,7 @@ export default {
 		noResources: "No resources available",
 		noErrors: "No error records",
 		parameters: "Parameters",
-		toolNoDescription: "No description"
+		toolNoDescription: "No description",
+		useMcpToolFrom: "Use MCP tool from",
 	}
 }
