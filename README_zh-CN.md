@@ -11,6 +11,9 @@ Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在�
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/felixduan)
 
 ## 最新版本
+[0.5.0](https://github.com/infiolab/infio-copilot/releases/tag/0.5.0) 增强性能和稳定性改进, 增加了 MC P支持
+
+## 最近更新
 [0.2.4](https://github.com/infiolab/infio-copilot/releases/tag/0.2.4) 增加了多语言支持
 
 [0.2.3](https://github.com/infiolab/infio-copilot/releases/tag/0.2.3) 增加了自定义模式配置，现在无法创建自己的 agent
@@ -21,48 +24,44 @@ Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在�
 
 ## 功能特点
 
-| 功能           | 描述                                                                  |
-| -------------- | --------------------------------------------------------------------- |
-| 🖋️ 内联编辑    | 选中文本 → 直接与 AI 讨论 → 一键应用到原段落                                   |
-| 💬 对话式改写  | 与单个笔记进行智能对话，轻松修改或重写原文内容                                     |
-| 📝 智能自动补全 | 边写边补，结合全局上下文，实时生成精准续写                                      |
-| 🖼️ 图片识别    | 支持 Vault 内或本地图片上传 → AI 智能识别并分析（v0.1.7+）                     |
-| 🔍 全库问答 (RAG)| 针对整个 Vault 提问，跨笔记检索并整合答案                                     |
-| 🌐 DeepResearch| 根据问题搜索互联网数据，生成研究报告（轻量级）                                  |
+| 功能 | 描述 |
+|------|------|
+| 💬 对话与编辑 | 获取即时 AI 协助，一键应用建议的改进 |
+| 📝 智能补全 | 在输入时获取上下文感知的写作建议 |
+| ✏️ 内联编辑 | 直接在当前文件中编辑笔记 |
+| 🔍 全库对话 | 使用 AI 与整个 Obsidian vault 交互 |
+| 🖼️ 图片分析 | 上传并分析来自 vault 或本地系统的图片 |
+| ⌨️ 快捷命令 | 创建和管理自定义快捷命令，实现快速操作 |
+| 🎯 自定义Mode | 定义具有特定行为的个性化 AI 模式 |
+| 🔌 MCP | 管理模型上下文协议集成 |
 
-
-### 🖋️ **内联编辑**
+### 🖋️ 内联编辑
 
 选中文本 → 直接与 AI 讨论 → 一键应用到原段落
 
 ![inline-edit](asserts/edit-inline.gif)
 
-### 💬 **对话式改写**
+### 💬 对话式改写
 
 与单个笔记进行智能对话，轻松修改或重写原文内容
 
 ![chat-with-select](asserts/chat-with-select.gif)
 
+### 📝 智能自动补全
 
-### 📝 **智能自动补全**
-
-输入时获取上下文感知的写作建议 （ ⬇️ 以下第4条为 AI 自动补全 ）
+输入时获取上下文感知的写作建议
 
 ![autocomplte](asserts/autocomplete.gif)
 
-
-🔍 **全库问答 (RAG)**
+### 🔍 全库问答 (RAG)
 
 针对整个 Vault 提问，跨笔记检索并整合答案
 
 ![rag](asserts/rag.gif)
 
-
 🖼️ **图片识别**
 
 支持 Vault 内或本地图片上传→AI 智能识别并分析（v0.1.7+）
-
-
 
 ## 开始使用
 
@@ -107,8 +106,6 @@ Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在�
 
 ## 交流
 ![wx- group](https://github.com/user-attachments/assets/b6b8f982-bca2-4819-8b43-572fefcacf2e)
-
-
 
 ## 致谢
 

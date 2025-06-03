@@ -4,7 +4,10 @@
 
 <a href="README.md" target="_blank"><b>English</b></a>  |  <a href="README_zh-CN.md" target="_blank"><b>中文</b></a>
 
-## New Version
+## Latest Version
+[0.5.0](https://github.com/infiolab/infio-copilot/releases/tag/0.5.0) Enhanced performance and stability improvements, added MCP support
+
+## Recent Updates
 [0.2.4](https://github.com/infiolab/infio-copilot/releases/tag/0.2.4) Added multilingual support
 
 [0.2.3](https://github.com/infiolab/infio-copilot/releases/tag/0.2.3) Add custom mode config, you can't create you own agent now
@@ -15,12 +18,22 @@
 
 ## Features
 
+| Feature | Description |
+|---------|-------------|
+| 💬 Chat & Edit | Get instant AI assistance and apply suggested improvements with a single click |
+| 📝 Autocomplete | Receive context-aware writing suggestions as you type |
+| ✏️ Inline Editing | Edit your notes directly within the current file |
+| 🔍 Vault Chat | Interact with your entire Obsidian vault using AI |
+| 🖼️ Image Analysis | Upload and analyze images from your vault or local system |
+| ⌨️ Commands | Create and manage custom commands for quick actions |
+| 🎯 Custom Mode | Define personalized AI modes with specific behaviors |
+| 🔌 MCP | Manage Model Context Protocol integrations |
+
 ### Chat & Edit Flow
 
 Get instant AI assistance and apply suggested improvements with a single click, all within Obsidian
 
 ![chat-with-select](asserts/chat-with-select.gif)
-
 
 ### Autocomplete
 
@@ -28,15 +41,13 @@ Receive context-aware writing suggestions as you type
 
 ![autocomplte](asserts/autocomplete.gif)
 
-
 ### Inline Editing
 
 Edit your notes directly within the current file
 
 ![inline-edit](asserts/edit-inline.gif)
 
-
-### chat with vault
+### Chat with Vault
 
 Leverage the power of AI to interact with your entire Obsidian vault, gaining insights and connections across your notes
 
