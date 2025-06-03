@@ -1,7 +1,7 @@
 releases:
   - version: "0.5.0"
     features:
-      - "Added MCP (Model Control Protocol) support for enhanced model integration"
+      - "Added MCP (Model Control Protocol) support"
       - "Optimized startup performance for faster loading times"
   - version: "0.2.5"
     features:
