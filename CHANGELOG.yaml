@@ -1,4 +1,7 @@
 releases:
+  - version: "0.5.1"
+    fixes:
+      - "fix current file content prompt"
   - version: "0.5.0"
     features:
       - "Added MCP (Model Control Protocol) support"
