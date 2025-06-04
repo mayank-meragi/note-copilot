@@ -169,6 +169,7 @@ export class PromptGenerator {
 			await this.compileUserMessagePrompt({
 				isNewChat,
 				message: lastUserMessage,
+				messages,
 				useVaultSearch,
 				onQueryProgressChange,
 			})
@@ -284,11 +285,13 @@ export class PromptGenerator {
 	private async compileUserMessagePrompt({
 		isNewChat,
 		message,
+		messages,
 		useVaultSearch,
 		onQueryProgressChange,
 	}: {
 		isNewChat: boolean
 		message: ChatUserMessage
+		messages?: ChatMessage[]
 		useVaultSearch?: boolean
 		onQueryProgressChange?: (queryProgress: QueryProgressState) => void
 	}): Promise<{
@@ -298,9 +301,10 @@ export class PromptGenerator {
 		})[]
 	}> {
 		// Add environment details
-		const environmentDetails = isNewChat
-			? await this.getEnvironmentDetails()
-			: undefined
+		// const environmentDetails = isNewChat
+		// 	? await this.getEnvironmentDetails()
+		// 	: undefined
+		const environmentDetails = await this.getEnvironmentDetails()
 
 		// if isToolCallReturn, add read_file_content to promptContent
 		if (message.content === null) {
@@ -378,6 +382,7 @@ export class PromptGenerator {
 				))
 				.join('\n') : undefined
 
+		// current file
 		const currentFile = message.mentionables
 			.filter((m): m is MentionableFile => m.type === 'current-file')
 			.first()
@@ -385,7 +390,38 @@ export class PromptGenerator {
 			? await getFileOrFolderContent(currentFile.file, this.app.vault)
 			: undefined
 
-		const currentFileContentPrompt = isNewChat && currentFileContent && this.settings.mode !== 'research'
+		// Check if current file content should be included
+		let shouldIncludeCurrentFile = false
+		if (currentFileContent && this.settings.mode !== 'research') {
+			if (isNewChat) {
+				// For new chats, always include current file content
+				shouldIncludeCurrentFile = true
+			} else {
+				// For continuing chats, check if current file content already exists in history
+				const currentFilePromptTag = `<current_file_content path="${currentFile.file.path}">`
+				const hasCurrentFileInHistory = messages?.some((msg) => {
+					if (msg.role === 'user' && msg.promptContent) {
+						if (typeof msg.promptContent === 'string') {
+							// Handle string type promptContent
+							return msg.promptContent.includes(currentFilePromptTag)
+						} else if (Array.isArray(msg.promptContent)) {
+							// Handle ContentPart[] type promptContent
+							return msg.promptContent.some((part) => {
+								if (part.type === 'text' && part.text) {
+									return part.text.includes(currentFilePromptTag)
+								}
+								return false
+							})
+						}
+					}
+					return false
+				}) || false
+				// Only include if not already in history
+				shouldIncludeCurrentFile = !hasCurrentFileInHistory
+			}
+		}
+
+		const currentFileContentPrompt = shouldIncludeCurrentFile
 			? `<current_file_content path="${currentFile.file.path}">\n${currentFileContent}\n</current_file_content>`
 			: undefined
 
