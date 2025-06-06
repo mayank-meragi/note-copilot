@@ -2,6 +2,7 @@ import * as Tooltip from '@radix-ui/react-tooltip'
 import { Check, CopyIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { useSettings } from '../../contexts/SettingsContext'
 import { t } from '../../lang/helpers'
 import { ChatAssistantMessage } from '../../types/chat'
 import { calculateLLMCost } from '../../utils/price-calculator'
@@ -46,6 +47,7 @@ function CopyButton({ message }: { message: ChatAssistantMessage }) {
 
 function LLMResponesInfoButton({ message }: { message: ChatAssistantMessage }) {
   const [cost, setCost] = useState<number | null>(0);
+  const { settings } = useSettings();
 
   useEffect(() => {
     async function calculateCost() {
@@ -56,12 +58,13 @@ function LLMResponesInfoButton({ message }: { message: ChatAssistantMessage }) {
       const calculatedCost = await calculateLLMCost({
         model: message.metadata.model,
         usage: message.metadata.usage,
+        settings: settings,
       });
       setCost(calculatedCost);
     }
 
     calculateCost();
-  }, [message]);	
+  }, [message, settings]);	
 
   return (
     <Tooltip.Provider delayDuration={0}>

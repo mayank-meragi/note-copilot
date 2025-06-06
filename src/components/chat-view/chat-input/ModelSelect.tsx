@@ -151,7 +151,7 @@ export function ModelSelect() {
 		const fetchModels = async () => {
 			setIsLoading(true)
 			try {
-				const models = await GetProviderModelIds(modelProvider)
+				const models = await GetProviderModelIds(modelProvider, settings)
 				setModelIds(models)
 			} catch (error) {
 				console.error('Failed to fetch provider models:', error)
@@ -162,7 +162,7 @@ export function ModelSelect() {
 		}
 
 		fetchModels()
-	}, [modelProvider])
+	}, [modelProvider, settings])
 
 	// Sync chat model id & chat model provider
 	useEffect(() => {

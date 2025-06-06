@@ -83,7 +83,7 @@ const ControlArea: React.FC<ControlAreaProps> = ({
 	useEffect(() => {
 		const fetchModels = async () => {
 			try {
-				const models = await GetProviderModelIds(settings.chatModelProvider);
+				const models = await GetProviderModelIds(settings.chatModelProvider, settings);
 				setProviderModels(models);
 			} catch (err) {
 				const error = err as Error;

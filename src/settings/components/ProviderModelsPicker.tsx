@@ -185,7 +185,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 		};
 
 		fetchModelIds();
-	}, [modelProvider, isEmbedding]);
+	}, [modelProvider, isEmbedding, settings]);
 
 	const searchableItems = useMemo(() => {
 		return modelIds.map((id) => ({

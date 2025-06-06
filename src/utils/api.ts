@@ -143,6 +143,7 @@ export const infioDefaultModelInfo: ModelInfo = {
 let infioModelsCache: Record<string, ModelInfo> | null = null;
 
 async function fetchInfioModels(apiKey?: string): Promise<Record<string, ModelInfo>> {
+	console.log("fetchInfioModels apiKey", apiKey)
 	if (infioModelsCache) {
 		return infioModelsCache;
 	}
@@ -1606,6 +1607,7 @@ export const GetProviderModels = async (provider: ApiProvider, settings?: InfioS
 	switch (provider) {
 		case ApiProvider.Infio: {
 			const apiKey = settings?.infioProvider?.apiKey
+			console.log("apiKey", apiKey)
 			return await fetchInfioModels(apiKey)
 		}
 		case ApiProvider.OpenRouter:
@@ -1640,6 +1642,8 @@ export const GetProviderModelsWithSettings = async (provider: ApiProvider, setti
 	switch (provider) {
 		case ApiProvider.Infio: {
 			const apiKey = settings?.infioProvider?.apiKey
+			console.log("apiKey", apiKey)
+			console.log("settings", settings)
 			return await fetchInfioModels(apiKey)
 		}
 		case ApiProvider.OpenRouter:

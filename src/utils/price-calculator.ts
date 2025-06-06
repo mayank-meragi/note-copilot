@@ -1,5 +1,6 @@
 import { LLMModel } from '../types/llm/model'
 import { ResponseUsage } from '../types/llm/response'
+import { InfioSettings } from '../types/settings'
 
 import { GetProviderModels } from './api'
 
@@ -7,11 +8,13 @@ import { GetProviderModels } from './api'
 export const calculateLLMCost = async ({
 	model,
 	usage,
+	settings,
 }: {
 	model: LLMModel
 	usage: ResponseUsage
+	settings?: InfioSettings
 }): Promise<number | null> => {
-	const providerModels = await GetProviderModels(model.provider)
+	const providerModels = await GetProviderModels(model.provider, settings)
 	if (!providerModels) {
 		return null
 	}
