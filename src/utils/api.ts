@@ -188,6 +188,26 @@ async function fetchInfioModels(apiKey?: string): Promise<Record<string, ModelIn
 	}
 }
 
+export const infioEmbeddingModels = {
+	"openai/text-embedding-3-small": {
+		dimensions: 1536,
+		description: "Increased performance over 2nd generation ada embedding model"
+	},
+	"gemini/gemini-embedding-exp-03-07": {
+		dimensions: 1024,
+		description: "Most capable 2nd generation embedding model, replacing 16 first generation models"
+	},
+	"deepseek/embedding-large-text": {
+		dimensions: 1024,
+		description: "Most capable embedding model for both English and non-English tasks"
+	},
+	"deepseek/embedding-text": {
+		dimensions: 512,
+		description: "Most capable embedding model for both English and non-English tasks"
+	}
+} as const satisfies Record<string, EmbeddingModelInfo>
+
+
 // OpenRouter
 // https://openrouter.ai/models?order=newest&supported_parameters=tools
 export const openRouterDefaultModelId = "anthropic/claude-sonnet-4" // will always exist in openRouterModels
@@ -1593,6 +1613,7 @@ export const GetAllProviders = (): ApiProvider[] => {
 
 export const GetEmbeddingProviders = (): ApiProvider[] => {
 	return [
+		ApiProvider.Infio,
 		ApiProvider.OpenAI,
 		ApiProvider.SiliconFlow,
 		ApiProvider.Google,
@@ -1684,6 +1705,8 @@ export const GetProviderModelIds = async (provider: ApiProvider, settings?: Infi
 // Get all embedding models for a provider
 export const GetEmbeddingProviderModels = (provider: ApiProvider): Record<string, EmbeddingModelInfo> => {
 	switch (provider) {
+		case ApiProvider.Infio:
+			return infioEmbeddingModels
 		case ApiProvider.Google:
 			return geminiEmbeddingModels
 		case ApiProvider.SiliconFlow:
