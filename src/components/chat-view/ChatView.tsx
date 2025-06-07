@@ -576,7 +576,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					if (!opFile) {
 						throw new Error(`File not found: ${toolArgs.filepath}`)
 					}
-					const fileContent = await readTFileContent(opFile, app.vault)
+					const fileContent = await readTFileContent(opFile, app.vault, app)
 					const formattedContent = `[read_file for '${toolArgs.filepath}'] Result:\n${addLineNumbers(fileContent)}\n`;
 					return {
 						type: 'read_file',

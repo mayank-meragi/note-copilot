@@ -1,22 +1,62 @@
 import * as path from 'path'
 
-import { App, Editor, MarkdownView, TFile, TFolder, Vault, WorkspaceLeaf } from 'obsidian'
+import { App, Editor, MarkdownView, TFile, TFolder, Vault, WorkspaceLeaf, loadPdfJs } from 'obsidian'
 
 import { MentionableBlockData } from '../types/mentionable'
+
+export async function parsePdfContent(file: TFile, app: App): Promise<string> {
+	try {
+		// 使用 Obsidian 内置的 PDF.js
+		const pdfjsLib = await loadPdfJs()
+		
+		// Read PDF file as binary buffer
+		const pdfBuffer = await app.vault.readBinary(file)
+
+		// 使用 Obsidian 内置的 PDF.js 处理 PDF
+		const loadingTask = pdfjsLib.getDocument({ data: pdfBuffer })
+		const doc = await loadingTask.promise
+		let fullText = ''
+
+		for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
+			const page = await doc.getPage(pageNum)
+			const textContent = await page.getTextContent()
+			const pageText = textContent.items
+				.map((item: any) => item.str)
+				.join(' ')
+			fullText += pageText + '\n\n'
+		}
+
+		return fullText || '(Empty PDF content)'
+	} catch (error: any) {
+		console.error('Error parsing PDF:', error)
+		return `(Error reading PDF file: ${error?.message || 'Unknown error'})`
+	}
+}
 
 export async function readTFileContent(
 	file: TFile,
 	vault: Vault,
+	app?: App,
 ): Promise<string> {
+	if (file.extension === 'pdf') {
+		if (app) {
+			return await parsePdfContent(file, app)
+		}
+		return "(PDF file, app context required for processing)"
+	}
+	if (file.extension != 'md') {
+		return "(Binary file, unable to display content)"
+	}
 	return await vault.cachedRead(file)
 }
 
 export async function readMultipleTFiles(
 	files: TFile[],
 	vault: Vault,
+	app?: App,
 ): Promise<string[]> {
 	// Read files in parallel
-	const readPromises = files.map((file) => readTFileContent(file, vault))
+	const readPromises = files.map((file) => readTFileContent(file, vault, app))
 	return await Promise.all(readPromises)
 }
 

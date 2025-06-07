@@ -7,7 +7,7 @@ import { McpHub } from '../core/mcp/McpHub'
 import { SystemPrompt } from '../core/prompts/system'
 import { RAGEngine } from '../core/rag/rag-engine'
 import { SelectVector } from '../database/schema'
-import { ChatAssistantMessage, ChatMessage, ChatUserMessage } from '../types/chat'
+import { ChatMessage, ChatUserMessage } from '../types/chat'
 import { ContentPart, RequestMessage } from '../types/llm/request'
 import {
 	MentionableBlock,
@@ -21,10 +21,14 @@ import { InfioSettings } from '../types/settings'
 import { CustomModePrompts, Mode, ModeConfig, getFullModeDetails } from "../utils/modes"
 
 import {
-	readTFileContent
+	readTFileContent,
+	readMultipleTFiles,
+	getNestedFiles,
+	parsePdfContent
 } from './obsidian'
 import { tokenCount } from './token'
-import { YoutubeTranscript, isYoutubeUrl } from './youtube-transcript'
+import { isVideoUrl, isYoutubeUrl } from './video-detector'
+import { YoutubeTranscript } from './youtube-transcript'
 
 export function addLineNumbers(content: string, startLine: number = 1): string {
 	const lines = content.split("\n")
@@ -66,13 +70,20 @@ async function getFolderTreeContent(path: TFolder): Promise<string> {
 	}
 }
 
-async function getFileOrFolderContent(path: TAbstractFile, vault: Vault): Promise<string> {
+async function getFileOrFolderContent(path: TAbstractFile, vault: Vault, app?: App): Promise<string> {
 	try {
 		if (path instanceof TFile) {
+			if (path.extension === 'pdf') {
+				// Handle PDF files without line numbers
+				if (app) {
+					return await parsePdfContent(path, app)
+				}
+				return "(PDF file, app context required for processing)"
+			}
 			if (path.extension != 'md') {
 				return "(Binary file, unable to display content)"
 			}
-			return addLineNumbers(await readTFileContent(path, vault))
+			return addLineNumbers(await readTFileContent(path, vault, app))
 		} else if (path instanceof TFolder) {
 			const entries = path.children
 			let folderContent = ""
@@ -85,10 +96,18 @@ async function getFileOrFolderContent(path: TAbstractFile, vault: Vault): Promis
 					fileContentPromises.push(
 						(async () => {
 							try {
+								if (entry.extension === 'pdf') {
+									// Handle PDF files in folders
+									if (app) {
+										const content = await parsePdfContent(entry, app)
+										return `<file_content path="${entry.path}">\n${content}\n</file_content>`
+									}
+									return `<file_content path="${entry.path}">\n(PDF file, app context required for processing)\n</file_content>`
+								}
 								if (entry.extension != 'md') {
 									return undefined
 								}
-								const content = addLineNumbers(await readTFileContent(entry, vault))
+								const content = addLineNumbers(await readTFileContent(entry, vault, app))
 								return `<file_content path="${entry.path}">\n${content}\n</file_content>`
 							} catch (error) {
 								return undefined
@@ -196,18 +215,18 @@ export class PromptGenerator {
 			...compiledMessages.slice(-19)
 				.filter((message) => !(message.role === 'assistant' && message.isToolResult))
 				.map((message): RequestMessage => {
-				if (message.role === 'user') {
-					return {
-						role: 'user',
-						content: message.promptContent ?? '',
+					if (message.role === 'user') {
+						return {
+							role: 'user',
+							content: message.promptContent ?? '',
+						}
+					} else {
+						return {
+							role: 'assistant',
+							content: message.content,
+						}
 					}
-				} else {
-					return {
-						role: 'assistant',
-						content: message.content,
-					}
-				}
-			}),
+				}),
 		]
 
 		return {
@@ -336,7 +355,7 @@ export class PromptGenerator {
 			.map((m) => m.file)
 		let fileContentsPrompts = files.length > 0
 			? (await Promise.all(files.map(async (file) => {
-				const content = await getFileOrFolderContent(file, this.app.vault)
+				const content = await getFileOrFolderContent(file, this.app.vault, this.app)
 				return `<file_content path="${file.path}">\n${content}\n</file_content>`
 			}))).join('\n')
 			: undefined
@@ -347,7 +366,7 @@ export class PromptGenerator {
 			.map((m) => m.folder)
 		let folderContentsPrompts = folders.length > 0
 			? (await Promise.all(folders.map(async (folder) => {
-				const content = await getFileOrFolderContent(folder, this.app.vault)
+				const content = await getFileOrFolderContent(folder, this.app.vault, this.app)
 				return `<folder_content path="${folder.path}">\n${content}\n</folder_content>`
 			}))).join('\n')
 			: undefined
@@ -387,7 +406,7 @@ export class PromptGenerator {
 			.filter((m): m is MentionableFile => m.type === 'current-file')
 			.first()
 		const currentFileContent = currentFile && currentFile.file != null
-			? await getFileOrFolderContent(currentFile.file, this.app.vault)
+			? await getFileOrFolderContent(currentFile.file, this.app.vault, this.app)
 			: undefined
 
 		// Check if current file content should be included
@@ -647,7 +666,7 @@ ${customInstruction}
 	private async getCurrentFileMessage(
 		currentFile: TFile,
 	): Promise<RequestMessage> {
-		const fileContent = await readTFileContent(currentFile, this.app.vault)
+		const fileContent = await readTFileContent(currentFile, this.app.vault, this.app)
 		return {
 			role: 'user',
 			content: `# Inputs
@@ -669,7 +688,7 @@ ${fileContent}
 			return null;
 		}
 
-		const fileContent = await readTFileContent(currentFile, this.app.vault);
+		const fileContent = await readTFileContent(currentFile, this.app.vault, this.app);
 		const lines = fileContent.split('\n');
 
 		// 计算上下文范围，并处理边界情况
@@ -743,6 +762,12 @@ When writing out new markdown blocks, remember not to include "line_number|" at 
 		return linesWithNumbers.join('\n')
 	}
 
+
+	private async getPdfContent(file: TFile): Promise<string> {
+		return await parsePdfContent(file, this.app)
+	}
+
+
 	/**
 	 * TODO: Improve markdown conversion logic
 	 * - filter visually hidden elements
@@ -762,5 +787,27 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`
 		const response = await requestUrl({ url })
 
 		return htmlToMarkdown(response.text)
+	}
+
+	private async callMcpToolGetWebsiteContent(url: string, mcpHub: McpHub | null): Promise<string> {
+		if (isVideoUrl(url)) {
+			return this.callMcpToolConvertVideo(url, mcpHub)
+		}
+		return this.callMcpToolFetchUrlContent(url, mcpHub)
+	}
+
+	private async callMcpToolConvertVideo(url: string, mcpHub: McpHub | null): Promise<string> {
+		// TODO: implement
+		return ''
+	}
+
+	private async callMcpToolFetchUrlContent(url: string, mcpHub: McpHub | null): Promise<string> {
+		// TODO: implement
+		return ''
+	}
+
+	private async callMcpToolConvertDocument(file: TFile, mcpHub: McpHub | null): Promise<string> {
+		// TODO: implement
+		return ''
 	}
 }
