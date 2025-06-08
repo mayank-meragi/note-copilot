@@ -40,6 +40,12 @@ export default {
 		searchResults: {
 			showReferencedDocuments: "Show Referenced Documents"
 		},
+		fileResults: {
+			showReadFiles: "Show Read Files"
+		},
+		websiteResults: {
+			showReadWebsites: "Show Website Content Files"
+		},
 		LLMResponseInfoPopover: {
 			header: "LLM response information",
 			tokenCount: "Token count",
@@ -53,6 +59,12 @@ export default {
 		},
 		queryProgress: {
 			readingMentionableFiles: "Reading mentioned files",
+			readingFiles: "Reading files",
+			readingFilesDone: "Files read successfully",
+			filesLoaded: "{count} files loaded",
+			readingWebsites: "Reading websites",
+			readingWebsitesDone: "Websites read successfully",
+			websitesLoaded: "{count} websites loaded",
 			indexing: "Indexing",
 			file: "file",
 			chunkIndexed: "chunk indexed",

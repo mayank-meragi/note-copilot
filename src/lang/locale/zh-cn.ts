@@ -41,6 +41,12 @@ export default {
 		searchResults: {
 			showReferencedDocuments: "显示引用的文档"
 		},
+		fileResults: {
+			showReadFiles: "显示读取的文件"
+		},
+		websiteResults: {
+			showReadWebsites: "显示网页内容文件"
+		},
 		LLMResponseInfoPopover: {
 			header: "LLM 响应信息",
 			tokenCount: "Token 数量",
@@ -54,6 +60,12 @@ export default {
 		},
 		queryProgress: {
 			readingMentionableFiles: "正在读取提及的文件",
+			readingFiles: "正在读取文件",
+			readingFilesDone: "文件读取完成",
+			filesLoaded: "已加载 {count} 个文件",
+			readingWebsites: "正在读取网页内容",
+			readingWebsitesDone: "网页内容读取完成",
+			websitesLoaded: "已加载 {count} 个网页",
 			indexing: "正在索引",
 			file: "文件",
 			chunkIndexed: "块已索引",

@@ -64,6 +64,8 @@ import McpHubView from './McpHubView' // Moved after MarkdownReasoningBlock
 import QueryProgress, { QueryProgressState } from './QueryProgress'
 import ReactMarkdown from './ReactMarkdown'
 import SimilaritySearchResults from './SimilaritySearchResults'
+import FileReadResults from './FileReadResults'
+import WebsiteReadResults from './WebsiteReadResults'
 import MarkdownReasoningBlock from './Markdown/MarkdownReasoningBlock'
 
 // Add an empty line here
@@ -1079,6 +1081,18 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 											)
 										}}
 									/>
+									{message.fileReadResults && (
+										<FileReadResults
+											key={"file-read-" + message.id}
+											fileContents={message.fileReadResults}
+										/>
+									)}
+									{message.websiteReadResults && (
+										<WebsiteReadResults
+											key={"website-read-" + message.id}
+											websiteContents={message.websiteReadResults}
+										/>
+									)}
 									{message.similaritySearchResults && (
 										<SimilaritySearchResults
 											key={"similarity-search-" + message.id}

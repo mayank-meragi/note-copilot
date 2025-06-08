@@ -202,7 +202,7 @@ export class McpHub {
 		if (typeof config !== 'object' || config === null) {
 			throw new Error("Server configuration must be an object.");
 		}
-		
+
 		// 使用类型保护而不是类型断言
 		const configObj = config as Record<string, unknown>;
 
@@ -214,7 +214,7 @@ export class McpHub {
 		if (hasStdioFields && hasSseFields) {
 			throw new Error(mixedFieldsErrorMessage)
 		}
-		
+
 		const mutableConfig = { ...configObj }; // Create a mutable copy
 
 		// Check if it's a stdio or SSE config and add type if missing
@@ -307,24 +307,24 @@ export class McpHub {
 	getServers(): McpServer[] {
 		// Only return enabled servers
 		const standardServers = this.connections.filter((conn) => !conn.server.disabled).map((conn) => conn.server)
-		
+
 		// 添加内置服务器（如果存在且未禁用）
 		if (this.builtInConnection && !this.builtInConnection.server.disabled) {
 			return [this.builtInConnection.server, ...standardServers]
 		}
-		
+
 		return standardServers
 	}
 
 	getAllServers(): McpServer[] {
 		// Return all servers regardless of state
 		const standardServers = this.connections.map((conn) => conn.server)
-		
+
 		// 添加内置服务器（如果存在）
 		if (this.builtInConnection) {
 			return [this.builtInConnection.server, ...standardServers]
 		}
-		
+
 		return standardServers
 	}
 
@@ -451,7 +451,7 @@ export class McpHub {
 				console.warn("Error injecting env vars. Using original config.", e);
 				configInjected = config; // Fallback to original config
 			}
-			
+
 			if (configInjected.type === "stdio") {
 				// Ensure cwd is set, default to plugin's root directory if not provided
 				// Obsidian's DataAdapter doesn't have a direct `basePath`.
@@ -1165,8 +1165,8 @@ export class McpHub {
 	 * @param source Whether to create in global or project scope (defaults to global)
 	 */
 	public async createServer(
-		name: string, 
-		config: string, 
+		name: string,
+		config: string,
 		source: "global" | "project" = "global"
 	): Promise<void> {
 		try {
@@ -1321,42 +1321,61 @@ export class McpHub {
 				throw new Error("Built-in server is not connected")
 			}
 
-			// 调用内置 API
-			const response = await fetch(`${INFIO_BASE_URL}/mcp/tools/call`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${this.plugin.settings.infioProvider.apiKey}`,
-				},
-				body: JSON.stringify({
-					name: toolName,
-					arguments: toolArguments || {},
-				}),
-			})
+			// 调用内置 API，设置 10 分钟超时
+			const controller = new AbortController()
+			const timeoutId = setTimeout(() => {
+				controller.abort()
+			}, 10 * 60 * 1000) // 10 分钟超时
 
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-			}
+			try {
+				const response = await fetch(`${INFIO_BASE_URL}/mcp/tools/call`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						'Authorization': `Bearer ${this.plugin.settings.infioProvider.apiKey}`,
+					},
+					body: JSON.stringify({
+						name: toolName,
+						arguments: toolArguments || {},
+					}),
+					signal: controller.signal,
+				})
 
-			const result = await response.json()
+				clearTimeout(timeoutId)
 
-			// 转换为 McpToolCallResponse 格式
-			return {
-				content: [{
-					type: "text",
-					text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
-				}],
-				isError: false,
+				if (!response.ok) {
+					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+				}
+
+				const result = await response.json()
+
+				// 接口已经返回了 MCP 格式的内容数组，直接使用
+				return {
+					content: Array.isArray(result) ? result : [result],
+					isError: false,
+				}
+			} catch (error) {
+				clearTimeout(timeoutId)
+				console.error(`Failed to call built-in tool ${toolName}:`, error)
+				// 特殊处理超时错误
+				let errorMessage: string
+				if (error instanceof Error && error.name === 'AbortError') {
+					errorMessage = `请求超时：工具 ${toolName} 执行时间超过 10 分钟`
+				} else {
+					errorMessage = `Error calling built-in tool: ${error instanceof Error ? error.message : String(error)}`
+				}
+
+				return {
+					content: [{
+						type: "text",
+						text: errorMessage
+					}],
+					isError: true,
+				}
 			}
 		} catch (error) {
 			console.error(`Failed to call built-in tool ${toolName}:`, error)
-			return {
-				content: [{
-					type: "text",
-					text: `Error calling built-in tool: ${error instanceof Error ? error.message : String(error)}`
-				}],
-				isError: true,
-			}
+			throw error
 		}
 	}
 
@@ -1471,10 +1490,10 @@ export class McpHub {
 			}
 		}
 		this.connections = []
-		
+
 		// 清理内置服务器连接
 		this.builtInConnection = null
-		
+
 		this.eventRefs.forEach((ref) => this.app.vault.offref(ref))
 		this.eventRefs = []
 	}
@@ -1483,10 +1502,10 @@ export class McpHub {
 	private async initializeBuiltInServer(): Promise<void> {
 		try {
 			console.log("Initializing built-in server...")
-			
+
 			// 获取工具列表
 			const tools = await this.fetchBuiltInTools()
-			
+
 			// 创建内置服务器连接
 			this.builtInConnection = {
 				server: {
@@ -1500,7 +1519,7 @@ export class McpHub {
 					resourceTemplates: [], // 内置服务器暂不支持资源模板
 				}
 			}
-			
+
 			console.log(`Built-in server initialized with ${tools.length} tools`)
 		} catch (error) {
 			console.error("Failed to initialize built-in server:", error)
@@ -1532,9 +1551,9 @@ export class McpHub {
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
 			}
-			
+
 			const tools: BuiltInToolResponse[] = await response.json()
-			
+
 			// 转换为 McpTool 格式
 			return tools.map((tool) => ({
 				name: tool.name,
@@ -1545,6 +1564,42 @@ export class McpHub {
 		} catch (error) {
 			console.error("Failed to fetch built-in tools:", error)
 			throw error
+		}
+	}
+
+	/**
+	 * 检查内置服务器是否可用
+	 * @returns true 如果内置服务器已连接且未被禁用，否则返回 false
+	 */
+	public isBuiltInServerAvailable(): boolean {
+		return !!(
+			this.builtInConnection &&
+			this.builtInConnection.server.status === "connected" &&
+			!this.builtInConnection.server.disabled
+		)
+	}
+
+	/**
+	 * 获取内置服务器的详细状态信息
+	 * @returns 包含内置服务器状态信息的对象，如果不存在则返回 null
+	 */
+	public getBuiltInServerStatus(): {
+		exists: boolean
+		status: "connecting" | "connected" | "disconnected"
+		disabled: boolean
+		toolsCount: number
+		error?: string
+	} | null {
+		if (!this.builtInConnection) {
+			return null
+		}
+
+		return {
+			exists: true,
+			status: this.builtInConnection.server.status,
+			disabled: this.builtInConnection.server.disabled,
+			toolsCount: this.builtInConnection.server.tools?.length || 0,
+			error: this.builtInConnection.server.error,
 		}
 	}
 }
