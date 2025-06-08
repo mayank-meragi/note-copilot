@@ -87,7 +87,7 @@ export default function QueryProgress({
 						{t('chat.queryProgress.readingFilesDone')}
 					</p>
 					<p className="infio-query-progress-detail">
-						{t('chat.queryProgress.filesLoaded', { count: state.fileContents.length })}
+						{t('chat.queryProgress.filesLoaded').replace('{count}', state.fileContents.length.toString())}
 					</p>
 				</div>
 			)
@@ -115,7 +115,7 @@ export default function QueryProgress({
 						{t('chat.queryProgress.readingWebsitesDone')}
 					</p>
 					<p className="infio-query-progress-detail">
-						{t('chat.queryProgress.websitesLoaded', { count: state.websiteContents.length })}
+						{t('chat.queryProgress.websitesLoaded').replace('{count}', state.websiteContents.length.toString())}
 					</p>
 				</div>
 			)

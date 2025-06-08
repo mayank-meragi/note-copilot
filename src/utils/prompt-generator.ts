@@ -6,6 +6,8 @@ import { DiffStrategy } from '../core/diff/DiffStrategy'
 import { McpHub } from '../core/mcp/McpHub'
 import { SystemPrompt } from '../core/prompts/system'
 import { RAGEngine } from '../core/rag/rag-engine'
+import { ConvertDataManager } from '../database/json/convert-data/ConvertDataManager'
+import { ConvertType } from '../database/json/convert-data/types'
 import { SelectVector } from '../database/schema'
 import { ChatMessage, ChatUserMessage } from '../types/chat'
 import { ContentPart, RequestMessage } from '../types/llm/request'
@@ -141,6 +143,7 @@ export class PromptGenerator {
 	private customModePrompts: CustomModePrompts | null = null
 	private customModeList: ModeConfig[] | null = null
 	private getMcpHub: () => Promise<McpHub> | null = null
+	private convertDataManager: ConvertDataManager
 	private static readonly EMPTY_ASSISTANT_MESSAGE: RequestMessage = {
 		role: 'assistant',
 		content: '',
@@ -163,6 +166,7 @@ export class PromptGenerator {
 		this.customModePrompts = customModePrompts ?? null
 		this.customModeList = customModeList ?? null
 		this.getMcpHub = getMcpHub ?? null
+		this.convertDataManager = new ConvertDataManager(app)
 	}
 
 	public async generateRequestMessages({
@@ -388,14 +392,22 @@ export class PromptGenerator {
 					completedFiles: completedFiles
 				})
 
-				const content = await getFileOrFolderContent(
-					file,
-					this.app.vault,
-					this.app
-				)
+				// 如果文件不是 md 文件且 mcpHub 存在，使用 MCP 工具转换
+				const mcpHub = await this.getMcpHub?.()
+				let content: string
+				let markdownFilePath = ''
+				if (file.extension !== 'md' && mcpHub?.isBuiltInServerAvailable()) {
+					[content, markdownFilePath] = await this.callMcpToolConvertDocument(file, mcpHub)
+				} else {
+					content = await getFileOrFolderContent(
+						file,
+						this.app.vault,
+						this.app
+					)
+				}
 
 				// 创建Markdown文件
-				const markdownFilePath = await this.createMarkdownFileForContent(
+				markdownFilePath = markdownFilePath || await this.createMarkdownFileForContent(
 					file.path,
 					content,
 					false
@@ -522,13 +534,11 @@ export class PromptGenerator {
 					completedUrls: completedUrls
 				})
 
-				const content = await this.getWebsiteContent(url, mcpHub)
-
+				const [content, mcpContentPath] = await this.getWebsiteContent(url, mcpHub)
 				// 从内容中提取标题
 				const websiteTitle = this.extractTitleFromWebsiteContent(content, url)
 
-				// 为网页内容创建Markdown文件
-				const markdownFilePath = await this.createMarkdownFileForContent(
+				const contentPath = mcpContentPath || await this.createMarkdownFileForContent(
 					url,
 					content,
 					true,
@@ -536,8 +546,8 @@ export class PromptGenerator {
 				)
 
 				completedUrls++
-				urlContents.push({ url: markdownFilePath, content }) // 这里url改为markdownFilePath
-				allWebsiteReadResults.push({ url: markdownFilePath, content }) // 同样这里也改为markdownFilePath
+				urlContents.push({ url: contentPath, content })
+				allWebsiteReadResults.push({ url: contentPath, content })
 			}
 
 			// 网页读取完成
@@ -574,8 +584,11 @@ export class PromptGenerator {
 
 			// 如果当前文件不是 md 文件且 mcpHub 存在，使用 MCP 工具转换
 			const mcpHub = await this.getMcpHub?.()
+			let currentMarkdownFilePath = ''
 			if (currentFile.file.extension !== 'md' && mcpHub?.isBuiltInServerAvailable()) {
-				currentFileContent = await this.callMcpToolConvertDocument(currentFile.file, mcpHub)
+				const [mcpCurrFileContent, mcpCurrFileContentPath] = await this.callMcpToolConvertDocument(currentFile.file, mcpHub)
+				currentFileContent = mcpCurrFileContent
+				currentMarkdownFilePath = mcpCurrFileContentPath
 			} else {
 				currentFileContent = await getFileOrFolderContent(
 					currentFile.file,
@@ -585,7 +598,7 @@ export class PromptGenerator {
 			}
 
 			// 为当前文件创建Markdown文件
-			const currentMarkdownFilePath = await this.createMarkdownFileForContent(
+			currentMarkdownFilePath = currentMarkdownFilePath || await this.createMarkdownFileForContent(
 				currentFile.file.path,
 				currentFileContent,
 				false
@@ -966,22 +979,18 @@ When writing out new markdown blocks, remember not to include "line_number|" at 
 	}
 
 
-	private async getPdfContent(file: TFile): Promise<string> {
-		return await parsePdfContent(file, this.app)
-	}
-
-
 	/**
 	 * TODO: Improve markdown conversion logic
 	 * - filter visually hidden elements
 	 * ...
 	 */
-	private async getWebsiteContent(url: string, mcpHub: McpHub | null): Promise<string> {
+	private async getWebsiteContent(url: string, mcpHub: McpHub | null): Promise<[string, string]> {
 
 		const mcpHubAvailable = mcpHub?.isBuiltInServerAvailable()
 
 		if (mcpHubAvailable && isVideoUrl(url)) {
-			return this.callMcpToolConvertVideo(url, mcpHub)
+			const [md, mdPath] = await this.callMcpToolConvertVideo(url, mcpHub)
+			return [md, mdPath]
 		}
 
 		if (isYoutubeUrl(url)) {
@@ -989,17 +998,28 @@ When writing out new markdown blocks, remember not to include "line_number|" at 
 			const { title, transcript } =
 				await YoutubeTranscript.fetchTranscriptAndMetadata(url)
 
-			return `Title: ${title}
+			return [
+				`Title: ${title}
 Video Transcript:
-${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`
+${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`,
+				''
+			]
 		}
 
 		const response = await requestUrl({ url })
 
-		return htmlToMarkdown(response.text)
+		return [htmlToMarkdown(response.text), '']
 	}
 
-	private async callMcpToolConvertVideo(url: string, mcpHub: McpHub): Promise<string> {
+	private async callMcpToolConvertVideo(url: string, mcpHub: McpHub): Promise<[string, string]> {
+		// 首先检查缓存
+		const cachedData = await this.convertDataManager.findBySource(url)
+		if (cachedData) {
+			console.log(`Using cached video conversion for: ${url}`)
+			return [cachedData.content, cachedData.contentPath]
+		}
+
+		// 如果没有缓存，进行转换
 		const response = await mcpHub.callTool(
 			'infio-builtin-server',
 			'CONVERT_VIDEO',
@@ -1007,23 +1027,41 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`
 		)
 
 		// 处理图片内容并获取图片引用
-		const imageReferences = await this.processImagesInResponse(response.content)
+		// @ts-ignore
+		await this.processImagesInResponse(response.content)
 
 		const textContent = response.content.find((c) => c.type === 'text')
-		let result = textContent?.text || ''
+		// @ts-ignore
+		const md = textContent?.text as string || ''
 
-		// 在文本内容末尾添加图片引用
-		if (imageReferences.length > 0) {
-			result += '\n\n## 图片内容\n\n'
-			imageReferences.forEach(imagePath => {
-				result += `![](${imagePath})\n\n`
-			})
-		}
+		// 创建Markdown文件
+		const websiteTitle = this.extractTitleFromWebsiteContent(md, url)
 
-		return result
+		// 为网页内容创建Markdown文件
+		const mdPath = await this.createMarkdownFileForContent(
+			url,
+			md,
+			true,
+			websiteTitle,
+		)
+
+		// 异步保存到缓存（不等待，避免阻塞）
+		this.saveConvertDataToCache(url, 'CONVERT_VIDEO', md, mdPath, url).catch(error => {
+			console.error('Failed to save video conversion to cache:', error)
+		})
+
+		return [md, mdPath]
 	}
 
-	private async callMcpToolConvertDocument(file: TFile, mcpHub: McpHub): Promise<string> {
+	private async callMcpToolConvertDocument(file: TFile, mcpHub: McpHub): Promise<[string, string]> {
+		// 首先检查缓存
+		const cachedData = await this.convertDataManager.findBySource(file.path)
+		if (cachedData) {
+			console.log(`Using cached document conversion for: ${file.path}`)
+			return [cachedData.content, cachedData.contentPath]
+		}
+
+		// 如果没有缓存，进行转换
 		// 读取文件的二进制内容并转换为Base64
 		const fileBuffer = await this.app.vault.readBinary(file)
 
@@ -1052,12 +1090,23 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`
 		)
 
 		// 处理图片内容并获取图片引用
+		// @ts-ignore
 		await this.processImagesInResponse(response.content)
 
-		const textContent = response.content.find((c) => c.type === 'text')
-		const result = textContent?.text as string || ''
+		// @ts-ignore
+		const textContent = response.content.find((c: { type: string; text?: string }) => c.type === 'text')
+		// @ts-ignore
+		const md = textContent?.text as string || ''
 
-		return result
+		// 创建Markdown文件
+		const mdPath = await this.createMarkdownFileForContent(file.path, md, false, file.name)
+
+		// 异步保存到缓存
+		this.saveConvertDataToCache(file.path, 'CONVERT_DOCUMENT', md, mdPath, file.name).catch(error => {
+			console.error('Failed to save document conversion to cache:', error)
+		})
+
+		return [md, mdPath]
 	}
 
 	/**
@@ -1107,7 +1156,7 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`
 			return file.path
 		} catch (error) {
 			console.error('Failed to create markdown file:', error)
-			return originalPath // 如果创建失败，返回原路径
+			return ""
 		}
 	}
 
@@ -1189,10 +1238,73 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`
 	}
 
 	/**
+	 * 根据 MIME 类型获取图片扩展名
+	 */
+	private getImageExtensionFromMimeType(mimeType?: string): string {
+		if (!mimeType) return 'png'
+
+		const extensionMap: Record<string, string> = {
+			'image/jpeg': 'jpg',
+			'image/jpg': 'jpg',
+			'image/png': 'png',
+			'image/gif': 'gif',
+			'image/webp': 'webp',
+			'image/svg+xml': 'svg',
+		}
+
+		return extensionMap[mimeType.toLowerCase()] || 'png'
+	}
+
+	/**
+	 * 保存转换数据到缓存
+	 */
+	private async saveConvertDataToCache(
+		source: string,
+		type: ConvertType,
+		content: string,
+		contentPath: string,
+		name?: string
+	): Promise<void> {
+		try {
+			// 生成名称
+			let displayName = name
+			if (!displayName) {
+				if (type === 'CONVERT_VIDEO') {
+					// 从URL提取名称
+					try {
+						const url = new URL(source)
+						displayName = url.hostname + url.pathname
+					} catch {
+						displayName = source
+					}
+				} else {
+					// 从文件路径提取名称
+					displayName = source.split('/').pop() || source
+				}
+			}
+
+			// 保存到数据库
+			await this.convertDataManager.createConvertData({
+				name: displayName,
+				type,
+				source,
+				contentPath,
+				content,
+			})
+
+			console.log(`Saved conversion data to cache: ${source}`)
+		} catch (error) {
+			console.error('Failed to save conversion data to cache:', error)
+			throw error
+		}
+	}
+
+	/**
 	 * 将base64图片数据保存为文件到Obsidian资源目录
 	 */
 	private async saveImageFromBase64(base64Data: string, filename: string, mimeType?: string): Promise<string> {
 		// 获取默认资源目录
+		// @ts-ignore
 		const staticResourceDir = this.app.vault.getConfig("attachmentFolderPath")
 
 		// 构建完整的文件路径

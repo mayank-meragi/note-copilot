@@ -1,4 +1,9 @@
 releases:
+  - version: "0.6.0"
+    features:
+      - "Added Infio built-in MCP (Model Control Protocol) support"
+      - "Optimized startup performance for faster loading times"
+      - "Support Infio provider MCP tools"
   - version: "0.5.2"
     features:
       - "Added Infio provider"

@@ -409,7 +409,7 @@ export default {
 			noErrors: "没有错误记录",
 			parameters: "参数",
 			toolNoDescription: "无描述",
-			useMcpToolFrom: "Use MCP tool from",
+			useMcpToolFrom: "使用来自以下的 MCP 工具：",
 		}
 	}
 };
