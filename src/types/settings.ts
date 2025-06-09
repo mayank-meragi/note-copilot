@@ -261,6 +261,7 @@ export const InfioSettingsSchema = z.object({
 
 	// Files Search
 	filesSearchMethod: z.enum(['regex', 'semantic', 'auto']).catch('auto'),
+	regexSearchBackend: z.enum(['omnisearch', 'ripgrep']).catch('ripgrep'),
 	ripgrepPath: z.string().catch(''),
 
 	/// [compatible]

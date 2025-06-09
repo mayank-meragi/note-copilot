@@ -163,6 +163,21 @@ export class InfioSettingTab extends PluginSettingTab {
 						})
 					}),
 			)
+			new Setting(containerEl)
+			.setName(t('settings.FilesSearch.regexBackend'))
+			.setDesc(t('settings.FilesSearch.regexBackendDescription'))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('ripgrep', t('settings.FilesSearch.ripgrep'))
+					.addOption('omnisearch', t('settings.FilesSearch.omnisearch'))
+					.setValue(this.plugin.settings.regexSearchBackend)
+					.onChange(async (value) => {
+						await this.plugin.setSettings({
+							...this.plugin.settings,
+							regexSearchBackend: value as 'ripgrep' | 'omnisearch',
+						})
+					}),
+			)
 		new Setting(containerEl)
 			.setName(t('settings.FilesSearch.ripgrepPath'))
 			.setDesc(t('settings.FilesSearch.ripgrepPathDescription'))

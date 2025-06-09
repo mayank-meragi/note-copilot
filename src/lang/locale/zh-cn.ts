@@ -228,8 +228,12 @@ export default {
 			auto: '自动',
 			semantic: '语义',
 			regex: '正则',
+			regexBackend: '正则搜索后端',
+			regexBackendDescription: '选择正则搜索的后端。',
+			ripgrep: 'ripgrep',
+			omnisearch: 'Omnisearch',
 			ripgrepPath: 'ripgrep 路径',
-			ripgrepPathDescription: 'ripgrep 二进制文件的路径。使用正则搜索时需要此项。',
+			ripgrepPathDescription: 'ripgrep 二进制文件的路径。使用 ripgrep 正则搜索时需要此项。',
 		},
 		
 		// 聊天行为部分

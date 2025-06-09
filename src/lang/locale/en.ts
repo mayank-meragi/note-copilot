@@ -227,8 +227,12 @@ export default {
 			auto: 'Auto',
 			semantic: 'Semantic',
 			regex: 'Regex',
+			regexBackend: 'Regex search backend',
+			regexBackendDescription: 'Choose the backend for regex search method.',
+			ripgrep: 'ripgrep',
+			omnisearch: 'Omnisearch',
 			ripgrepPath: 'ripgrep path',
-			ripgrepPathDescription: 'Path to the ripgrep binary. When using regex search, this is required.',
+			ripgrepPathDescription: 'Path to the ripgrep binary. When using ripgrep regex search, this is required.',
 		},
 		
 		// Chat Behavior Section

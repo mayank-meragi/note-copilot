@@ -29,7 +29,8 @@ import {
 	LLMBaseUrlNotSetException,
 	LLMModelNotSetException,
 } from '../../core/llm/exception'
-import { regexSearchFiles } from '../../core/ripgrep'
+import { regexSearchFilesWithRipgrep } from '../../core/regex/ripgrep-index'
+import { regexSearchFilesWithOmnisearch } from '../../core/regex/omnisearch-index'
 import { useChatHistory } from '../../hooks/use-chat-history'
 import { useCustomModes } from '../../hooks/use-custom-mode'
 import { t } from '../../lang/helpers'
@@ -609,10 +610,16 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					}
 				} else if (toolArgs.type === 'regex_search_files') {
 					// @ts-expect-error Obsidian API type mismatch
+					const searchBackend = settings.regexSearchBackend
 					const baseVaultPath = String(app.vault.adapter.getBasePath())
-					const ripgrepPath = settings.ripgrepPath
 					const absolutePath = path.join(baseVaultPath, toolArgs.filepath)
-					const results = await regexSearchFiles(absolutePath, toolArgs.regex, ripgrepPath)
+					let results: string;
+					if (searchBackend === 'omnisearch') {
+						results = await regexSearchFilesWithOmnisearch(absolutePath, toolArgs.regex, app)
+					} else {
+						const ripgrepPath = settings.ripgrepPath
+						results = await regexSearchFilesWithRipgrep(absolutePath, toolArgs.regex, ripgrepPath)
+					}
 					const formattedContent = `[regex_search_files for '${toolArgs.filepath}'] Result:\n${results}\n`;
 					return {
 						type: 'regex_search_files',
