@@ -14,7 +14,7 @@ import {
  * @param query The query to search for.
  * @returns A promise that resolves to a formatted string of search results.
  */
-export async function searchFilesWithCorePlugin(
+export async function matchSearchUsingCorePlugin(
     query: string,
     app: App,
 ): Promise<string> {

@@ -47,7 +47,7 @@ function isOmnisearchAvailable(): boolean {
  * @param app The Obsidian App instance.
  * @returns A formatted string of search results.
  */
-export async function searchFilesWithOmnisearch(
+export async function matchSearchUsingOmnisearch(
 	query: string,
 	app: App,
 ): Promise<string> {

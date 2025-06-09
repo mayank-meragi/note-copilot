@@ -29,10 +29,10 @@ import {
 	LLMBaseUrlNotSetException,
 	LLMModelNotSetException,
 } from '../../core/llm/exception'
-import { searchFilesWithCorePlugin } from '../../core/search/match/coreplugin-match'
-import { searchFilesWithOmnisearch } from '../../core/search/match/omnisearch-match'
-import { regexSearchFilesWithRipgrep } from '../../core/search/regex/ripgrep-regex'
-import { regexSearchFilesWithCorePlugin } from '../../core/search/regex/coreplugin-regex'
+import { matchSearchUsingCorePlugin } from '../../core/search/match/coreplugin-match'
+import { matchSearchUsingOmnisearch } from '../../core/search/match/omnisearch-match'
+import { regexSearchUsingRipgrep } from '../../core/search/regex/ripgrep-regex'
+import { regexSearchUsingCorePlugin } from '../../core/search/regex/coreplugin-regex'
 import { useChatHistory } from '../../hooks/use-chat-history'
 import { useCustomModes } from '../../hooks/use-custom-mode'
 import { t } from '../../lang/helpers'
@@ -614,9 +614,9 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					const searchBackend = settings.matchSearchBackend
 					let results: string;
 					if (searchBackend === 'omnisearch') {
-						results = await searchFilesWithOmnisearch(toolArgs.query, app)
+						results = await matchSearchUsingOmnisearch(toolArgs.query, app)
 					} else {
-						results = await searchFilesWithCorePlugin(toolArgs.query, app)
+						results = await matchSearchUsingCorePlugin(toolArgs.query, app)
 					}
 					const formattedContent = `[match_search_files for '${toolArgs.filepath}'] Result:\n${results}\n`;
 					return {
@@ -636,13 +636,13 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					const searchBackend = settings.regexSearchBackend
 					let results: string;
 					if (searchBackend === 'coreplugin') {
-						results = await regexSearchFilesWithCorePlugin(toolArgs.regex, app)
+						results = await regexSearchUsingCorePlugin(toolArgs.regex, app)
 					} else {
 						// @ts-expect-error Obsidian API type mismatch
 						const baseVaultPath = String(app.vault.adapter.getBasePath())
 						const absolutePath = path.join(baseVaultPath, toolArgs.filepath)
 						const ripgrepPath = settings.ripgrepPath
-						results = await regexSearchFilesWithRipgrep(absolutePath, toolArgs.regex, ripgrepPath)
+						results = await regexSearchUsingRipgrep(absolutePath, toolArgs.regex, ripgrepPath)
 					}
 					const formattedContent = `[regex_search_files for '${toolArgs.filepath}'] Result:\n${results}\n`;
 					return {

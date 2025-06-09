@@ -66,7 +66,7 @@ async function execRipgrep(bin: string, args: string[]): Promise<string> {
 	})
 }
 
-export async function regexSearchFilesWithRipgrep(
+export async function regexSearchUsingRipgrep(
 	directoryPath: string,
 	regex: string,
 	ripgrepPath: string,

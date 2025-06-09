@@ -1,5 +1,5 @@
 import { App } from "obsidian";
-import { searchFilesWithCorePlugin } from '../match/coreplugin-match'
+import { matchSearchUsingCorePlugin } from '../match/coreplugin-match'
 
 /**
  * Performs a regular expression search using Obsidian's core search plugin.
@@ -8,10 +8,10 @@ import { searchFilesWithCorePlugin } from '../match/coreplugin-match'
  * @param regex The regular expression to search for.
  * @returns A promise that resolves to a formatted string of search results.
  */
-export async function regexSearchFilesWithCorePlugin(
+export async function regexSearchUsingCorePlugin(
     regex: string,
     app: App,
 ): Promise<string> {
     const regexQuery = `/${regex}/`;
-    return searchFilesWithCorePlugin(regexQuery, app);
+    return matchSearchUsingCorePlugin(regexQuery, app);
 }
