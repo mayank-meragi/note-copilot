@@ -235,6 +235,7 @@ export default {
 			matchBackendDescription: 'Choose the backend for match search method.',
 			ripgrep: 'ripgrep',
 			coreplugin: 'Core plugin',
+			omnisearch: 'Omnisearch',
 			ripgrepPath: 'ripgrep path',
 			ripgrepPathDescription: 'Path to the ripgrep binary. When using ripgrep regex search, this is required.',
 		},

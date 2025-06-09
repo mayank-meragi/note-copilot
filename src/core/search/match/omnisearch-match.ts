@@ -2,6 +2,7 @@ import { App } from "obsidian";
 import {
 	MAX_RESULTS,
 	truncateLine,
+	findLineDetails,
 	SearchResult,
 	formatResults,
 } from '../search-common';
@@ -41,32 +42,6 @@ function isOmnisearchAvailable(): boolean {
 }
 
 /**
- * Finds the line number, column number, and content for a given character offset in a file.
- * @param allLines All lines in the file.
- * @param offset The character offset of the match.
- * @returns An object with line number, column number, and the full line content.
- */
-function findLineAndColumnFromOffset(
-	allLines: string[],
-	offset: number
-): { lineNumber: number; columnNumber: number; lineContent: string } {
-	let charCount = 0;
-	for (let i = 0; i < allLines.length; i++) {
-		const line = allLines[i];
-		// The line ending length (1 for \n, 2 for \r\n) can vary.
-		// A simple +1 is a reasonable approximation for this calculation.
-		const lineEndOffset = charCount + line.length + 1; 
-
-		if (offset < lineEndOffset) {
-			const columnNumber = offset - charCount;
-			return { lineNumber: i, columnNumber, lineContent: line };
-		}
-		charCount = lineEndOffset;
-	}
-	return { lineNumber: -1, columnNumber: -1, lineContent: "" };
-}
-
-/**
  * Searches using Omnisearch and builds context for each match.
  * @param query The search query for Omnisearch. Note: Omnisearch does not support full regex.
  * @param app The Obsidian App instance.
@@ -87,7 +62,8 @@ export async function searchFilesWithOmnisearch(
 		// The `query` will be treated as a keyword/fuzzy search by the plugin.
 		const apiResults = await window.omnisearch.search(query);
 		if (!apiResults || apiResults.length === 0) {
-			throw new Error("No results found.");
+			console.error("No results found.");
+			return "No results found."
 		}
 
 		const results: SearchResult[] = [];
@@ -99,15 +75,15 @@ export async function searchFilesWithOmnisearch(
 			if (!result.matches || result.matches.length === 0) continue;
 
 			const fileContent = await app.vault.adapter.read(result.path);
-			const allLines = fileContent.split("\n");
+			const lines = fileContent.split("\n");
 
 			for (const match of result.matches) {
 				if (results.length >= MAX_RESULTS) {
 					break; // Stop processing matches if we have enough results
 				}
 
-				const { lineNumber, columnNumber, lineContent } = findLineAndColumnFromOffset(
-					allLines,
+				const { lineNumber, columnNumber, lineContent } = findLineDetails(
+					lines,
 					match.offset
 				);
 
@@ -118,10 +94,10 @@ export async function searchFilesWithOmnisearch(
 					line: lineNumber + 1, // ripgrep is 1-based, so we adjust
 					column: columnNumber + 1,
 					match: truncateLine(lineContent.trimEnd()),
-					beforeContext: lineNumber > 0 ? [truncateLine(allLines[lineNumber - 1].trimEnd())] : [],
+					beforeContext: lineNumber > 0 ? [truncateLine(lines[lineNumber - 1].trimEnd())] : [],
 					afterContext:
-						lineNumber < allLines.length - 1
-							? [truncateLine(allLines[lineNumber + 1].trimEnd())]
+						lineNumber < lines.length - 1
+							? [truncateLine(lines[lineNumber + 1].trimEnd())]
 							: [],
 				};
 				results.push(searchResult);

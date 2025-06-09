@@ -96,7 +96,7 @@ export async function regexSearchFilesWithRipgrep(
 		output = await execRipgrep(rgPath, args)
 	} catch (error) {
 		console.error("Error executing ripgrep:", error)
-		return "No results found"
+		return "No results found."
 	}
 	const results: SearchResult[] = []
 	let currentResult: Partial<SearchResult> | null = null

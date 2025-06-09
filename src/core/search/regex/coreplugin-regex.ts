@@ -12,6 +12,6 @@ export async function regexSearchFilesWithCorePlugin(
     regex: string,
     app: App,
 ): Promise<string> {
-    const query = "/" + regex + "/";
-    return searchFilesWithCorePlugin(query, app);
+    const regexQuery = `/${regex}/`;
+    return searchFilesWithCorePlugin(regexQuery, app);
 }

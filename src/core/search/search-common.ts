@@ -14,6 +14,32 @@ export function truncateLine(line: string, maxLength: number = MAX_LINE_LENGTH):
 	return line.length > maxLength ? line.substring(0, maxLength) + " [truncated...]" : line
 }
 
+/**
+ * Finds the line number and content for a given character offset within a file's content.
+ * @param lines All lines in the file.
+ * @param offset The character offset of the match.
+ * @returns An object with line number, column number, and the full line content.
+ */
+export function findLineDetails(
+	lines: string[],
+	offset: number
+): { lineNumber: number; columnNumber: number; lineContent: string } {
+	let charCount = 0;
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		// The line ending length (1 for \n, 2 for \r\n) can vary.
+		// A simple +1 is a reasonable approximation for this calculation.
+		const lineEndOffset = charCount + line.length + 1; 
+
+		if (offset < lineEndOffset) {
+			const columnNumber = offset - charCount;
+			return { lineNumber: i, columnNumber, lineContent: line };
+		}
+		charCount = lineEndOffset;
+	}
+	return { lineNumber: -1, columnNumber: -1, lineContent: "" };
+}
+
 export interface SearchResult {
 	file: string
 	line: number

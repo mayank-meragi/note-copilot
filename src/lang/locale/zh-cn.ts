@@ -236,6 +236,7 @@ export default {
 			matchBackendDescription: '选择匹配搜索的后端。',
 			ripgrep: 'ripgrep',
 			coreplugin: '核心插件',
+			omnisearch: 'Omnisearch',
 			ripgrepPath: 'ripgrep 路径',
 			ripgrepPathDescription: 'ripgrep 二进制文件的路径。使用 ripgrep 正则搜索时需要此项。',
 		},
