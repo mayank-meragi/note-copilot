@@ -260,8 +260,9 @@ export const InfioSettingsSchema = z.object({
 	jinaApiKey: z.string().catch(''),
 
 	// Files Search
-	filesSearchMethod: z.enum(['regex', 'semantic', 'auto']).catch('auto'),
-	regexSearchBackend: z.enum(['omnisearch', 'ripgrep']).catch('ripgrep'),
+	filesSearchMethod: z.enum(['match', 'regex', 'semantic', 'auto']).catch('auto'),
+	regexSearchBackend: z.enum(['coreplugin', 'ripgrep']).catch('ripgrep'),
+	matchSearchBackend: z.enum(['omnisearch', 'coreplugin']).catch('coreplugin'),
 	ripgrepPath: z.string().catch(''),
 
 	/// [compatible]

@@ -155,26 +155,42 @@ export class InfioSettingTab extends PluginSettingTab {
 					.addOption('auto', t('settings.FilesSearch.auto'))
 					.addOption('semantic', t('settings.FilesSearch.semantic'))
 					.addOption('regex', t('settings.FilesSearch.regex'))
+					.addOption('match', t('settings.FilesSearch.match'))
 					.setValue(this.plugin.settings.filesSearchMethod)
 					.onChange(async (value) => {
 						await this.plugin.setSettings({
 							...this.plugin.settings,
-							filesSearchMethod: value as 'regex' | 'semantic' | 'auto',
+							filesSearchMethod: value as 'match' | 'regex' | 'semantic' | 'auto',
 						})
 					}),
 			)
-			new Setting(containerEl)
+		new Setting(containerEl)
 			.setName(t('settings.FilesSearch.regexBackend'))
 			.setDesc(t('settings.FilesSearch.regexBackendDescription'))
 			.addDropdown((dropdown) =>
 				dropdown
 					.addOption('ripgrep', t('settings.FilesSearch.ripgrep'))
-					.addOption('omnisearch', t('settings.FilesSearch.omnisearch'))
+					.addOption('coreplugin', t('settings.FilesSearch.coreplugin'))
 					.setValue(this.plugin.settings.regexSearchBackend)
 					.onChange(async (value) => {
 						await this.plugin.setSettings({
 							...this.plugin.settings,
-							regexSearchBackend: value as 'ripgrep' | 'omnisearch',
+							regexSearchBackend: value as 'ripgrep' | 'coreplugin',
+						})
+					}),
+			)
+		new Setting(containerEl)
+			.setName(t('settings.FilesSearch.matchBackend'))
+			.setDesc(t('settings.FilesSearch.matchBackendDescription'))
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('coreplugin', t('settings.FilesSearch.coreplugin'))
+					.addOption('omnisearch', t('settings.FilesSearch.omnisearch'))
+					.setValue(this.plugin.settings.matchSearchBackend)
+					.onChange(async (value) => {
+						await this.plugin.setSettings({
+							...this.plugin.settings,
+							matchSearchBackend: value as 'coreplugin' | 'omnisearch',
 						})
 					}),
 			)

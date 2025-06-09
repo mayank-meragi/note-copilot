@@ -28,6 +28,10 @@ export const listFilesAndFolders = async (vault: Vault, path: string) => {
 	return []
 }
 
+export const matchSearchFiles = async (vault: Vault, path: string, query: string, file_pattern: string) => {
+	
+}
+
 export const regexSearchFiles = async (vault: Vault, path: string, regex: string, file_pattern: string) => {
 	
 }

@@ -8,7 +8,7 @@ import {
 	truncateLine,
 	SearchResult,
 	formatResults
-} from './regex-common'
+} from '../search-common'
 
 const isWindows = /^win/.test(process.platform)
 const binName = isWindows ? "rg.exe" : "rg"

@@ -4,9 +4,7 @@ import {
 	truncateLine,
 	SearchResult,
 	formatResults,
-} from './regex-common';
-
-// --- Omnisearch API and Helper Types ---
+} from '../search-common';
 
 type SearchMatchApi = {
 	match: string;
@@ -69,14 +67,12 @@ function findLineAndColumnFromOffset(
 }
 
 /**
- * Searches using Omnisearch and builds context for each match to replicate ripgrep's output.
- * @param vaultPath The absolute path of the vault for making relative paths.
+ * Searches using Omnisearch and builds context for each match.
  * @param query The search query for Omnisearch. Note: Omnisearch does not support full regex.
  * @param app The Obsidian App instance.
  * @returns A formatted string of search results.
  */
-export async function regexSearchFilesWithOmnisearch(
-	vaultPath: string,
+export async function searchFilesWithOmnisearch(
 	query: string,
 	app: App,
 ): Promise<string> {
@@ -87,8 +83,8 @@ export async function regexSearchFilesWithOmnisearch(
 			);
 		}
 
-		// Omnisearch is not a regex engine. The function name is kept for consistency
-		// but the `query` will be treated as a keyword/fuzzy search by the plugin.
+		// Omnisearch is not a regex engine.
+		// The `query` will be treated as a keyword/fuzzy search by the plugin.
 		const apiResults = await window.omnisearch.search(query);
 		if (!apiResults || apiResults.length === 0) {
 			throw new Error("No results found.");
@@ -132,7 +128,7 @@ export async function regexSearchFilesWithOmnisearch(
 			}
 		}
 
-		return formatResults(results, vaultPath);
+		return formatResults(results, ".\\");
 	} catch (error) {
 		console.error("Error during Omnisearch processing:", error);
 		return "An error occurred during the search.";

@@ -29,8 +29,10 @@ import {
 	LLMBaseUrlNotSetException,
 	LLMModelNotSetException,
 } from '../../core/llm/exception'
-import { regexSearchFilesWithRipgrep } from '../../core/regex/ripgrep-index'
-import { regexSearchFilesWithOmnisearch } from '../../core/regex/omnisearch-index'
+import { searchFilesWithCorePlugin } from '../../core/search/match/coreplugin-match'
+import { searchFilesWithOmnisearch } from '../../core/search/match/omnisearch-match'
+import { regexSearchFilesWithRipgrep } from '../../core/search/regex/ripgrep-regex'
+import { regexSearchFilesWithCorePlugin } from '../../core/search/regex/coreplugin-regex'
 import { useChatHistory } from '../../hooks/use-chat-history'
 import { useCustomModes } from '../../hooks/use-custom-mode'
 import { t } from '../../lang/helpers'
@@ -608,15 +610,37 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							mentionables: [],
 						}
 					}
-				} else if (toolArgs.type === 'regex_search_files') {
-					// @ts-expect-error Obsidian API type mismatch
-					const searchBackend = settings.regexSearchBackend
-					const baseVaultPath = String(app.vault.adapter.getBasePath())
-					const absolutePath = path.join(baseVaultPath, toolArgs.filepath)
+				} else if (toolArgs.type === 'match_search_files') {
+					const searchBackend = settings.matchSearchBackend
 					let results: string;
 					if (searchBackend === 'omnisearch') {
-						results = await regexSearchFilesWithOmnisearch(absolutePath, toolArgs.regex, app)
+						results = await searchFilesWithOmnisearch(toolArgs.query, app)
 					} else {
+						results = await searchFilesWithCorePlugin(toolArgs.query, app)
+					}
+					const formattedContent = `[match_search_files for '${toolArgs.filepath}'] Result:\n${results}\n`;
+					return {
+						type: 'match_search_files',
+						applyMsgId,
+						applyStatus: ApplyStatus.Applied,
+						returnMsg: {
+							role: 'user',
+							applyStatus: ApplyStatus.Idle,
+							content: null,
+							promptContent: formattedContent,
+							id: uuidv4(),
+							mentionables: [],
+						}
+					}
+				} else if (toolArgs.type === 'regex_search_files') {
+					const searchBackend = settings.regexSearchBackend
+					let results: string;
+					if (searchBackend === 'coreplugin') {
+						results = await regexSearchFilesWithCorePlugin(toolArgs.regex, app)
+					} else {
+						// @ts-expect-error Obsidian API type mismatch
+						const baseVaultPath = String(app.vault.adapter.getBasePath())
+						const absolutePath = path.join(baseVaultPath, toolArgs.filepath)
 						const ripgrepPath = settings.ripgrepPath
 						results = await regexSearchFilesWithRipgrep(absolutePath, toolArgs.regex, ripgrepPath)
 					}
