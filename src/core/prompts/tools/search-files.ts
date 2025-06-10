@@ -1,5 +1,4 @@
 import { ToolArgs } from "./types"
-import { useSettings } from '../../../contexts/SettingsContext'
 
 export function getSearchFilesDescription(args: ToolArgs): string {
 	if (args.searchTool === 'match') {
@@ -34,9 +33,8 @@ Example: Requesting to search for all Markdown files containing 'test' in the cu
 }
 
 export function getRegexSearchFilesDescription(args: ToolArgs): string {
-	const { settings } = useSettings()
 	let regex_syntax: string;
-	switch (settings.regexSearchBackend) {
+	switch (args.searchSettings.regexBackend) {
 		case 'coreplugin':
 			regex_syntax = "ECMAScript (JavaScript)";
 			break;

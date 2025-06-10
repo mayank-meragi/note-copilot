@@ -156,11 +156,14 @@ export class InfioSettingTab extends PluginSettingTab {
 					.addOption('semantic', t('settings.FilesSearch.semantic'))
 					.addOption('regex', t('settings.FilesSearch.regex'))
 					.addOption('match', t('settings.FilesSearch.match'))
-					.setValue(this.plugin.settings.filesSearchMethod)
+					.setValue(this.plugin.settings.filesSearchSettings.method)
 					.onChange(async (value) => {
 						await this.plugin.setSettings({
 							...this.plugin.settings,
-							filesSearchMethod: value as 'match' | 'regex' | 'semantic' | 'auto',
+							filesSearchSettings: {
+								...this.plugin.settings.filesSearchSettings,
+								method: value as 'match' | 'regex' | 'semantic' | 'auto',
+							}
 						})
 					}),
 			)
@@ -171,11 +174,14 @@ export class InfioSettingTab extends PluginSettingTab {
 				dropdown
 					.addOption('ripgrep', t('settings.FilesSearch.ripgrep'))
 					.addOption('coreplugin', t('settings.FilesSearch.coreplugin'))
-					.setValue(this.plugin.settings.regexSearchBackend)
+					.setValue(this.plugin.settings.filesSearchSettings.regexBackend)
 					.onChange(async (value) => {
 						await this.plugin.setSettings({
 							...this.plugin.settings,
-							regexSearchBackend: value as 'ripgrep' | 'coreplugin',
+							filesSearchSettings: {
+								...this.plugin.settings.filesSearchSettings,
+								regexBackend: value as 'ripgrep' | 'coreplugin',
+							}
 						})
 					}),
 			)
@@ -186,11 +192,14 @@ export class InfioSettingTab extends PluginSettingTab {
 				dropdown
 					.addOption('coreplugin', t('settings.FilesSearch.coreplugin'))
 					.addOption('omnisearch', t('settings.FilesSearch.omnisearch'))
-					.setValue(this.plugin.settings.matchSearchBackend)
+					.setValue(this.plugin.settings.filesSearchSettings.matchBackend)
 					.onChange(async (value) => {
 						await this.plugin.setSettings({
 							...this.plugin.settings,
-							matchSearchBackend: value as 'coreplugin' | 'omnisearch',
+							filesSearchSettings: {
+								...this.plugin.settings.filesSearchSettings,
+								matchBackend: value as 'coreplugin' | 'omnisearch',
+							}
 						})
 					}),
 			)
@@ -200,11 +209,14 @@ export class InfioSettingTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setPlaceholder('/opt/homebrew/bin/')
-					.setValue(this.plugin.settings.ripgrepPath)
+					.setValue(this.plugin.settings.filesSearchSettings.ripgrepPath)
 					.onChange(async (value) => {
 						await this.plugin.setSettings({
 							...this.plugin.settings,
-							ripgrepPath: value,
+							filesSearchSettings: {
+								...this.plugin.settings.filesSearchSettings,
+								ripgrepPath: value,
+							}
 						})
 					}),
 			)
