@@ -29,10 +29,10 @@ import {
 	LLMBaseUrlNotSetException,
 	LLMModelNotSetException,
 } from '../../core/llm/exception'
-import { matchSearchUsingCorePlugin } from '../../core/search/match/coreplugin-match'
-import { matchSearchUsingOmnisearch } from '../../core/search/match/omnisearch-match'
-import { regexSearchUsingRipgrep } from '../../core/search/regex/ripgrep-regex'
-import { regexSearchUsingCorePlugin } from '../../core/search/regex/coreplugin-regex'
+import { matchSearchUsingCorePlugin } from '../../core/file-search/match/coreplugin-match'
+import { matchSearchUsingOmnisearch } from '../../core/file-search/match/omnisearch-match'
+import { regexSearchUsingRipgrep } from '../../core/file-search/regex/ripgrep-regex'
+import { regexSearchUsingCorePlugin } from '../../core/file-search/regex/coreplugin-regex'
 import { useChatHistory } from '../../hooks/use-chat-history'
 import { useCustomModes } from '../../hooks/use-custom-mode'
 import { t } from '../../lang/helpers'
