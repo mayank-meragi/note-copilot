@@ -40,7 +40,7 @@ export async function matchSearchUsingCorePlugin(
                 // @ts-ignore
                 const results = (view as any).dom?.resultDomLookup;
                 resolve(results || new Map());
-            }, 5000)
+            }, 10000)
         });
 
         if (!searchResultsMap || searchResultsMap.size === 0) {
