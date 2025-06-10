@@ -28,18 +28,23 @@ export async function matchSearchUsingCorePlugin(
         // It does not return the results directly.
         searchPlugin.openGlobalSearch(query);
 
-        // We must wait for the search to execute and the UI to update.
-        await new Promise(resolve => setTimeout(resolve, 500));
-
         const searchLeaf = app.workspace.getLeavesOfType('search')[0];
         if (!searchLeaf) {
             throw new Error("No active search pane found after triggering search.");
         }
 
-        // @ts-ignore
-        const searchResultsMap = (searchLeaf.view as any).dom.resultDomLookup;
+        // Ensure the view is fully loaded before we try to access its properties.
+        const view = await searchLeaf.open(searchLeaf.view);
+        const searchResultsMap = await new Promise<Map<TFile, any>>(resolve => {
+            setTimeout(() => {
+                // @ts-ignore
+                const results = (view as any).dom?.resultDomLookup;
+                resolve(results || new Map());
+            }, 5000)
+        });
+
         if (!searchResultsMap || searchResultsMap.size === 0) {
-			console.error("No results found.");
+			console.error("No results found or search results map is not available.");
 			return "No results found."
         }
 
