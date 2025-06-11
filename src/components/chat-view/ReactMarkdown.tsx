@@ -13,6 +13,7 @@ import MarkdownFetchUrlsContentBlock from './Markdown/MarkdownFetchUrlsContentBl
 import MarkdownListFilesBlock from './Markdown/MarkdownListFilesBlock'
 import MarkdownReadFileBlock from './Markdown/MarkdownReadFileBlock'
 import MarkdownReasoningBlock from './Markdown/MarkdownReasoningBlock'
+import MarkdownMatchSearchFilesBlock from './Markdown/MarkdownMatchSearchFilesBlock'
 import MarkdownRegexSearchFilesBlock from './Markdown/MarkdownRegexSearchFilesBlock'
 import MarkdownSearchAndReplace from './Markdown/MarkdownSearchAndReplace'
 import MarkdownSearchWebBlock from './Markdown/MarkdownSearchWebBlock'
@@ -115,6 +116,15 @@ function ReactMarkdown({
 						onApply={onApply}
 						path={block.path}
 						recursive={block.recursive}
+						finish={block.finish}
+					/>
+				) : block.type === 'match_search_files' ? (
+					<MarkdownMatchSearchFilesBlock
+						key={"match-search-files-" + index}
+						applyStatus={applyStatus}
+						onApply={onApply}
+						path={block.path}
+						query={block.query}
 						finish={block.finish}
 					/>
 				) : block.type === 'regex_search_files' ? (

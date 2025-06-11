@@ -1,7 +1,9 @@
 import { ToolArgs } from "./types"
 
 export function getSearchFilesDescription(args: ToolArgs): string {
-	if (args.searchTool === 'regex') {
+	if (args.searchTool === 'match') {
+		return getMatchSearchFilesDescription(args)
+	} else if (args.searchTool === 'regex') {
 		return getRegexSearchFilesDescription(args)
 	} else if (args.searchTool === 'semantic') {
 		return getSemanticSearchFilesDescription(args)
@@ -10,12 +12,44 @@ export function getSearchFilesDescription(args: ToolArgs): string {
 	}
 }
 
+export function getMatchSearchFilesDescription(args: ToolArgs): string {
+	return `## match_search_files
+Description: Request to perform a match/fuzzy search across files in a specified directory, providing context-rich results. This tool searches for specific content across multiple files, displaying each match with encapsulating context.
+Parameters:
+- path: (required) The path of the directory to search in (relative to the current working directory ${args.cwd}). This directory will be recursively searched.
+- query: (required) The keyword/phrase to search for. The system will find documents with similar keywords/phrases.
+
+Usage:
+<match_search_files>
+<path>Directory path here</path>
+<query>Your keyword/phrase here</query>
+</match_search_files>
+
+Example: Requesting to search for all Markdown files containing 'test' in the current directory
+<match_search_files>
+<path>.</path>
+<query>test</query>
+</match_search_files>`
+}
+
 export function getRegexSearchFilesDescription(args: ToolArgs): string {
+	let regex_syntax: string;
+	switch (args.searchSettings.regexBackend) {
+		case 'coreplugin':
+			regex_syntax = "ECMAScript (JavaScript)";
+			break;
+		case 'ripgrep':
+			regex_syntax = "Rust";
+			break;
+		default:
+			regex_syntax = "ECMAScript (JavaScript)";
+	}
+
 	return `## regex_search_files
 Description: Request to perform a regex search across files in a specified directory, providing context-rich results. This tool searches for patterns or specific content across multiple files, displaying each match with encapsulating context.
 Parameters:
 - path: (required) The path of the directory to search in (relative to the current working directory ${args.cwd}). This directory will be recursively searched.
-- regex: (required) The regular expression pattern to search for. Uses Rust regex syntax, **but should not include word boundaries (\b)**.
+- regex: (required) The regular expression pattern to search for. Uses ${regex_syntax} regex syntax, **but should not include word boundaries (\b)**.
 
 Usage:
 <regex_search_files>

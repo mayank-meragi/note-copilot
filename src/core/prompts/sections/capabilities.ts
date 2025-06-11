@@ -1,3 +1,5 @@
+const MatchSearchFilesInstructions = "\n- You can use match_search_files to perform fuzzy-based searches across files using keyword/phrase. This tool is ideal for finding similar texts in notes. It excels at finding similar contents with similar keywords and phrases quickly."
+
 const RegexSearchFilesInstructions = "\n- You can use regex_search_files to perform pattern-based searches across files using regular expressions. This tool is ideal for finding exact text matches, specific patterns (like tags, links, dates, URLs), or structural elements in notes. It excels at locating precise format patterns and is perfect for finding connections between notes, frontmatter elements, or specific Markdown formatting."
 
 const SemanticSearchFilesInstructions = "\n- You can use semantic_search_files to find content based on meaning rather than exact text matches. Semantic search uses embedding vectors to understand concepts and ideas, finding relevant content even when keywords differ. This is especially powerful for discovering thematically related notes, answering conceptual questions about your knowledge base, or finding content when you don't know the exact wording used in the notes."
@@ -6,12 +8,20 @@ function getObsidianCapabilitiesSection(
 	cwd: string,
 	searchFilesTool: string,
 ): string {
-
-	const searchFilesInstructions = searchFilesTool === 'regex'
-		? RegexSearchFilesInstructions
-		: searchFilesTool === 'semantic'
-			? SemanticSearchFilesInstructions
-			: "";
+	let searchFilesInstructions: string;
+	switch (searchFilesTool) {
+		case 'match':
+			searchFilesInstructions = MatchSearchFilesInstructions;
+			break;
+		case 'regex':
+			searchFilesInstructions = RegexSearchFilesInstructions;
+			break;
+		case 'semantic':
+			searchFilesInstructions = SemanticSearchFilesInstructions;
+			break;
+		default:
+			searchFilesInstructions = "";
+	}
 
 	return `====
 

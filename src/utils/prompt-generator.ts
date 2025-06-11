@@ -182,7 +182,7 @@ export class PromptGenerator {
 			},
 		]
 
-		let filesSearchMethod = this.settings.filesSearchMethod
+		let filesSearchMethod = this.settings.filesSearchSettings.method
 		if (filesSearchMethod === 'auto' && this.settings.embeddingModelId && this.settings.embeddingModelId !== '') {
 			filesSearchMethod = 'semantic'
 		}
@@ -520,6 +520,7 @@ export class PromptGenerator {
 			this.app.vault.getRoot().path,
 			false,
 			mode,
+			this.settings.filesSearchSettings,
 			filesSearchMethod,
 			preferredLanguage,
 			this.diffStrategy,
