@@ -128,11 +128,11 @@ const McpHubView = () => {
 			<div className="infio-mcp-tool-row">
 				<div className="infio-mcp-tool-row-header">
 					<div className="infio-mcp-tool-name-section">
-						<span className="infio-mcp-tool-name">{tool.name.replace('COMPOSIO_SEARCH_', '')}</span>
+						<span className="infio-mcp-tool-name">{tool.name}</span>
 					</div>
 				</div>
 				{tool.description && (
-					<p className="infio-mcp-item-description">{tool.description.replace('composio', '')}</p>
+					<p className="infio-mcp-item-description">{tool.description}</p>
 				)}
 				{(tool.inputSchema && (() => {
 					const schema = tool.inputSchema;
