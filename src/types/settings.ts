@@ -201,6 +201,18 @@ export const triggerSchema = z.object({
 	}
 });
 
+const FilesSearchSettingsSchema = z.object({
+	method: z.enum(['match', 'regex', 'semantic', 'auto']).catch('auto'),
+	regexBackend: z.enum(['coreplugin', 'ripgrep']).catch('ripgrep'),
+	matchBackend: z.enum(['omnisearch', 'coreplugin']).catch('coreplugin'),
+	ripgrepPath: z.string().catch(''),
+}).catch({
+	method: 'auto',
+	regexBackend: 'ripgrep',
+	matchBackend: 'coreplugin',
+	ripgrepPath: '',
+});
+
 export const InfioSettingsSchema = z.object({
 	// Version
 	version: z.literal(SETTINGS_SCHEMA_VERSION).catch(SETTINGS_SCHEMA_VERSION),
@@ -260,8 +272,7 @@ export const InfioSettingsSchema = z.object({
 	jinaApiKey: z.string().catch(''),
 
 	// Files Search
-	filesSearchMethod: z.enum(['regex', 'semantic', 'auto']).catch('auto'),
-	ripgrepPath: z.string().catch(''),
+	filesSearchSettings: FilesSearchSettingsSchema,
 
 	/// [compatible]
 	// activeModels [compatible]
@@ -363,6 +374,7 @@ export const InfioSettingsSchema = z.object({
 })
 
 export type InfioSettings = z.infer<typeof InfioSettingsSchema>
+export type FilesSearchSettings = z.infer<typeof FilesSearchSettingsSchema>
 
 type Migration = {
 	fromVersion: number

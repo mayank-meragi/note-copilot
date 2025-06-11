@@ -60,6 +60,11 @@ export type ParsedMsgBlock =
 		recursive?: boolean
 		finish: boolean
 	} | {
+		type: 'match_search_files'
+		path: string
+		query: string
+		finish: boolean
+	} | {
 		type: 'regex_search_files'
 		path: string
 		regex: string
@@ -223,6 +228,36 @@ export function parseMsgBlocks(
 					path,
 					// Check if the tag is completely parsed with proper closing tag
 					// In parse5, when a tag is properly closed, its sourceCodeLocation will include endTag
+					finish: node.sourceCodeLocation.endTag !== undefined
+				})
+				lastEndOffset = endOffset
+			} else if (node.nodeName === 'match_search_files') {
+				if (!node.sourceCodeLocation) {
+					throw new Error('sourceCodeLocation is undefined')
+				}
+				const startOffset = node.sourceCodeLocation.startOffset
+				const endOffset = node.sourceCodeLocation.endOffset
+				if (startOffset > lastEndOffset) {
+					parsedResult.push({
+						type: 'string',
+						content: input.slice(lastEndOffset, startOffset),
+					})
+				}
+				let path: string | undefined
+				let query: string | undefined
+
+				for (const childNode of node.childNodes) {
+					if (childNode.nodeName === 'path' && childNode.childNodes.length > 0) {
+						path = childNode.childNodes[0].value
+					} else if (childNode.nodeName === 'query' && childNode.childNodes.length > 0) {
+						query = childNode.childNodes[0].value
+					}
+				}
+
+				parsedResult.push({
+					type: 'match_search_files',
+					path: path,
+					query: query,
 					finish: node.sourceCodeLocation.endTag !== undefined
 				})
 				lastEndOffset = endOffset

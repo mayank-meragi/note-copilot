@@ -20,6 +20,14 @@ export type ListFilesToolArgs = {
 	recursive?: boolean;
 }
 
+export type MatchSearchFilesToolArgs = {
+	type: 'match_search_files';
+	filepath?: string;
+	query?: string;
+	file_pattern?: string;
+	finish?: boolean;
+}
+
 export type RegexSearchFilesToolArgs = {
 	type: 'regex_search_files';
 	filepath?: string;
@@ -97,4 +105,4 @@ export type UseMcpToolArgs = {
 	parameters: Record<string, unknown>;
 }
 
-export type ToolArgs = ReadFileToolArgs | WriteToFileToolArgs | InsertContentToolArgs | SearchAndReplaceToolArgs | ListFilesToolArgs | RegexSearchFilesToolArgs | SemanticSearchFilesToolArgs | SearchWebToolArgs | FetchUrlsContentToolArgs | SwitchModeToolArgs | ApplyDiffToolArgs | UseMcpToolArgs;
+export type ToolArgs = ReadFileToolArgs | WriteToFileToolArgs | InsertContentToolArgs | SearchAndReplaceToolArgs | ListFilesToolArgs | MatchSearchFilesToolArgs | RegexSearchFilesToolArgs | SemanticSearchFilesToolArgs | SearchWebToolArgs | FetchUrlsContentToolArgs | SwitchModeToolArgs | ApplyDiffToolArgs | UseMcpToolArgs;
