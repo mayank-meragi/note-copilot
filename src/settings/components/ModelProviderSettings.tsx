@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 import { t } from '../../lang/helpers';
 import InfioPlugin from "../../main";
@@ -50,11 +50,19 @@ const getProviderSettingKey = (provider: ApiProvider): ProviderSettingKey => {
 
 const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin, onSettingsUpdate }) => {
 	const settings = plugin.settings;
-	const [activeTab, setActiveTab] = useState<ApiProvider>(ApiProvider.Infio);
+	const activeTab = settings.activeProviderTab || ApiProvider.Infio;
 
 	const handleSettingsUpdate = async (newSettings: InfioSettings) => {
 		await plugin.setSettings(newSettings);
 		onSettingsUpdate?.();
+	};
+
+	const setActiveTab = (provider: ApiProvider) => {
+		const newSettings = {
+			...settings,
+			activeProviderTab: provider
+		};
+		handleSettingsUpdate(newSettings);
 	};
 
 	const providers = GetAllProviders(); // 按照重要程度排序

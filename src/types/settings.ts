@@ -241,6 +241,9 @@ export const InfioSettingsSchema = z.object({
 		modelId: z.string(),
 	})).catch([]),
 
+	// Active Provider Tab (for UI state)
+	activeProviderTab: z.nativeEnum(ApiProvider).catch(ApiProvider.Infio),
+
 	// Chat Model 
 	chatModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.Infio),
 	chatModelId: z.string().catch(''),
