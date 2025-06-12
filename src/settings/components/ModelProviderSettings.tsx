@@ -397,7 +397,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			{/* 模型选择区域 */}
 			<div className="model-selection-section">
 				<div className="model-selection-header">
-					<h2 className="section-title">{t("settings.ModelProvider.modelSelection")}</h2>
+					<h2 className="section-title">{t("settings.ModelProvider.modelSelection")}:</h2>
 					<button 
 						className="one-click-config-btn"
 						onClick={handleOneClickConfig}

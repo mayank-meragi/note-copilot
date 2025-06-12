@@ -68,7 +68,7 @@ export function t(str: string, params?: Record<string, any>): any {
 	}
 
 	const path = str.split('.');
-	let result = locale || en;
+	let result: any = locale || en;
 
 	for (const key of path) {
 		result = result[key] || (en && en[key]);

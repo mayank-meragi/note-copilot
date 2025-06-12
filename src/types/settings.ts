@@ -203,12 +203,12 @@ export const triggerSchema = z.object({
 
 const FilesSearchSettingsSchema = z.object({
 	method: z.enum(['match', 'regex', 'semantic', 'auto']).catch('auto'),
-	regexBackend: z.enum(['coreplugin', 'ripgrep']).catch('ripgrep'),
+	regexBackend: z.enum(['coreplugin', 'ripgrep']).catch('coreplugin'),
 	matchBackend: z.enum(['omnisearch', 'coreplugin']).catch('coreplugin'),
 	ripgrepPath: z.string().catch(''),
 }).catch({
 	method: 'auto',
-	regexBackend: 'ripgrep',
+	regexBackend: 'coreplugin',
 	matchBackend: 'coreplugin',
 	ripgrepPath: '',
 });
