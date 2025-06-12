@@ -1453,10 +1453,7 @@ input[type='text'].infio-chat-list-dropdown-item-title-input {
  * Highlight styles
  */
 .infio-llm-setting-model-item-highlight {
-  background-color: var(--text-highlight-bg);
   color: var(--text-normal);
-  border-radius: var(--radius-s);
-  padding: 0 2px;
 }
 
 .infio-llm-setting-item-control::placeholder {

@@ -218,7 +218,7 @@ export const InfioSettingsSchema = z.object({
 	version: z.literal(SETTINGS_SCHEMA_VERSION).catch(SETTINGS_SCHEMA_VERSION),
 
 	// Provider
-	defaultProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.OpenRouter),
+	defaultProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.Infio),
 	infioProvider: InfioProviderSchema,
 	openrouterProvider: OpenRouterProviderSchema,
 	siliconflowProvider: SiliconFlowProviderSchema,
@@ -242,15 +242,15 @@ export const InfioSettingsSchema = z.object({
 	})).catch([]),
 
 	// Chat Model 
-	chatModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.OpenRouter),
+	chatModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.Infio),
 	chatModelId: z.string().catch(''),
 
 	// Apply Model
-	applyModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.OpenRouter),
+	applyModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.Infio),
 	applyModelId: z.string().catch(''),
 
 	// Embedding Model
-	embeddingModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.Google),
+	embeddingModelProvider: z.nativeEnum(ApiProvider).catch(ApiProvider.Infio),
 	embeddingModelId: z.string().catch(''),
 
 	// fuzzyMatchThreshold

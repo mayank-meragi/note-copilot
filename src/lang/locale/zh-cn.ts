@@ -208,14 +208,20 @@ export default {
 		// 模型设置部分
 		ApiProvider: {
 			label: 'LLM 提供商：',
+			labelDescription: '选择您想要使用的 LLM 提供商，支持配置多个提供商，API 密钥将安全保存在本地',
 			useCustomBaseUrl: '使用自定义基础 URL',
+			useCustomBaseUrlDescription: '为该提供商使用自定义的API端点URL',
 			enterApiKey: '输入您的 API 密钥',
+			enterApiKeyDescription: 'API Key 可以从官方网站{provider_api_url}获取',
 			enterCustomUrl: '输入您的自定义 API 端点 URL',
 		},
 		Models: {
 			chatModel: '聊天模型：',
+			chatModelDescription: '用于日常对话和问答的模型，处理大部分聊天交互',
 			autocompleteModel: '自动补全模型：',
+			autocompleteModelDescription: '用于代码和文本自动补全的模型，提供智能写作建议',
 			embeddingModel: '嵌入模型：',
+			embeddingModelDescription: '用于文档向量化和语义搜索的模型，支持 RAG 功能',
 		},
 		
 		// 模型参数部分

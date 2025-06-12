@@ -207,8 +207,11 @@ export default {
 		// Models Section
 		ApiProvider: {
 			label: 'Api provider:',
+			labelDescription: 'Select the LLM provider you want to use. Multiple providers can be configured, and API keys are securely stored locally',
 			useCustomBaseUrl: 'Use custom base url',
+			useCustomBaseUrlDescription: 'Use custom API endpoint URL for this provider',
 			enterApiKey: 'Enter your api key',
+			enterApiKeyDescription: 'API Key can be obtained from their official website{provider_api_url}',
 			enterCustomUrl: 'Enter your custom api endpoint url',
 		},
 		Models: {
