@@ -1,4 +1,8 @@
 releases:
+  - version: "0.6.4"
+    features:
+      - "Added batch embedding for siliconflow"
+
   - version: "0.6.3"
     features:
       - "Added Core Search Plugin and Omnisearch Support for Local File Searching PR from @travertexs"
