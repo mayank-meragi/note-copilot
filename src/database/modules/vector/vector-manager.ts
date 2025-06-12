@@ -131,12 +131,12 @@ export class VectorManager {
 
 		const embeddingProgress = { completed: 0 }
 		const embeddingChunks: InsertVector[] = []
-		const insertBatchSize = 100 // 数据库插入批量大小
+		const insertBatchSize = 64 // 数据库插入批量大小
 		
 		try {
 			if (embeddingModel.supportsBatch) {
 				// 支持批量处理的提供商：使用批量处理逻辑
-				const embeddingBatchSize = 100 // API批量处理大小
+				const embeddingBatchSize = 64 // API批量处理大小
 				
 				for (let i = 0; i < contentChunks.length; i += embeddingBatchSize) {
 					const batchChunks = contentChunks.slice(i, Math.min(i + embeddingBatchSize, contentChunks.length))
@@ -285,14 +285,15 @@ export class VectorManager {
 		})
 
 		const embeddingChunks: InsertVector[] = []
-		const insertBatchSize = 100 // 数据库插入批量大小
+		const insertBatchSize = 64 // 数据库插入批量大小
 		
 		try {
 			if (embeddingModel.supportsBatch) {
 				// 支持批量处理的提供商：使用批量处理逻辑
-				const embeddingBatchSize = 100 // API批量处理大小
+				const embeddingBatchSize = 64 // API批量处理大小
 				
 				for (let i = 0; i < contentChunks.length; i += embeddingBatchSize) {
+					console.log(`Embedding batch ${i / embeddingBatchSize + 1} of ${Math.ceil(contentChunks.length / embeddingBatchSize)}`)
 					const batchChunks = contentChunks.slice(i, Math.min(i + embeddingBatchSize, contentChunks.length))
 					const batchTexts = batchChunks.map(chunk => chunk.content)
 					

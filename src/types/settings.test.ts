@@ -15,7 +15,7 @@ describe('parseSmartCopilotSettings', () => {
 			anthropicApiKey: '',
 			filesSearchSettings: {
 				method: 'auto',
-				regexBackend: 'ripgrep',
+				regexBackend: 'coreplugin',
 				matchBackend: 'coreplugin',
 				ripgrepPath: '',
 			},
@@ -203,7 +203,7 @@ describe('settings migration', () => {
 			anthropicApiKey: '',
 			filesSearchSettings: {
 				method: 'auto',
-				regexBackend: 'ripgrep',
+				regexBackend: 'coreplugin',
 				matchBackend: 'coreplugin',
 				ripgrepPath: '',
 			},
