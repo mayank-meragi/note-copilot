@@ -4,7 +4,7 @@ import { t } from '../../lang/helpers';
 import InfioPlugin from "../../main";
 import { ApiProvider } from '../../types/llm/model';
 import { InfioSettings } from '../../types/settings';
-import { GetAllProviders } from '../../utils/api';
+import { GetAllProviders, GetDefaultModelId, GetEmbeddingProviders } from '../../utils/api';
 import { getProviderApiUrl } from '../../utils/provider-urls';
 
 import { ApiKeyComponent, CustomUrlComponent } from './FormComponents';
@@ -57,7 +57,72 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 		onSettingsUpdate?.();
 	};
 
-	const providers = GetAllProviders();
+	const providers = GetAllProviders(); // 按照重要程度排序
+	const embeddingProviders = GetEmbeddingProviders(); // 按照重要程度排序
+
+	// 获取已设置API Key的提供商列表
+	const getSettedProviders = (): ApiProvider[] => {
+		return providers.filter(provider => {			
+			const providerSetting = getProviderSetting(provider);
+			return providerSetting.apiKey && providerSetting.apiKey.trim() !== '';
+		});
+	};
+
+	// 一键配置模型
+	const handleOneClickConfig = () => {
+		const settedProviders = getSettedProviders();
+		
+		if (settedProviders.length === 0) {
+			// 提示用户未设置任何key
+			alert("当前未设置任何key");
+			return;
+		}
+
+		// 选择chat和autocomplete的提供商（按providers排序选择最靠前的）
+		const selectedProvider = providers.find(provider => settedProviders.includes(provider));
+		
+		// 选择embedding的提供商（按embeddingProviders排序选择最靠前的）
+		const embeddingProvider = embeddingProviders.find(provider => settedProviders.includes(provider));
+
+		// 准备要更新的设置对象
+		const newSettings = { ...settings };
+		let hasUpdates = false;
+
+		if (selectedProvider) {
+			const defaultModels = GetDefaultModelId(selectedProvider);
+			
+			// 设置chat和autocomplete模型
+			if (defaultModels.chat) {
+				newSettings.chatModelProvider = selectedProvider;
+				newSettings.chatModelId = defaultModels.chat;
+				hasUpdates = true;
+				console.log(`已自动配置聊天模型：${selectedProvider}/${defaultModels.chat}`);
+			}
+			if (defaultModels.autoComplete) {
+				newSettings.applyModelProvider = selectedProvider;
+				newSettings.applyModelId = defaultModels.autoComplete;
+				hasUpdates = true;
+				console.log(`已自动配置自动补全模型：${selectedProvider}/${defaultModels.autoComplete}`);
+			}
+		}
+
+		if (embeddingProvider) {
+			const embeddingDefaultModels = GetDefaultModelId(embeddingProvider);
+			
+			// 设置embedding模型
+			if (embeddingDefaultModels.embedding) {
+				newSettings.embeddingModelProvider = embeddingProvider;
+				newSettings.embeddingModelId = embeddingDefaultModels.embedding;
+				hasUpdates = true;
+				console.log(`已自动配置嵌入模型：${embeddingProvider}/${embeddingDefaultModels.embedding}`);
+			}
+		}
+
+		// 一次性更新所有设置
+		if (hasUpdates) {
+			handleSettingsUpdate(newSettings);
+		}
+	};
 
 	const updateProviderApiKey = (provider: ApiProvider, value: string) => {
 		const providerKey = getProviderSettingKey(provider);
@@ -232,7 +297,16 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 
 			{/* 模型选择区域 */}
 			<div className="model-selection-section">
-				<h2 className="section-title">模型选择</h2>
+				<div className="model-selection-header">
+					<h2 className="section-title">模型选择</h2>
+					<button 
+						className="one-click-config-btn"
+						onClick={handleOneClickConfig}
+						title="自动配置模型为已设置API Key的提供商的推荐模型"
+					>
+						一键配置
+					</button>
+				</div>
 
 				<div className="model-selectors">
 					<ComboBoxComponent
@@ -291,6 +365,44 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 					margin: 0 0 var(--size-4-3) 0;
 					padding-bottom: var(--size-2-2);
 					border-bottom: 1px solid var(--background-modifier-border);
+				}
+
+				/* 模型选择区域头部样式 */
+				.model-selection-header {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
+					margin-bottom: var(--size-4-3);
+				}
+
+				.model-selection-header .section-title {
+					margin: 0;
+					padding-bottom: 0;
+					border-bottom: none;
+				}
+
+				/* 一键配置按钮样式 */
+				.one-click-config-btn {
+					background: var(--interactive-accent);
+					color: var(--text-on-accent);
+					border: none;
+					border-radius: var(--radius-s);
+					padding: var(--size-2-1) var(--size-4-2);
+					font-size: var(--font-ui-smaller);
+					font-weight: var(--font-weight-medium);
+					cursor: pointer;
+					transition: all 0.15s ease-in-out;
+					box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+				}
+
+				.one-click-config-btn:hover {
+					background: var(--interactive-accent-hover);
+					box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+				}
+
+				.one-click-config-btn:active {
+					transform: translateY(1px);
+					box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 				}
 
 				/* 提供商标签页容器 */
@@ -379,6 +491,12 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 					.provider-tab {
 						padding: var(--size-2-1) var(--size-4-1);
 						font-size: var(--font-ui-smaller);
+					}
+
+					.model-selection-header {
+						flex-direction: column;
+						align-items: flex-start;
+						gap: var(--size-2-2);
 					}
 				}
 
