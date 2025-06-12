@@ -2,6 +2,7 @@ import * as Popover from "@radix-ui/react-popover";
 import Fuse, { FuseResult } from "fuse.js";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
+import { t } from "../../lang/helpers";
 import { ApiProvider } from "../../types/llm/model";
 import { InfioSettings } from "../../types/settings";
 // import { PROVIDERS } from '../constants';
@@ -224,7 +225,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 			if (!exactMatch) {
 				results.unshift({
 					id: searchTerm,
-					html: [{ text: `${modelIds.length > 0 ? '自定义: ' : ''}${searchTerm}`, isHighlighted: false }]
+					html: [{ text: `${modelIds.length > 0 ? t("settings.ModelProvider.custom") : ''}${searchTerm}`, isHighlighted: false }]
 				});
 			}
 		}
@@ -268,7 +269,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 			<div className="infio-llm-setting-item-content">
 				{/* Provider Selection - Now visible outside */}
 				<div className="infio-llm-setting-provider-container">
-					<label className="infio-llm-setting-provider-label">提供商</label>
+					<label className="infio-llm-setting-provider-label">{t("settings.ModelProvider.provider")}</label>
 					<select
 						className="dropdown infio-llm-setting-provider-select"
 						value={modelProvider}
@@ -287,12 +288,12 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 
 				{/* Model Selection */}
 				<div className="infio-llm-setting-model-container">
-					<label className="infio-llm-setting-model-label">模型</label>
+					<label className="infio-llm-setting-model-label">{t("settings.ModelProvider.model")}</label>
 					<Popover.Root modal={false} open={isOpen} onOpenChange={setIsOpen}>
 						<Popover.Trigger asChild>
 							<button className="infio-llm-setting-model-trigger clickable-icon" type="button">
 								<span className="infio-llm-setting-model-display">
-									{modelId || "选择模型..."}
+									{modelId || t("settings.ModelProvider.selectModel")}
 								</span>
 								<svg
 									className="infio-llm-setting-model-arrow"
@@ -322,7 +323,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 									<input
 										type="text"
 										className="infio-llm-setting-item-search"
-										placeholder={modelIds.length > 0 ? "搜索或输入模型名称..." : "输入自定义模型名称"}
+										placeholder={modelIds.length > 0 ? t("settings.ModelProvider.searchOrEnterModelName") : t("settings.ModelProvider.enterCustomModelName")}
 										value={searchTerm}
 										onChange={(e) => {
 											setSearchTerm(e.target.value);
@@ -348,7 +349,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 															updateModel(modelProvider, selectedOption.id);
 														}
 													} else if (searchTerm.trim()) {
-														// 如果没有选项但有输入内容，直接使用输入内容
+														// If no options but there is input content, use the input content directly
 														updateModel(modelProvider, searchTerm.trim());
 													}
 													setSearchTerm("");

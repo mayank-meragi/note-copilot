@@ -216,8 +216,29 @@ export default {
 		},
 		Models: {
 			chatModel: 'Chat model:',
+			chatModelDescription: 'Model used for daily conversations and Q&A, handling most chat interactions',
 			autocompleteModel: 'Autocomplete model:',
+			autocompleteModelDescription: 'Model used for code and text autocompletion, providing intelligent writing suggestions',
 			embeddingModel: 'Embedding model:',
+			embeddingModelDescription: 'Model used for document vectorization and semantic search, supporting RAG functionality',
+		},
+		
+		// Model Provider Settings
+		ModelProvider: {
+			noApiKeySet: 'No API key has been set',
+			setApiKey: 'Set {provider} API Key',
+			modelSelection: 'Model Selection',
+			oneClickConfig: 'One-Click Config',
+			oneClickConfigTooltip: 'Automatically configure models to recommended models from providers with API keys set',
+			chatModelConfigured: 'Chat model configured automatically: {provider}/{model}',
+			autocompleteModelConfigured: 'Autocomplete model configured automatically: {provider}/{model}',
+			embeddingModelConfigured: 'Embedding model configured automatically: {provider}/{model}',
+			provider: 'Provider',
+			model: 'Model',
+			selectModel: 'Select model...',
+			searchOrEnterModelName: 'Search or enter model name...',
+			enterCustomModelName: 'Enter custom model name',
+			custom: 'Custom: ',
 		},
 		
 		// Model Parameters Section

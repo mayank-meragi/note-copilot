@@ -56,7 +56,6 @@ export const getEmbeddingModel = (
 					}
 				},
 				getBatchEmbeddings: async (texts: string[]) => {
-					console.log("use getBatchEmbeddings", texts.length)
 					try {
 						if (!openai.apiKey) {
 							throw new LLMAPIKeyNotSetException(

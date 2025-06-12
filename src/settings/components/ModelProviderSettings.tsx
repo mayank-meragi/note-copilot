@@ -82,7 +82,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 		
 		if (settedProviders.length === 0) {
 			// 提示用户未设置任何key
-			alert("当前未设置任何key");
+			alert(t("settings.ModelProvider.noApiKeySet"));
 			return;
 		}
 
@@ -104,13 +104,13 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 				newSettings.chatModelProvider = selectedProvider;
 				newSettings.chatModelId = defaultModels.chat;
 				hasUpdates = true;
-				console.log(`已自动配置聊天模型：${selectedProvider}/${defaultModels.chat}`);
+				console.log(t("settings.ModelProvider.chatModelConfigured", { provider: selectedProvider, model: defaultModels.chat }));
 			}
 			if (defaultModels.autoComplete) {
 				newSettings.applyModelProvider = selectedProvider;
 				newSettings.applyModelId = defaultModels.autoComplete;
 				hasUpdates = true;
-				console.log(`已自动配置自动补全模型：${selectedProvider}/${defaultModels.autoComplete}`);
+				console.log(t("settings.ModelProvider.autocompleteModelConfigured", { provider: selectedProvider, model: defaultModels.autoComplete }));
 			}
 		}
 
@@ -122,7 +122,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 				newSettings.embeddingModelProvider = embeddingProvider;
 				newSettings.embeddingModelId = embeddingDefaultModels.embedding;
 				hasUpdates = true;
-				console.log(`已自动配置嵌入模型：${embeddingProvider}/${embeddingDefaultModels.embedding}`);
+				console.log(t("settings.ModelProvider.embeddingModelConfigured", { provider: embeddingProvider, model: embeddingDefaultModels.embedding }));
 			}
 		}
 
@@ -217,7 +217,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 	// 生成包含链接的API Key描述
 	const generateApiKeyDescription = (provider: ApiProvider): React.ReactNode => {
 		const apiUrl = getProviderApiUrl(provider);
-		const baseDescription = t("settings.ApiProvider.enterApiKeyDescription");
+		const baseDescription = String(t("settings.ApiProvider.enterApiKeyDescription"));
 		
 		if (!apiUrl) {
 			// 如果没有URL，直接移除占位符
@@ -253,11 +253,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			<div className="provider-config">
 				{provider !== ApiProvider.Ollama && (
 					<ApiKeyComponent
-						name={
-							<>
-								设置 <span className="provider-name-highlight">{provider}</span> API Key
-							</>
-						}
+						name={t("settings.ModelProvider.setApiKey", { provider })}
 						placeholder={t("settings.ApiProvider.enterApiKey")}
 						description={generateApiKeyDescription(provider)}
 						value={providerSetting.apiKey || ''}
@@ -306,13 +302,13 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			{/* 模型选择区域 */}
 			<div className="model-selection-section">
 				<div className="model-selection-header">
-					<h2 className="section-title">模型选择</h2>
+					<h2 className="section-title">{t("settings.ModelProvider.modelSelection")}</h2>
 					<button 
 						className="one-click-config-btn"
 						onClick={handleOneClickConfig}
-						title="自动配置模型为已设置API Key的提供商的推荐模型"
+						title={t("settings.ModelProvider.oneClickConfigTooltip")}
 					>
-						一键配置
+						{t("settings.ModelProvider.oneClickConfig")}
 					</button>
 				</div>
 

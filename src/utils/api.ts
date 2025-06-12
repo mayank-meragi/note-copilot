@@ -147,7 +147,6 @@ export const infioDefaultModelInfo: ModelInfo = {
 let infioModelsCache: Record<string, ModelInfo> | null = null;
 
 async function fetchInfioModels(apiKey?: string): Promise<Record<string, ModelInfo>> {
-	console.log("fetchInfioModels apiKey", apiKey)
 	if (infioModelsCache) {
 		return infioModelsCache;
 	}

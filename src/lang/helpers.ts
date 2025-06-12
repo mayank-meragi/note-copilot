@@ -56,7 +56,7 @@ const localeMap: { [k: string]: Partial<typeof en> } = {
 
 const locale = localeMap[moment.locale()];
 
-export function t(str: string): any {
+export function t(str: string, params?: Record<string, any>): any {
 	if (!locale) {
 		console.error({
 			plugin: "infio-copilot",
@@ -73,6 +73,13 @@ export function t(str: string): any {
 	for (const key of path) {
 		result = result[key] || (en && en[key]);
 		if (result === undefined) return str;
+	}
+
+	// Handle parameter interpolation
+	if (params && typeof result === 'string') {
+		return result.replace(/\{([^}]+)\}/g, (match, key) => {
+			return params[key] !== undefined ? String(params[key]) : match;
+		});
 	}
 
 	return result;

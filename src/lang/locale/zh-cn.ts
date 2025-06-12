@@ -224,6 +224,24 @@ export default {
 			embeddingModelDescription: '用于文档向量化和语义搜索的模型，支持 RAG 功能',
 		},
 		
+		// 模型提供商设置
+		ModelProvider: {
+			noApiKeySet: '当前未设置任何 API Key',
+			setApiKey: '设置 {provider} API Key',
+			modelSelection: '模型选择',
+			oneClickConfig: '一键配置',
+			oneClickConfigTooltip: '自动配置模型为已设置 API Key 的提供商的推荐模型',
+			chatModelConfigured: '已自动配置聊天模型：{provider}/{model}',
+			autocompleteModelConfigured: '已自动配置自动补全模型：{provider}/{model}',
+			embeddingModelConfigured: '已自动配置嵌入模型：{provider}/{model}',
+			provider: '提供商',
+			model: '模型',
+			selectModel: '选择模型...',
+			searchOrEnterModelName: '搜索或输入模型名称...',
+			enterCustomModelName: '输入自定义模型名称',
+			custom: '自定义: ',
+		},
+		
 		// 模型参数部分
 		ModelParameters: {
 			title: '模型参数',
