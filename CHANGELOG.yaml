@@ -1,4 +1,9 @@
 releases:
+  - version: "0.6.3"
+    features:
+      - "Added Core Search Plugin and Omnisearch Support for Local File Searching PR from @travertexs"
+      - "Added one-click configuration for model selection"
+      - "Added test connection for API key"
   - version: "0.6.0"
     features:
       - "Added Infio built-in MCP (Model Control Protocol) support"
