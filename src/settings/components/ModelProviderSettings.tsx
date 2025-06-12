@@ -181,7 +181,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			
 			// 对于Ollama和OpenAICompatible，不支持测试API连接
 			if (provider === ApiProvider.Ollama || provider === ApiProvider.OpenAICompatible) {
-				throw new Error(`不支持测试 ${provider} 的API连接`);
+				throw new Error(t("settings.ModelProvider.testConnection.notSupported", { provider }));
 			}
 			
 			// 创建LLM管理器实例
@@ -193,7 +193,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			
 			// 对于没有默认模型的提供商，使用通用的测试模型
 			if (!testModelId) {
-				throw new Error(`No default chat model available for ${provider}`);
+				throw new Error(t("settings.ModelProvider.testConnection.noDefaultModel", { provider }));
 			}
 			
 			// 构造测试模型对象
@@ -235,7 +235,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 					// ApiKeyComponent expects no return value on success, just no thrown error
 					return;
 				} else {
-					throw new Error('Invalid response format');
+					throw new Error(t("settings.ModelProvider.testConnection.invalidResponse"));
 				}
 			} catch (apiError) {
 				clearTimeout(timeoutId);
@@ -246,26 +246,33 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			console.error(`❌ ${provider} connection test failed:`, error);
 			
 			// 根据错误类型提供更具体的错误信息
-			let errorMessage = '连接测试失败';
+			let errorMessage = t("settings.ModelProvider.testConnection.connectionFailed");
 			
 			if (error.message?.includes('API key')) {
-				errorMessage = 'API Key 无效或缺失';
+				errorMessage = t("settings.ModelProvider.testConnection.invalidApiKey");
 			} else if (error.message?.includes('base URL') || error.message?.includes('baseURL')) {
-				errorMessage = '基础URL设置错误';
+				errorMessage = t("settings.ModelProvider.testConnection.invalidBaseUrl");
 			} else if (error.message?.includes('timeout') || error.name === 'AbortError') {
-				errorMessage = '请求超时，请检查网络连接';
+				errorMessage = t("settings.ModelProvider.testConnection.requestTimeout");
 			} else if (error.message?.includes('fetch')) {
-				errorMessage = '网络连接失败';
+				errorMessage = t("settings.ModelProvider.testConnection.networkError");
 			} else if (error.message?.includes('401')) {
-				errorMessage = 'API Key 授权失败';
+				errorMessage = t("settings.ModelProvider.testConnection.unauthorizedError");
 			} else if (error.message?.includes('403')) {
-				errorMessage = '访问被拒绝，请检查API Key权限';
+				errorMessage = t("settings.ModelProvider.testConnection.forbiddenError");
 			} else if (error.message?.includes('429')) {
-				errorMessage = '请求频率过高，请稍后重试';
+				errorMessage = t("settings.ModelProvider.testConnection.rateLimitError");
 			} else if (error.message?.includes('500')) {
-				errorMessage = '服务器内部错误';
+				errorMessage = t("settings.ModelProvider.testConnection.serverError");
 			} else if (error.message) {
-				errorMessage = error.message;
+				// 如果错误消息本身已经是翻译过的（比如不支持的提供商），直接使用
+				if (error.message.includes(t("settings.ModelProvider.testConnection.notSupported", { provider: '' }).slice(0, 10))) {
+					errorMessage = error.message;
+				} else if (error.message.includes(t("settings.ModelProvider.testConnection.noDefaultModel", { provider: '' }).slice(0, 10))) {
+					errorMessage = error.message;
+				} else {
+					errorMessage = error.message;
+				}
 			}
 			alert(errorMessage);
 			// 必须抛出错误，这样ApiKeyComponent才能正确显示失败状态

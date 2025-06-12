@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 
+import { t } from '../../lang/helpers';
+
 export type DropdownComponentProps = {
 	name: string;
 	description?: string;
@@ -310,7 +312,7 @@ export const ApiKeyComponent: React.FC<ApiKeyComponentProps> = ({
 						type="button"
 						className="infio-api-key-toggle"
 						onClick={toggleVisibility}
-						title={isVisible ? "隐藏API Key" : "显示API Key"}
+						title={isVisible ? t("settings.ModelProvider.testConnection.hideApiKey") : t("settings.ModelProvider.testConnection.showApiKey")}
 					>
 						{isVisible ? (
 							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -332,19 +334,19 @@ export const ApiKeyComponent: React.FC<ApiKeyComponentProps> = ({
 						className={`infio-api-key-test ${isTestingConnection ? 'testing' : ''} ${testResult ? testResult : ''}`}
 						onClick={handleTest}
 						disabled={isTestingConnection || !localValue.trim()}
-						title="测试API连通性"
+						title={t("settings.ModelProvider.testConnection.testConnectionTooltip")}
 					>
 						{isTestingConnection ? (
 							<>
 								<div className="loading-spinner"></div>
-								<span>测试中</span>
+								<span>{t("settings.ModelProvider.testConnection.testing")}</span>
 							</>
 						) : testResult === 'success' ? (
 							<>
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
 									<polyline points="20,6 9,17 4,12"></polyline>
 								</svg>
-								<span>成功</span>
+								<span>{t("settings.ModelProvider.testConnection.success")}</span>
 							</>
 						) : testResult === 'error' ? (
 							<>
@@ -353,7 +355,7 @@ export const ApiKeyComponent: React.FC<ApiKeyComponentProps> = ({
 									<line x1="15" y1="9" x2="9" y2="15"></line>
 									<line x1="9" y1="9" x2="15" y2="15"></line>
 								</svg>
-								<span>失败</span>
+								<span>{t("settings.ModelProvider.testConnection.failed")}</span>
 							</>
 						) : (
 							<>
@@ -362,7 +364,7 @@ export const ApiKeyComponent: React.FC<ApiKeyComponentProps> = ({
 									<path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5z"></path>
 									<path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5z"></path>
 								</svg>
-								<span>测试</span>
+								<span>{t("settings.ModelProvider.testConnection.test")}</span>
 							</>
 						)}
 					</button>
