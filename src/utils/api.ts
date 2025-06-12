@@ -1786,6 +1786,12 @@ export const GetDefaultModelId = (provider: ApiProvider): { chat: string, autoCo
 				"autoComplete": anthropicDefaultAutoCompleteModelId,
 				"embedding": anthropicDefaultEmbeddingModelId,
 			}
+		case ApiProvider.OpenAI:
+			return {
+				"chat": openAiNativeDefaultModelId,
+				"autoComplete": openAiNativeDefaultAutoCompleteModelId,
+				"embedding": openAiNativeDefaultEmbeddingModelId,
+			}
 		case ApiProvider.Deepseek:
 			return {
 				"chat": deepSeekDefaultModelId,

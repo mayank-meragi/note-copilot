@@ -1,4 +1,7 @@
 releases:
+  - version: "0.6.5"
+    fixes:
+      - "fixed openai provider test error"
   - version: "0.6.4"
     features:
       - "Added batch embedding for siliconflow"
