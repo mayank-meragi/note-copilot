@@ -1,4 +1,7 @@
 releases:
+  - version: "0.6.6"
+    fixes:
+      - "fixed pdf content null byte error"
   - version: "0.6.5"
     fixes:
       - "fixed openai provider test error"
