@@ -87,7 +87,7 @@ async function getFileOrFolderContent(
 			if (path.extension != 'md') {
 				return "(Binary file, unable to display content)"
 			}
-			return addLineNumbers(await readTFileContent(path, vault, app))
+			return addLineNumbers(await readTFileContent(path, vault))
 		} else if (path instanceof TFolder) {
 			const entries = path.children
 			let folderContent = ""
@@ -111,7 +111,7 @@ async function getFileOrFolderContent(
 								if (entry.extension != 'md') {
 									return undefined
 								}
-								const content = addLineNumbers(await readTFileContent(entry, vault, app))
+								const content = addLineNumbers(await readTFileContent(entry, vault))
 								return `<file_content path="${entry.path}">\n${content}\n</file_content>`
 							} catch (error) {
 								return undefined
@@ -883,7 +883,7 @@ ${customInstruction}
 	private async getCurrentFileMessage(
 		currentFile: TFile,
 	): Promise<RequestMessage> {
-		const fileContent = await readTFileContent(currentFile, this.app.vault, this.app)
+		const fileContent = await readTFileContent(currentFile, this.app.vault)
 		return {
 			role: 'user',
 			content: `# Inputs
@@ -905,7 +905,7 @@ ${fileContent}
 			return null;
 		}
 
-		const fileContent = await readTFileContent(currentFile, this.app.vault, this.app);
+		const fileContent = await readTFileContent(currentFile, this.app.vault);
 		const lines = fileContent.split('\n');
 
 		// 计算上下文范围，并处理边界情况

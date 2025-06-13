@@ -8,7 +8,7 @@ export async function parsePdfContent(file: TFile, app: App): Promise<string> {
 	try {
 		// 使用 Obsidian 内置的 PDF.js
 		const pdfjsLib = await loadPdfJs()
-		
+
 		// Read PDF file as binary buffer
 		const pdfBuffer = await app.vault.readBinary(file)
 
@@ -26,7 +26,9 @@ export async function parsePdfContent(file: TFile, app: App): Promise<string> {
 			fullText += pageText + '\n\n'
 		}
 
-		return fullText || '(Empty PDF content)'
+		// 清理null字节，防止PostgreSQL UTF8编码错误
+		const cleanText = (fullText || '(Empty PDF content)').replace(/\0/g, '')
+		return cleanText
 	} catch (error: any) {
 		console.error('Error parsing PDF:', error)
 		return `(Error reading PDF file: ${error?.message || 'Unknown error'})`
@@ -36,27 +38,42 @@ export async function parsePdfContent(file: TFile, app: App): Promise<string> {
 export async function readTFileContent(
 	file: TFile,
 	vault: Vault,
+): Promise<string> {
+	if (file.extension != 'md') {
+		return "(Binary file, unable to display content)"
+	}
+	const content = await vault.cachedRead(file)
+	// 清理null字节，防止PostgreSQL UTF8编码错误
+	return content.replace(/\0/g, '')
+}
+
+export async function readTFileContentPdf(
+	file: TFile,
+	vault: Vault,
 	app?: App,
 ): Promise<string> {
 	if (file.extension === 'pdf') {
 		if (app) {
-			return await parsePdfContent(file, app)
+			const content = await parsePdfContent(file, app)
+			// 清理null字节，防止PostgreSQL UTF8编码错误
+			return content.replace(/\0/g, '')
 		}
 		return "(PDF file, app context required for processing)"
 	}
 	if (file.extension != 'md') {
 		return "(Binary file, unable to display content)"
 	}
-	return await vault.cachedRead(file)
+	const content = await vault.cachedRead(file)
+	// 清理null字节，防止PostgreSQL UTF8编码错误
+	return content.replace(/\0/g, '')
 }
 
 export async function readMultipleTFiles(
 	files: TFile[],
-	vault: Vault,
-	app?: App,
+	vault: Vault
 ): Promise<string[]> {
 	// Read files in parallel
-	const readPromises = files.map((file) => readTFileContent(file, vault, app))
+	const readPromises = files.map((file) => readTFileContent(file, vault))
 	return await Promise.all(readPromises)
 }
 
