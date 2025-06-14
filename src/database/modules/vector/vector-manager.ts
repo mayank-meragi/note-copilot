@@ -85,7 +85,6 @@ export class VectorManager {
 		},
 		updateProgress?: (indexProgress: IndexProgress) => void,
 	): Promise<void> {
-		console.log("updateVaultIndex start")
 		let filesToIndex: TFile[]
 		if (options.reindexAll) {
 			filesToIndex = await this.getFilesToIndex({
@@ -96,7 +95,6 @@ export class VectorManager {
 			})
 			await this.repository.clearAllVectors(embeddingModel)
 		} else {
-			console.log("updateVaultIndex cleanVectorsForDeletedFiles")
 			await this.cleanVectorsForDeletedFiles(embeddingModel)
 			filesToIndex = await this.getFilesToIndex({
 				embeddingModel: embeddingModel,
@@ -484,9 +482,7 @@ export class VectorManager {
 	private async cleanVectorsForDeletedFiles(
 		embeddingModel: EmbeddingModel,
 	) {
-		console.log("cleanVectorsForDeletedFiles start")
 		const indexedFilePaths = await this.repository.getAllIndexedFilePaths(embeddingModel)
-		console.log("indexedFilePaths: ", indexedFilePaths)
 		const needToDelete = indexedFilePaths.filter(filePath => !this.app.vault.getAbstractFileByPath(filePath))
 		if (needToDelete.length > 0) {
 			await this.repository.deleteVectorsForMultipleFiles(
@@ -494,7 +490,6 @@ export class VectorManager {
 				embeddingModel,
 			)
 		}
-		console.log("cleanVectorsForDeletedFiles done")
 	}
 
 	private async getFilesToIndex({
@@ -508,7 +503,6 @@ export class VectorManager {
 		includePatterns: string[]
 		reindexAll?: boolean
 		}): Promise<TFile[]> {
-		console.log("getFilesToIndex")
 		let filesToIndex = this.app.vault.getMarkdownFiles()
 
 		filesToIndex = filesToIndex.filter((file) => {
@@ -524,7 +518,6 @@ export class VectorManager {
 		if (reindexAll) {
 			return filesToIndex
 		}
-		console.log("filesToIndex: ", filesToIndex)
 		// Check for updated or new files
 		filesToIndex = await Promise.all(
 			filesToIndex.map(async (file) => {

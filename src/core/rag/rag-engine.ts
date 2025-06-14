@@ -53,7 +53,6 @@ export class RAGEngine {
 			throw new Error('Embedding model is not set')
 		}
 		await this.initializeDimension()
-		console.log("updateVaultIndex")
 
 		await this.vectorManager.updateVaultIndex(
 			this.embeddingModel,
@@ -70,7 +69,6 @@ export class RAGEngine {
 				})
 			},
 		)
-		console.log("updateVaultIndex done")
 		this.initialized = true
 	}
 
