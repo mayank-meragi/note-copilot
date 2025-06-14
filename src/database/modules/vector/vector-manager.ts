@@ -85,6 +85,7 @@ export class VectorManager {
 		},
 		updateProgress?: (indexProgress: IndexProgress) => void,
 	): Promise<void> {
+		console.log("updateVaultIndex start")
 		let filesToIndex: TFile[]
 		if (options.reindexAll) {
 			filesToIndex = await this.getFilesToIndex({
@@ -95,6 +96,7 @@ export class VectorManager {
 			})
 			await this.repository.clearAllVectors(embeddingModel)
 		} else {
+			console.log("updateVaultIndex cleanVectorsForDeletedFiles")
 			await this.cleanVectorsForDeletedFiles(embeddingModel)
 			filesToIndex = await this.getFilesToIndex({
 				embeddingModel: embeddingModel,
@@ -168,13 +170,13 @@ export class VectorManager {
 
 		const embeddingProgress = { completed: 0 }
 		// 减少批量大小以降低内存压力
-		const insertBatchSize = 16 // 从64降低到16
+		const insertBatchSize = 32
 		let batchCount = 0
 		
 		try {
 			if (embeddingModel.supportsBatch) {
 				// 支持批量处理的提供商：使用流式处理逻辑
-				const embeddingBatchSize = 16 // 从64降低到16
+				const embeddingBatchSize = 32 
 				
 				for (let i = 0; i < contentChunks.length; i += embeddingBatchSize) {
 					batchCount++
@@ -226,7 +228,7 @@ export class VectorManager {
 				}
 			} else {
 				// 不支持批量处理的提供商：使用流式处理逻辑
-				const limit = pLimit(10) // 从50降低到10，减少并发压力
+				const limit = pLimit(32) // 从50降低到10，减少并发压力
 				const abortController = new AbortController()
 				
 				// 流式处理：分批处理并立即插入
@@ -482,7 +484,9 @@ export class VectorManager {
 	private async cleanVectorsForDeletedFiles(
 		embeddingModel: EmbeddingModel,
 	) {
+		console.log("cleanVectorsForDeletedFiles start")
 		const indexedFilePaths = await this.repository.getAllIndexedFilePaths(embeddingModel)
+		console.log("indexedFilePaths: ", indexedFilePaths)
 		const needToDelete = indexedFilePaths.filter(filePath => !this.app.vault.getAbstractFileByPath(filePath))
 		if (needToDelete.length > 0) {
 			await this.repository.deleteVectorsForMultipleFiles(
@@ -490,6 +494,7 @@ export class VectorManager {
 				embeddingModel,
 			)
 		}
+		console.log("cleanVectorsForDeletedFiles done")
 	}
 
 	private async getFilesToIndex({
@@ -502,7 +507,8 @@ export class VectorManager {
 		excludePatterns: string[]
 		includePatterns: string[]
 		reindexAll?: boolean
-	}): Promise<TFile[]> {
+		}): Promise<TFile[]> {
+		console.log("getFilesToIndex")
 		let filesToIndex = this.app.vault.getMarkdownFiles()
 
 		filesToIndex = filesToIndex.filter((file) => {
@@ -518,7 +524,7 @@ export class VectorManager {
 		if (reindexAll) {
 			return filesToIndex
 		}
-
+		console.log("filesToIndex: ", filesToIndex)
 		// Check for updated or new files
 		filesToIndex = await Promise.all(
 			filesToIndex.map(async (file) => {
@@ -541,6 +547,7 @@ export class VectorManager {
 					const outOfDate = file.stat.mtime > fileChunks[0].mtime
 					if (outOfDate) {
 						// File has changed, so we need to re-index it
+						console.log("File has changed, so we need to re-index it", file.path)
 						return file
 					}
 					return null

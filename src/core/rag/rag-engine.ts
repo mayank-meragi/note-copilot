@@ -53,6 +53,7 @@ export class RAGEngine {
 			throw new Error('Embedding model is not set')
 		}
 		await this.initializeDimension()
+		console.log("updateVaultIndex")
 
 		await this.vectorManager.updateVaultIndex(
 			this.embeddingModel,
@@ -69,6 +70,7 @@ export class RAGEngine {
 				})
 			},
 		)
+		console.log("updateVaultIndex done")
 		this.initialized = true
 	}
 
@@ -121,9 +123,10 @@ export class RAGEngine {
 
 		await this.initializeDimension()
 
-		if (!this.initialized) {
-			await this.updateVaultIndex({ reindexAll: false }, onQueryProgressChange)
-		}
+		// if (!this.initialized) {
+		// 	console.log("need to updateVaultIndex")
+		// 	await this.updateVaultIndex({ reindexAll: false }, onQueryProgressChange)
+		// }
 		const queryEmbedding = await this.getEmbedding(query)
 		onQueryProgressChange?.({
 			type: 'querying',
