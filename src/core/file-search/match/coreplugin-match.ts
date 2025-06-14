@@ -56,7 +56,9 @@ export async function matchSearchUsingCorePlugin(
                 break;
             }
 
-            const content = await vault.cachedRead(file as TFile);
+            let content = await vault.cachedRead(file as TFile);
+            // 清理null字节，防止PostgreSQL UTF8编码错误
+            content = content.replace(/\0/g, '');
             const lines = content.split('\n');
 
             // `fileMatches.result.content` holds an array of matches for the file.
