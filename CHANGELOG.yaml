@@ -1,4 +1,7 @@
 releases:
+  - version: "0.6.9"
+    features:
+      - "Added search view"
   - version: "0.6.8"
     fixes:
       - "fixed vector embedding memory leak"
