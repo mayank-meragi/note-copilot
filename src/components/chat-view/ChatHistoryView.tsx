@@ -1,4 +1,4 @@
-import { Clock, MessageSquare, Pencil, Search, Trash2 } from 'lucide-react'
+import { CheckSquare, Clock, Edit3, MessageSquare, Pencil, Search, Square, Trash2, CopyPlus } from 'lucide-react'
 import { Notice } from 'obsidian'
 import React, { useMemo, useRef, useState } from 'react'
 
@@ -31,6 +31,10 @@ const ChatHistoryView = ({
 	// editing conversation id
 	const [editingConversationId, setEditingConversationId] = useState<string | null>(null)
 
+	// selection mode and selected conversations
+	const [selectionMode, setSelectionMode] = useState(false)
+	const [selectedConversations, setSelectedConversations] = useState<Set<string>>(new Set())
+
 	const titleInputRefs = useRef<Map<string, HTMLInputElement>>(new Map())
 
 	// handle search
@@ -49,6 +53,38 @@ const ChatHistoryView = ({
 		)
 	}, [chatList, searchTerm])
 
+	// toggle selection mode
+	const toggleSelectionMode = () => {
+		setSelectionMode(!selectionMode)
+		setSelectedConversations(new Set()) // clear selections when toggling
+	}
+
+	// toggle conversation selection
+	const toggleConversationSelection = (conversationId: string) => {
+		const newSelected = new Set(selectedConversations)
+		if (newSelected.has(conversationId)) {
+			newSelected.delete(conversationId)
+		} else {
+			newSelected.add(conversationId)
+		}
+		setSelectedConversations(newSelected)
+	}
+
+	// select all conversations
+	const selectAllConversations = () => {
+		const allIds = new Set(filteredConversations.map(conv => conv.id))
+		setSelectedConversations(allIds)
+	}
+
+	// clear all selections
+	const clearAllSelections = () => {
+		setSelectedConversations(new Set())
+	}
+
+	// check if all conversations are selected
+	const isAllSelected = filteredConversations.length > 0 && 
+		filteredConversations.every(conv => selectedConversations.has(conv.id))
+
 	// delete conversation
 	const handleDeleteConversation = async (id: string) => {
 		try {
@@ -58,6 +94,46 @@ const ChatHistoryView = ({
 			new Notice(String(t('chat.errors.failedToDeleteConversation')))
 			console.error('Failed to delete conversation', error)
 		}
+	}
+
+	// batch delete selected conversations
+	const handleBatchDelete = async () => {
+		if (selectedConversations.size === 0) {
+			new Notice('请先选择要删除的对话')
+			return
+		}
+
+		// show confirmation
+		const confirmed = confirm(`确定要删除选中的 ${selectedConversations.size} 个对话吗？此操作不可撤销。`)
+		if (!confirmed) {
+			return
+		}
+
+		const deletedIds: string[] = []
+		const errors: string[] = []
+
+		// delete conversations one by one
+		for (const id of selectedConversations) {
+			try {
+				await deleteConversation(id)
+				deletedIds.push(id)
+				onDelete?.(id)
+			} catch (error) {
+				errors.push(id)
+				console.error('Failed to delete conversation', id, error)
+			}
+		}
+
+		// show results
+		if (deletedIds.length > 0) {
+			new Notice(`成功删除 ${deletedIds.length} 个对话`)
+		}
+		if (errors.length > 0) {
+			new Notice(`${errors.length} 个对话删除失败`)
+		}
+
+		// clear selections
+		setSelectedConversations(new Set())
 	}
 
 	// edit conversation title
@@ -85,7 +161,11 @@ const ChatHistoryView = ({
 
 	// select conversation
 	const handleSelectConversation = (conversationId: string) => {
-		onSelect?.(conversationId)
+		if (selectionMode) {
+			toggleConversationSelection(conversationId)
+		} else {
+			onSelect?.(conversationId)
+		}
 	}
 
 	// format date
@@ -98,7 +178,7 @@ const ChatHistoryView = ({
 		if (date >= today) {
 			return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 		} else if (date >= yesterday) {
-			return t('chat.history.yesterday')
+			return String(t('chat.history.yesterday'))
 		} else {
 			return date.toLocaleDateString()
 		}
@@ -111,19 +191,66 @@ const ChatHistoryView = ({
 				<div className="infio-chat-history-title">
 					<h2>{t('chat.history.title')}</h2>
 				</div>
+				<div className="infio-chat-history-header-actions">
+					<button
+						onClick={toggleSelectionMode}
+						className={`infio-chat-history-selection-btn ${selectionMode ? 'active' : ''}`}
+						title={selectionMode ? '退出选择模式' : '进入选择模式'}
+					>
+						<CopyPlus size={16} />
+						{selectionMode ? '取消' : '多选'}
+					</button>
+				</div>
 			</div>
 
 			{/* description */}
 			<div className="infio-chat-history-tip">
-				{t('chat.history.description')}
+				{selectionMode 
+					? `选择模式 - 已选择 ${selectedConversations.size} 个对话`
+					: String(t('chat.history.description'))
+				}
 			</div>
+
+			{/* batch operations bar */}
+			{selectionMode && (
+				<div className="infio-chat-history-batch-actions">
+					<div className="infio-chat-history-select-actions">
+						<button
+							onClick={isAllSelected ? clearAllSelections : selectAllConversations}
+							className="infio-chat-history-select-all-btn"
+						>
+							{isAllSelected ? (
+								<>
+									<CheckSquare size={16} />
+									取消全选
+								</>
+							) : (
+								<>
+									<Square size={16} />
+									全选
+								</>
+							)}
+						</button>
+					</div>
+					<div className="infio-chat-history-batch-delete">
+						<button
+							onClick={handleBatchDelete}
+							disabled={selectedConversations.size === 0}
+							className="infio-chat-history-batch-delete-btn"
+						>
+							<Trash2 size={16} />
+							批量删除 ({selectedConversations.size})
+						</button>
+					</div>
+				</div>
+			)}
 
 			{/* search bar */}
 			<div className="infio-chat-history-search">
 				<Search size={18} className="infio-chat-history-search-icon" />
 				<input
 					type="text"
-					placeholder={t('chat.history.searchPlaceholder')}
+					placeholder={String(t('chat.history.searchPlaceholder'))}
 					value={searchTerm}
 					onChange={handleSearch}
 					className="infio-chat-history-search-input"
@@ -135,13 +262,13 @@ const ChatHistoryView = ({
 				{filteredConversations.length === 0 ? (
 					<div className="infio-chat-history-empty">
 						<MessageSquare size={48} className="infio-chat-history-empty-icon" />
-						<p>{searchTerm ? t('chat.history.noMatchingChats') : t('chat.history.noChats')}</p>
+						<p>{searchTerm ? String(t('chat.history.noMatchingChats')) : String(t('chat.history.noChats'))}</p>
 					</div>
 				) : (
 					filteredConversations.map(conversation => (
 						<div 
 							key={conversation.id} 
-							className={`infio-chat-history-item ${currentConversationId === conversation.id ? 'active' : ''}`}
+							className={`infio-chat-history-item ${currentConversationId === conversation.id ? 'active' : ''} ${selectedConversations.has(conversation.id) ? 'selected' : ''}`}
 						>
 							{editingConversationId === conversation.id ? (
 								// edit mode
@@ -167,13 +294,13 @@ const ChatHistoryView = ({
 											onClick={() => handleSaveEdit(conversation.id)}
 											className="infio-chat-history-save-btn"
 										>
-											<span>{t('chat.history.save')}</span>
+											<span>{String(t('chat.history.save'))}</span>
 										</button>
 										<button
 											onClick={() => setEditingConversationId(null)}
 											className="infio-chat-history-cancel-btn"
 										>
-											<span>{t('chat.history.cancel')}</span>
+											<span>{String(t('chat.history.cancel'))}</span>
 										</button>
 									</div>
 								</div>
@@ -183,6 +310,15 @@ const ChatHistoryView = ({
 									className="infio-chat-history-view-mode"
 									onClick={() => handleSelectConversation(conversation.id)}
 								>
+									{selectionMode && (
+										<div className="infio-chat-history-checkbox">
+											{selectedConversations.has(conversation.id) ? (
+												<CheckSquare size={20} className="infio-chat-history-checkbox-checked" />
+											) : (
+												<Square size={20} className="infio-chat-history-checkbox-unchecked" />
+											)}
+										</div>
+									)}
 									<div className="infio-chat-history-content">
 										<div className="infio-chat-history-date">
 											<Clock size={12} />
@@ -190,28 +326,30 @@ const ChatHistoryView = ({
 										</div>
 										<div className="infio-chat-history-conversation-title">{conversation.title}</div>
 									</div>
-									<div className="infio-chat-history-actions">
-										<button
-											onClick={(e) => {
-												e.stopPropagation()
-												handleEditConversation(conversation)
-											}}
-											className="infio-chat-history-btn"
-											title={t('chat.history.editTitle')}
-										>
-											<Pencil size={16} />
-										</button>
-										<button
-											onClick={(e) => {
-												e.stopPropagation()
-												handleDeleteConversation(conversation.id)
-											}}
-											className="infio-chat-history-btn infio-chat-history-delete-btn"
-											title={t('chat.history.deleteConversation')}
-										>
-											<Trash2 size={16} />
-										</button>
-									</div>
+									{!selectionMode && (
+										<div className="infio-chat-history-actions">
+											<button
+												onClick={(e) => {
+													e.stopPropagation()
+													handleEditConversation(conversation)
+												}}
+												className="infio-chat-history-btn"
+												title={String(t('chat.history.editTitle'))}
+											>
+												<Pencil size={16} />
+											</button>
+											<button
+												onClick={(e) => {
+													e.stopPropagation()
+													handleDeleteConversation(conversation.id)
+												}}
+												className="infio-chat-history-btn infio-chat-history-delete-btn"
+												title={String(t('chat.history.deleteConversation'))}
+											>
+												<Trash2 size={16} />
+											</button>
+										</div>
+									)}
 								</div>
 							)}
 						</div>
@@ -243,11 +381,113 @@ const ChatHistoryView = ({
 					display: flex;
 					justify-content: space-between;
 					align-items: center;
+					width: 100%;
+					min-height: 40px;
+					margin-bottom: 8px;
 				}
 
 				.infio-chat-history-title h2 {
 					margin: 0;
 					font-size: 24px;
+					flex: 1;
+				}
+
+				.infio-chat-history-header-actions {
+					display: flex;
+					gap: 8px;
+					flex-shrink: 0;
+				}
+
+				.infio-chat-history-selection-btn {
+					display: flex !important;
+					align-items: center;
+					gap: 6px;
+					background-color: var(--background-primary, #ffffff);
+					border: 1px solid var(--background-modifier-border, #e0e0e0);
+					color: var(--text-normal, #333333);
+					padding: 6px 12px;
+					border-radius: var(--radius-s, 4px);
+					cursor: pointer;
+					font-size: var(--font-ui-small, 14px);
+					transition: all 0.2s ease;
+					min-width: 60px;
+					height: 32px;
+					box-sizing: border-box;
+				}
+
+				.infio-chat-history-selection-btn:hover {
+					background-color: var(--background-modifier-hover, #f5f5f5);
+					border-color: var(--background-modifier-border-hover, #d0d0d0);
+				}
+
+				.infio-chat-history-selection-btn.active {
+					background-color: var(--interactive-accent, #007acc);
+					color: var(--text-on-accent, #ffffff);
+					border-color: var(--interactive-accent, #007acc);
+				}
+
+				.infio-chat-history-batch-actions {
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+					padding: 12px;
+					background-color: var(--background-secondary);
+					border: 1px solid var(--background-modifier-border);
+					border-radius: var(--radius-s);
+					gap: 12px;
+				}
+
+				.infio-chat-history-select-actions {
+					display: flex;
+					gap: 8px;
+				}
+
+				.infio-chat-history-select-all-btn {
+					display: flex;
+					align-items: center;
+					gap: 6px;
+					background-color: transparent;
+					border: 1px solid var(--background-modifier-border);
+					color: var(--text-normal);
+					padding: 6px 12px;
+					border-radius: var(--radius-s);
+					cursor: pointer;
+					font-size: var(--font-ui-small);
+					transition: all 0.2s ease;
+				}
+
+				.infio-chat-history-select-all-btn:hover {
+					background-color: var(--background-modifier-hover);
+				}
+
+				.infio-chat-history-batch-delete {
+					display: flex;
+					gap: 8px;
+				}
+
+				.infio-chat-history-batch-delete-btn {
+					display: flex;
+					align-items: center;
+					gap: 6px;
+					background-color: var(--background-modifier-error);
+					border: 1px solid var(--background-modifier-error);
+					color: var(--text-error);
+					padding: 6px 12px;
+					border-radius: var(--radius-s);
+					cursor: pointer;
+					font-size: var(--font-ui-small);
+					transition: all 0.2s ease;
+				}
+
+				.infio-chat-history-batch-delete-btn:hover:not(:disabled) {
+					background-color: var(--background-modifier-error-hover);
+				}
+
+				.infio-chat-history-batch-delete-btn:disabled {
+					background-color: var(--background-modifier-form-field);
+					color: var(--text-faint);
+					border-color: var(--background-modifier-border);
+					cursor: not-allowed;
 				}
 
 				.infio-chat-history-tip {
@@ -353,12 +593,31 @@ const ChatHistoryView = ({
 					border-color: var(--text-accent);
 				}
 
+				.infio-chat-history-item.selected {
+					background-color: var(--background-modifier-active);
+					border-color: var(--interactive-accent);
+				}
+
 				.infio-chat-history-view-mode {
 					display: flex;
 					align-items: center;
 					justify-content: space-between;
 					padding: 12px;
 					cursor: pointer;
+				}
+
+				.infio-chat-history-checkbox {
+					margin-right: 12px;
+					display: flex;
+					align-items: center;
+				}
+
+				.infio-chat-history-checkbox-checked {
+					color: var(--interactive-accent);
+				}
+
+				.infio-chat-history-checkbox-unchecked {
+					color: var(--text-muted);
 				}
 
 				.infio-chat-history-content {
