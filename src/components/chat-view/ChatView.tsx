@@ -59,7 +59,7 @@ import { fetchUrlsContent, onEnt, webSearch } from '../../utils/web-search'
 import { ModeSelect } from './chat-input/ModeSelect'; // Start of new group
 import PromptInputWithActions, { ChatUserInputRef } from './chat-input/PromptInputWithActions'
 import { editorStateToPlainText } from './chat-input/utils/editor-state-to-plain-text'
-import { ChatHistory } from './ChatHistoryView'
+import ChatHistoryView from './ChatHistoryView'
 import CommandsView from './CommandsView'
 import CustomModeView from './CustomModeView'
 import FileReadResults from './FileReadResults'
@@ -177,7 +177,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		}
 	}
 
-	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp' | 'search'>('chat')
+	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp' | 'search' | 'history'>('chat')
 
 	const [selectedSerializedNodes, setSelectedSerializedNodes] = useState<BaseSerializedNode[]>([])
 
@@ -1005,36 +1005,18 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					>
 						<Search size={18} color={tab === 'search' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
-					<ChatHistory
-						chatList={chatList}
-						currentConversationId={currentConversationId}
-						onSelect={async (conversationId) => {
-							if (tab !== 'chat') {
+					<button
+						onClick={() => {
+							if (tab === 'history') {
 								setTab('chat')
+							} else {
+								setTab('history')
 							}
-							if (conversationId === currentConversationId) return
-							await handleLoadConversation(conversationId)
-						}}
-						onDelete={async (conversationId) => {
-							await deleteConversation(conversationId)
-							if (conversationId === currentConversationId) {
-								const nextConversation = chatList.find(
-									(chat) => chat.id !== conversationId,
-								)
-								if (nextConversation) {
-									void handleLoadConversation(nextConversation.id)
-								} else {
-									handleNewChat()
-								}
-							}
-						}}
-						onUpdateTitle={async (conversationId, newTitle) => {
-							await updateConversationTitle(conversationId, newTitle)
 						}}
 						className="infio-chat-list-dropdown"
 					>
-						<History size={18} />
-					</ChatHistory>
+						<History size={18} color={tab === 'history' ? 'var(--text-accent)' : 'var(--text-color)'} />
+					</button>
 					<button
 						onClick={() => {
 							// switch between chat and prompts
@@ -1210,6 +1192,33 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 			) : tab === 'custom-mode' ? (
 				<div className="infio-chat-commands">
 					<CustomModeView />
+				</div>
+			) : tab === 'history' ? (
+				<div className="infio-chat-commands">
+					<ChatHistoryView
+						currentConversationId={currentConversationId}
+						onSelect={async (conversationId) => {
+							setTab('chat')
+							if (conversationId === currentConversationId) return
+							await handleLoadConversation(conversationId)
+						}}
+						onDelete={async (conversationId) => {
+							await deleteConversation(conversationId)
+							if (conversationId === currentConversationId) {
+								const nextConversation = chatList.find(
+									(chat) => chat.id !== conversationId,
+								)
+								if (nextConversation) {
+									void handleLoadConversation(nextConversation.id)
+								} else {
+									handleNewChat()
+								}
+							}
+						}}
+						onUpdateTitle={async (conversationId, newTitle) => {
+							await updateConversationTitle(conversationId, newTitle)
+						}}
+					/>
 				</div>
 			) : (
 				<div className="infio-chat-commands">

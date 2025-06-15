@@ -111,7 +111,12 @@ export class ChatManager extends AbstractJsonRepository<
 	}
 
 	public async listChats(): Promise<ChatConversationMeta[]> {
+		console.log('ChatManager - listChats called')
+		console.log('ChatManager - data directory:', this.dataDir)
 		const metadata = await this.listMetadata()
-		return metadata.sort((a, b) => b.updatedAt - a.updatedAt)
+		console.log('ChatManager - raw metadata:', metadata)
+		const sorted = metadata.sort((a, b) => b.updatedAt - a.updatedAt)
+		console.log('ChatManager - sorted chats:', sorted)
+		return sorted
 	}
 }

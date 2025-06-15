@@ -26,7 +26,10 @@ export function useChatHistory(): UseChatHistory {
 	const [chatList, setChatList] = useState<ChatConversationMeta[]>([])
 
 	const fetchChatList = useCallback(async () => {
+		console.log('useChatHistory - fetching chat list...')
 		const conversations = await chatManager.listChats()
+		console.log('useChatHistory - fetched conversations:', conversations)
+		console.log('useChatHistory - conversations length:', conversations.length)
 		setChatList(conversations)
 	}, [chatManager])
 
@@ -38,20 +41,24 @@ export function useChatHistory(): UseChatHistory {
 		() =>
 			debounce(
 				async (id: string, messages: ChatMessage[]): Promise<void> => {
+					console.log('useChatHistory - createOrUpdateConversation called with id:', id, 'messages length:', messages.length)
 					const serializedMessages = messages.map(serializeChatMessage)
 					const existingConversation = await chatManager.findById(id)
 
 					if (existingConversation) {
+						console.log('useChatHistory - updating existing conversation:', existingConversation.id)
 						if (isEqual(existingConversation.messages, serializedMessages)) {
+							console.log('useChatHistory - messages are identical, skipping update')
 							return
 						}
 						await chatManager.updateChat(existingConversation.id, {
 							messages: serializedMessages,
 						})
 					} else {
+						console.log('useChatHistory - creating new conversation')
 						const firstUserMessage = messages.find((v) => v.role === 'user') as ChatUserMessage
 
-						await chatManager.createChat({
+						const newChat = await chatManager.createChat({
 							id,
 							title: firstUserMessage?.content
 								? editorStateToPlainText(firstUserMessage.content).substring(
@@ -61,8 +68,10 @@ export function useChatHistory(): UseChatHistory {
 								: 'New chat',
 							messages: serializedMessages,
 						})
+						console.log('useChatHistory - created new chat:', newChat)
 					}
 
+					console.log('useChatHistory - refreshing chat list after create/update')
 					await fetchChatList()
 				},
 				300,
