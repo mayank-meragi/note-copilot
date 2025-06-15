@@ -103,6 +103,7 @@ export default {
 			viewDetails: "查看详情"
 		},
 		input: {
+			search: "搜索",
 			submit: "提交",
 			collectedModels: "收集的模型",
 			loading: "加载中...",

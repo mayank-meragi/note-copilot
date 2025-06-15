@@ -2,7 +2,7 @@ import * as path from 'path'
 
 import { BaseSerializedNode } from '@lexical/clipboard/clipboard'
 import { useMutation } from '@tanstack/react-query'
-import { CircleStop, History, NotebookPen, Plus, Server, SquareSlash } from 'lucide-react'
+import { CircleStop, History, NotebookPen, Plus, Search, Server, SquareSlash } from 'lucide-react'
 import { App, Notice } from 'obsidian'
 import {
 	forwardRef,
@@ -68,6 +68,7 @@ import MarkdownReasoningBlock from './Markdown/MarkdownReasoningBlock'
 import McpHubView from './McpHubView'; // Moved after MarkdownReasoningBlock
 import QueryProgress, { QueryProgressState } from './QueryProgress'
 import ReactMarkdown from './ReactMarkdown'
+import SearchView from './SearchView'
 import SimilaritySearchResults from './SimilaritySearchResults'
 import WebsiteReadResults from './WebsiteReadResults'
 
@@ -176,7 +177,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		}
 	}
 
-	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp'>('chat')
+	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp' | 'search'>('chat')
 
 	const [selectedSerializedNodes, setSelectedSerializedNodes] = useState<BaseSerializedNode[]>([])
 
@@ -763,7 +764,8 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 									return item.text
 								}
 								if (item.type === "resource") {
-									const { blob: _blob, ...rest } = item.resource
+									// eslint-disable-next-line @typescript-eslint/no-unused-vars
+									const { blob, ...rest } = item.resource
 									return JSON.stringify(rest, null, 2)
 								}
 								return ""
@@ -991,6 +993,18 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					>
 						<Plus size={18} />
 					</button>
+					<button
+						onClick={() => {
+							if (tab === 'search') {
+								setTab('chat')
+							} else {
+								setTab('search')
+							}
+						}}
+						className="infio-chat-list-dropdown"
+					>
+						<Search size={18} color={tab === 'search' ? 'var(--text-accent)' : 'var(--text-color)'} />
+					</button>
 					<ChatHistory
 						chatList={chatList}
 						currentConversationId={currentConversationId}
@@ -1183,6 +1197,10 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 						addedBlockKey={addedBlockKey}
 					/>
 				</>
+			) : tab === 'search' ? (
+				<div className="infio-chat-commands">
+					<SearchView />
+				</div>
 			) : tab === 'commands' ? (
 				<div className="infio-chat-commands">
 					<CommandsView

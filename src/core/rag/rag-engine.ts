@@ -102,6 +102,7 @@ export class RAGEngine {
 	async processQuery({
 		query,
 		scope,
+		limit,
 		onQueryProgressChange,
 	}: {
 		query: string
@@ -109,6 +110,7 @@ export class RAGEngine {
 			files: string[]
 			folders: string[]
 		}
+		limit?: number
 		onQueryProgressChange?: (queryProgress: QueryProgressState) => void
 	}): Promise<
 		(Omit<SelectVector, 'embedding'> & {
@@ -134,7 +136,7 @@ export class RAGEngine {
 			this.embeddingModel,
 			{
 				minSimilarity: this.settings.ragOptions.minSimilarity,
-				limit: this.settings.ragOptions.limit,
+				limit: limit ?? this.settings.ragOptions.limit,
 				scope,
 			},
 		)
