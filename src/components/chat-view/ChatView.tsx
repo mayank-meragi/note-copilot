@@ -2,7 +2,7 @@ import * as path from 'path'
 
 import { BaseSerializedNode } from '@lexical/clipboard/clipboard'
 import { useMutation } from '@tanstack/react-query'
-import { CircleStop, History, NotebookPen, Plus, Search, Server, SquareSlash } from 'lucide-react'
+import { CircleStop, History, NotebookPen, Plus, Search, Server, SquareSlash, Undo } from 'lucide-react'
 import { App, Notice } from 'obsidian'
 import {
 	forwardRef,
@@ -70,6 +70,7 @@ import QueryProgress, { QueryProgressState } from './QueryProgress'
 import ReactMarkdown from './ReactMarkdown'
 import SearchView from './SearchView'
 import SimilaritySearchResults from './SimilaritySearchResults'
+import UserMessageView from './UserMessageView'
 import WebsiteReadResults from './WebsiteReadResults'
 
 // Add an empty line here
@@ -180,6 +181,9 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp' | 'search' | 'history'>('chat')
 
 	const [selectedSerializedNodes, setSelectedSerializedNodes] = useState<BaseSerializedNode[]>([])
+	
+	// 跟踪正在编辑的消息ID
+	const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
 
 	useEffect(() => {
 		const scrollContainer = chatMessagesRef.current
@@ -995,18 +999,6 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					</button>
 					<button
 						onClick={() => {
-							if (tab === 'search') {
-								setTab('chat')
-							} else {
-								setTab('search')
-							}
-						}}
-						className="infio-chat-list-dropdown"
-					>
-						<Search size={18} color={tab === 'search' ? 'var(--text-accent)' : 'var(--text-color)'} />
-					</button>
-					<button
-						onClick={() => {
 							if (tab === 'history') {
 								setTab('chat')
 							} else {
@@ -1016,6 +1008,18 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 						className="infio-chat-list-dropdown"
 					>
 						<History size={18} color={tab === 'history' ? 'var(--text-accent)' : 'var(--text-color)'} />
+					</button>
+					<button
+						onClick={() => {
+							if (tab === 'search') {
+								setTab('chat')
+							} else {
+								setTab('search')
+							}
+						}}
+						className="infio-chat-list-dropdown"
+					>
+						<Search size={18} color={tab === 'search' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
 					<button
 						onClick={() => {
@@ -1073,41 +1077,70 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							message.role === 'user' ? (
 								message.content &&
 								<div key={"user-" + message.id} className="infio-chat-messages-user">
-									<PromptInputWithActions
-										key={"input-" + message.id}
-										ref={(ref) => registerChatUserInputRef(message.id, ref)}
-										initialSerializedEditorState={message.content}
-										onSubmit={(content, useVaultSearch) => {
-											if (editorStateToPlainText(content).trim() === '') return
-											handleSubmit(
-												[
-													...chatMessages.slice(0, index),
-													{
-														role: 'user',
-														applyStatus: ApplyStatus.Idle,
-														content: content,
-														promptContent: null,
-														id: message.id,
-														mentionables: message.mentionables,
-													},
-												],
-												useVaultSearch,
-											)
-											chatUserInputRefs.current.get(inputMessage.id)?.focus()
-										}}
-										onFocus={() => {
-											setFocusedMessageId(message.id)
-										}}
-										onCreateCommand={handleCreateCommand}
-										mentionables={message.mentionables}
-										setMentionables={(mentionables) => {
-											setChatMessages((prevChatHistory) =>
-												prevChatHistory.map((msg) =>
-													msg.id === message.id ? { ...msg, mentionables } : msg,
-												),
-											)
-										}}
-									/>
+									{editingMessageId === message.id ? (
+										<div className="infio-chat-edit-container">
+											<button
+												onClick={() => {
+													setEditingMessageId(null)
+													chatUserInputRefs.current.get(inputMessage.id)?.focus()
+												}}
+												className="infio-chat-edit-cancel-button"
+												title="取消编辑"
+											>
+												<Undo size={16} />
+											</button>
+											<PromptInputWithActions
+												key={"input-" + message.id}
+												ref={(ref) => registerChatUserInputRef(message.id, ref)}
+												initialSerializedEditorState={message.content}
+												onSubmit={(content, useVaultSearch) => {
+													if (editorStateToPlainText(content).trim() === '') return
+													setEditingMessageId(null) // 退出编辑模式
+													handleSubmit(
+														[
+															...chatMessages.slice(0, index),
+															{
+																role: 'user',
+																applyStatus: ApplyStatus.Idle,
+																content: content,
+																promptContent: null,
+																id: message.id,
+																mentionables: message.mentionables,
+															},
+														],
+														useVaultSearch,
+													)
+													chatUserInputRefs.current.get(inputMessage.id)?.focus()
+												}}
+												onFocus={() => {
+													setFocusedMessageId(message.id)
+												}}
+												onCreateCommand={handleCreateCommand}
+												mentionables={message.mentionables}
+												setMentionables={(mentionables) => {
+													setChatMessages((prevChatHistory) =>
+														prevChatHistory.map((msg) =>
+															msg.id === message.id ? { ...msg, mentionables } : msg,
+														),
+													)
+												}}
+
+											/>
+										</div>
+									) : (
+										<UserMessageView
+											content={message.content}
+											mentionables={message.mentionables}
+											onEdit={() => {
+												setEditingMessageId(message.id)
+												setFocusedMessageId(message.id)
+												// 延迟聚焦，确保组件已渲染
+												setTimeout(() => {
+													chatUserInputRefs.current.get(message.id)?.focus()
+												}, 0)
+											}}
+										/>
+									)}
 									{message.fileReadResults && (
 										<FileReadResults
 											key={"file-read-" + message.id}
