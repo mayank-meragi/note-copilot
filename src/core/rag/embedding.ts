@@ -27,6 +27,9 @@ export const getEmbeddingModel = (
 				dangerouslyAllowBrowser: true,
 			})
 			const modelInfo = GetEmbeddingModelInfo(settings.embeddingModelProvider, settings.embeddingModelId)
+			if (!modelInfo) {
+				throw new Error(`Embedding model ${settings.embeddingModelId} not found for provider ${settings.embeddingModelProvider}`)
+			}
 			return {
 				id: settings.embeddingModelId,
 				dimension: modelInfo.dimensions,
@@ -89,6 +92,9 @@ export const getEmbeddingModel = (
 				dangerouslyAllowBrowser: true,
 			})
 			const modelInfo = GetEmbeddingModelInfo(settings.embeddingModelProvider, settings.embeddingModelId)
+			if (!modelInfo) {
+				throw new Error(`Embedding model ${settings.embeddingModelId} not found for provider ${settings.embeddingModelProvider}`)
+			}
 			return {
 				id: settings.embeddingModelId,
 				dimension: modelInfo.dimensions,
@@ -151,6 +157,9 @@ export const getEmbeddingModel = (
 				dangerouslyAllowBrowser: true,
 			})
 			const modelInfo = GetEmbeddingModelInfo(settings.embeddingModelProvider, settings.embeddingModelId)
+			if (!modelInfo) {
+				throw new Error(`Embedding model ${settings.embeddingModelId} not found for provider ${settings.embeddingModelProvider}`)
+			}
 			return {
 				id: settings.embeddingModelId,
 				dimension: modelInfo.dimensions,
@@ -213,6 +222,9 @@ export const getEmbeddingModel = (
 				dangerouslyAllowBrowser: true,
 			})
 			const modelInfo = GetEmbeddingModelInfo(settings.embeddingModelProvider, settings.embeddingModelId)
+			if (!modelInfo) {
+				throw new Error(`Embedding model ${settings.embeddingModelId} not found for provider ${settings.embeddingModelProvider}`)
+			}
 			return {
 				id: settings.embeddingModelId,
 				dimension: modelInfo.dimensions,
@@ -271,6 +283,9 @@ export const getEmbeddingModel = (
 			const client = new GoogleGenerativeAI(settings.googleProvider.apiKey)
 			const model = client.getGenerativeModel({ model: settings.embeddingModelId })
 			const modelInfo = GetEmbeddingModelInfo(settings.embeddingModelProvider, settings.embeddingModelId)
+			if (!modelInfo) {
+				throw new Error(`Embedding model ${settings.embeddingModelId} not found for provider ${settings.embeddingModelProvider}`)
+			}
 			return {
 				id: settings.embeddingModelId,
 				dimension: modelInfo.dimensions,

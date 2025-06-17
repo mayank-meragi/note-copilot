@@ -1760,7 +1760,7 @@ export const GetEmbeddingProviderModelIds = (provider: ApiProvider): string[] =>
 	return Object.keys(GetEmbeddingProviderModels(provider))
 }
 // Get embedding model info for a provider and model id
-export const GetEmbeddingModelInfo = (provider: ApiProvider, modelId: string): EmbeddingModelInfo => {
+export const GetEmbeddingModelInfo = (provider: ApiProvider, modelId: string): EmbeddingModelInfo | undefined => {
 	const models = GetEmbeddingProviderModels(provider)
 	return models[modelId]
 }

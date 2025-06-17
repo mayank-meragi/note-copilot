@@ -57,8 +57,15 @@ export class ChatView extends ItemView {
 	}
 
 	async render() {
+		// 确保容器元素存在
+		const containerElement = this.containerEl.children[1]
+		if (!containerElement || !(containerElement instanceof HTMLElement)) {
+			console.error('ChatView: Container element not found or invalid')
+			return
+		}
+
 		if (!this.root) {
-			this.root = createRoot(this.containerEl.children[1])
+			this.root = createRoot(containerElement)
 		}
 
 		const queryClient = new QueryClient({
@@ -92,7 +99,7 @@ export class ChatView extends ItemView {
 											<QueryClientProvider client={queryClient}>
 												<React.StrictMode>
 													<DialogProvider
-														container={this.containerEl.children[1] as HTMLElement}
+														container={containerElement}
 													>
 														<Chat ref={this.chatRef} {...this.initialChatProps} />
 													</DialogProvider>

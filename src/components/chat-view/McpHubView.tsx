@@ -273,6 +273,11 @@ const McpHubView = () => {
 						</div>
 					) : (
 						mcpServers.map(server => {
+							// Add null check for server object
+							if (!server || !server.name) {
+								return null;
+							}
+							
 							const serverKey = `${server.name}-${server.source || 'global'}`;
 							const isExpanded = !!expandedServers[serverKey];
 							const currentDetailTab = activeServerDetailTab[serverKey] || 'tools';
@@ -285,7 +290,7 @@ const McpHubView = () => {
 												{isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
 											</div>
 											<span className={`infio-mcp-hub-status-indicator ${server.status === 'connected' ? 'connected' : server.status === 'connecting' ? 'connecting' : 'disconnected'} ${server.disabled ? 'disabled' : ''}`}></span>
-											<h3 className="infio-mcp-hub-name">{server.name.replace('infio-builtin-server', 'builtin')}</h3>
+											<h3 className="infio-mcp-hub-name">{server.name ? server.name.replace('infio-builtin-server', 'builtin') : 'Unknown Server'}</h3>
 										</div>
 
 										<div className="infio-mcp-hub-actions" onClick={(e) => e.stopPropagation()}>
@@ -352,7 +357,7 @@ const McpHubView = () => {
 											<div className="infio-mcp-tab-content">
 												{currentDetailTab === 'tools' && (
 													<div className="infio-mcp-tools-list">
-														{(server.tools && server.tools.length > 0) ? server.tools.map(tool => <ToolRow key={tool.name} tool={tool} />) : <p className="infio-mcp-empty-message">{t('mcpHub.noTools')}</p>}
+														{(server.tools && server.tools.length > 0) ? server.tools.filter(tool => tool && tool.name).map(tool => <ToolRow key={tool.name} tool={tool} />) : <p className="infio-mcp-empty-message">{t('mcpHub.noTools')}</p>}
 													</div>
 												)}
 												{currentDetailTab === 'resources' && (
