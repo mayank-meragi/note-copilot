@@ -5,7 +5,33 @@ import { parseInfioSettings } from './settings'
 
 describe('parseSmartCopilotSettings', () => {
 	it('should return default values for empty input', () => {
-		const result = parseInfioSettings({})
+		const result = parseInfioSettings({
+			autocompleteEnabled: true,
+			advancedMode: false,
+			apiProvider: 'openai',
+			triggers: DEFAULT_SETTINGS.triggers,
+			delay: 500,
+			modelOptions: {
+				temperature: 1,
+				top_p: 0.1,
+				frequency_penalty: 0.25,
+				presence_penalty: 0,
+				max_tokens: 800,
+			},
+			systemMessage: DEFAULT_SETTINGS.systemMessage,
+			fewShotExamples: DEFAULT_SETTINGS.fewShotExamples,
+			userMessageTemplate: '{{prefix}}<mask/>{{suffix}}',
+			chainOfThoughRemovalRegex: '(.|\\n)*ANSWER:',
+			dontIncludeDataviews: true,
+			maxPrefixCharLimit: 4000,
+			maxSuffixCharLimit: 4000,
+			removeDuplicateMathBlockIndicator: true,
+			removeDuplicateCodeBlockIndicator: true,
+			ignoredFilePatterns: '**/secret/**\n',
+			ignoredTags: '',
+			cacheSuggestions: true,
+			debugMode: false,
+		})
 		expect(result).toEqual({
 			version: 0.4,
 			activeModels: DEFAULT_MODELS,
@@ -191,6 +217,31 @@ describe('settings migration', () => {
 				minSimilarity: 0.0,
 				limit: 10,
 			},
+			autocompleteEnabled: true,
+			advancedMode: false,
+			apiProvider: 'openai',
+			triggers: DEFAULT_SETTINGS.triggers,
+			delay: 500,
+			modelOptions: {
+				temperature: 1,
+				top_p: 0.1,
+				frequency_penalty: 0.25,
+				presence_penalty: 0,
+				max_tokens: 800,
+			},
+			systemMessage: DEFAULT_SETTINGS.systemMessage,
+			fewShotExamples: DEFAULT_SETTINGS.fewShotExamples,
+			userMessageTemplate: '{{prefix}}<mask/>{{suffix}}',
+			chainOfThoughRemovalRegex: '(.|\\n)*ANSWER:',
+			dontIncludeDataviews: true,
+			maxPrefixCharLimit: 4000,
+			maxSuffixCharLimit: 4000,
+			removeDuplicateMathBlockIndicator: true,
+			removeDuplicateCodeBlockIndicator: true,
+			ignoredFilePatterns: '**/secret/**\n',
+			ignoredTags: '',
+			cacheSuggestions: true,
+			debugMode: false,
 		}
 
 		const result = parseInfioSettings(oldSettings)
@@ -199,8 +250,8 @@ describe('settings migration', () => {
 			activeModels: DEFAULT_MODELS,
 			activeProviderTab: 'Infio',
 			infioApiKey: '',
-			openAIApiKey: '',
-			anthropicApiKey: '',
+			openAIApiKey: 'openai-api-key',
+			anthropicApiKey: 'anthropic-api-key',
 			filesSearchSettings: {
 				method: 'auto',
 				regexBackend: 'coreplugin',
@@ -209,7 +260,7 @@ describe('settings migration', () => {
 			},
 			fuzzyMatchThreshold: 0.85,
 			geminiApiKey: '',
-			groqApiKey: '',
+			groqApiKey: 'groq-api-key',
 			deepseekApiKey: '',
 			collectedChatModels: [],
 			chatModelId: '',
@@ -255,7 +306,7 @@ describe('settings migration', () => {
 				baseUrl: '',
 				model: '',
 			},
-			systemPrompt: '',
+			systemPrompt: 'system prompt',
 			ragOptions: {
 				chunkSize: 1000,
 				thresholdTokens: 8192,
