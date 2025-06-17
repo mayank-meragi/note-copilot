@@ -424,6 +424,7 @@ export function parseInfioSettings(data: unknown): InfioSettings {
 		const migratedData = migrateSettings(data as Record<string, unknown>)
 		return InfioSettingsSchema.parse(migratedData)
 	} catch (error) {
+		console.error("Failed to parse settings with migrated data, using default settings instead: ", error);
 		return InfioSettingsSchema.parse({ ...DEFAULT_SETTINGS })
 	}
 }
