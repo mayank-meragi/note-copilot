@@ -20,13 +20,13 @@ const InfioProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'Infio',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const OpenRouterProviderSchema = z.object({
@@ -34,13 +34,13 @@ const OpenRouterProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'OpenRouter',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const SiliconFlowProviderSchema = z.object({
@@ -48,13 +48,13 @@ const SiliconFlowProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'SiliconFlow',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const AlibabaQwenProviderSchema = z.object({
@@ -62,13 +62,13 @@ const AlibabaQwenProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'AlibabaQwen',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const AnthropicProviderSchema = z.object({
@@ -76,13 +76,13 @@ const AnthropicProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().optional(),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'Anthropic',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const DeepSeekProviderSchema = z.object({
@@ -90,13 +90,13 @@ const DeepSeekProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'DeepSeek',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const GoogleProviderSchema = z.object({
@@ -104,13 +104,13 @@ const GoogleProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'Google',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const OpenAIProviderSchema = z.object({
@@ -118,13 +118,13 @@ const OpenAIProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().optional(),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'OpenAI',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const OpenAICompatibleProviderSchema = z.object({
@@ -132,13 +132,13 @@ const OpenAICompatibleProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().optional(),
 	useCustomUrl: z.boolean().catch(true),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'OpenAICompatible',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: true,
-	models: new Set()
+	models: []
 })
 
 const OllamaProviderSchema = z.object({
@@ -146,13 +146,13 @@ const OllamaProviderSchema = z.object({
 	apiKey: z.string().catch('ollama'),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'Ollama',
 	apiKey: 'ollama',
 	baseUrl: '',
 	useCustomUrl: true,
-	models: new Set()
+	models: []
 })
 
 const GroqProviderSchema = z.object({
@@ -160,13 +160,13 @@ const GroqProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'Groq',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const GrokProviderSchema = z.object({
@@ -174,13 +174,13 @@ const GrokProviderSchema = z.object({
 	apiKey: z.string().catch(''),
 	baseUrl: z.string().catch(''),
 	useCustomUrl: z.boolean().catch(false),
-	models: z.set(z.string()).catch(new Set())
+	models: z.array(z.string()).catch([])
 }).catch({
 	name: 'Grok',
 	apiKey: '',
 	baseUrl: '',
 	useCustomUrl: false,
-	models: new Set()
+	models: []
 })
 
 const ollamaModelSchema = z.object({

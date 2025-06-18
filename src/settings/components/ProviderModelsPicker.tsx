@@ -207,13 +207,13 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 	const combinedModelIds = useMemo(() => {
 		const providerKey = getProviderSettingKey(modelProvider);
 		const providerModels = settings?.[providerKey]?.models;
-		console.log(`🔍 Custom models in settings for ${modelProvider}:`, providerModels ? Array.from(providerModels) : 'none')
-		// Ensure providerModels is a Set of strings
-		if (!providerModels || !(providerModels instanceof Set)) {
+		console.log(`🔍 Custom models in settings for ${modelProvider}:`, providerModels || 'none')
+		// Ensure providerModels is an array of strings
+		if (!providerModels || !Array.isArray(providerModels)) {
 			console.log(`📋 Using only official models (${modelIds.length}):`, modelIds);
 			return modelIds;
 		}
-		const additionalModels = Array.from(providerModels).filter((model): model is string => typeof model === 'string');
+		const additionalModels = providerModels.filter((model): model is string => typeof model === 'string');
 		console.log(`📋 Combined models: ${modelIds.length} official + ${additionalModels.length} custom`);
 		return [...modelIds, ...additionalModels];
 	}, [modelIds, settings, modelProvider]);
@@ -286,6 +286,8 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 
 		if (isValidProvider(newProvider)) {
 			setModelProvider(newProvider);
+			// 当提供商变更时，清空模型选择并通知父组件
+			updateModel(newProvider, '', false);
 		}
 	};
 

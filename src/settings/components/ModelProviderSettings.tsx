@@ -293,7 +293,12 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 		console.log(`updateChatModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
 		const providerSettingKey = getProviderSettingKey(provider);
 		const providerSettings = settings[providerSettingKey] || {};
-		const currentModels = providerSettings.models || new Set<string>();
+		const currentModels = providerSettings.models || [];
+		
+		// 如果是自定义模型且不在列表中，则添加
+		const updatedModels = isCustom && !currentModels.includes(modelId) 
+			? [...currentModels, modelId] 
+			: currentModels;
 		
 		handleSettingsUpdate({
 			...settings,
@@ -301,7 +306,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			chatModelId: modelId,
 			[providerSettingKey]: {
 				...providerSettings,
-				models: isCustom ? new Set([...currentModels, modelId]) : currentModels
+				models: updatedModels
 			}
 		});
 	};
@@ -310,7 +315,12 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 		console.log(`updateApplyModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
 		const providerSettingKey = getProviderSettingKey(provider);
 		const providerSettings = settings[providerSettingKey] || {};
-		const currentModels = providerSettings.models || new Set<string>();
+		const currentModels = providerSettings.models || [];
+		
+		// 如果是自定义模型且不在列表中，则添加
+		const updatedModels = isCustom && !currentModels.includes(modelId) 
+			? [...currentModels, modelId] 
+			: currentModels;
 		
 		handleSettingsUpdate({
 			...settings,
@@ -318,7 +328,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			applyModelId: modelId,
 			[providerSettingKey]: {
 				...providerSettings,
-				models: isCustom ? new Set([...currentModels, modelId]) : currentModels
+				models: updatedModels
 			}
 		});
 	};
@@ -327,7 +337,12 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 		console.log(`updateEmbeddingModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
 		const providerSettingKey = getProviderSettingKey(provider);
 		const providerSettings = settings[providerSettingKey] || {};
-		const currentModels = providerSettings.models || new Set<string>();
+		const currentModels = providerSettings.models || [];
+		
+		// 如果是自定义模型且不在列表中，则添加
+		const updatedModels = isCustom && !currentModels.includes(modelId) 
+			? [...currentModels, modelId] 
+			: currentModels;
 		
 		handleSettingsUpdate({
 			...settings,
@@ -335,7 +350,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 			embeddingModelId: modelId,
 			[providerSettingKey]: {
 				...providerSettings,
-				models: isCustom ? new Set([...currentModels, modelId]) : currentModels
+				models: updatedModels
 			}
 		});
 	};
