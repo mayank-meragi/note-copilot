@@ -286,7 +286,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 
 		if (isValidProvider(newProvider)) {
 			setModelProvider(newProvider);
-			// 当提供商变更时，清空模型选择并通知父组件
+			// 当提供商变更时，清空模型选择让用户重新选择
 			updateModel(newProvider, '', false);
 		}
 	};

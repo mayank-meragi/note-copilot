@@ -25,7 +25,16 @@ export class RAGEngine {
 		this.app = app
 		this.settings = settings
 		this.vectorManager = dbManager.getVectorManager()
-		this.embeddingModel = getEmbeddingModel(settings)
+		if (settings.embeddingModelId && settings.embeddingModelId.trim() !== '') {
+			try {
+				this.embeddingModel = getEmbeddingModel(settings)
+			} catch (error) {
+				console.warn('Failed to initialize embedding model:', error)
+				this.embeddingModel = null
+			}
+		} else {
+			this.embeddingModel = null
+		}
 	}
 
 	cleanup() {
@@ -35,7 +44,16 @@ export class RAGEngine {
 
 	setSettings(settings: InfioSettings) {
 		this.settings = settings
-		this.embeddingModel = getEmbeddingModel(settings)
+		if (settings.embeddingModelId && settings.embeddingModelId.trim() !== '') {
+			try {
+				this.embeddingModel = getEmbeddingModel(settings)
+			} catch (error) {
+				console.warn('Failed to initialize embedding model:', error)
+				this.embeddingModel = null
+			}
+		} else {
+			this.embeddingModel = null
+		}
 	}
 
 	async initializeDimension(): Promise<void> {
