@@ -56,7 +56,6 @@ import { PromptGenerator, addLineNumbers } from '../../utils/prompt-generator'
 // Removed empty line above, added one below for group separation
 import { fetchUrlsContent, onEnt, webSearch } from '../../utils/web-search'
 
-import { ModeSelect } from './chat-input/ModeSelect'; // Start of new group
 import PromptInputWithActions, { ChatUserInputRef } from './chat-input/PromptInputWithActions'
 import { editorStateToPlainText } from './chat-input/utils/editor-state-to-plain-text'
 import ChatHistoryView from './ChatHistoryView'
@@ -986,7 +985,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		<div className="infio-chat-container">
 			{/* header view */}
 			<div className="infio-chat-header">
-				<ModeSelect />
+				INFIO
 				<div className="infio-chat-header-buttons">
 					<button
 						onClick={() => {

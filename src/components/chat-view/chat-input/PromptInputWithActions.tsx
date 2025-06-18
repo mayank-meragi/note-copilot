@@ -13,6 +13,7 @@ import {
 
 import { useApp } from '../../../contexts/AppContext'
 import { useDarkModeContext } from '../../../contexts/DarkModeContext'
+import { useSettings } from '../../../contexts/SettingsContext'
 import {
 	Mentionable,
 	MentionableImage,
@@ -31,11 +32,10 @@ import { ImageUploadButton } from './ImageUploadButton'
 import LexicalContentEditable from './LexicalContentEditable'
 import MentionableBadge from './MentionableBadge'
 import { ModelSelect } from './ModelSelect'
-// import { ModeSelect } from './ModeSelect'
+import { ModeSelect } from './ModeSelect'
 import { MentionNode } from './plugins/mention/MentionNode'
 import { NodeMutations } from './plugins/on-mutation/OnMutationPlugin'
 import { SubmitButton } from './SubmitButton'
-
 export type ChatUserInputRef = {
 	focus: () => void
 }
@@ -68,6 +68,7 @@ const PromptInputWithActions = forwardRef<ChatUserInputRef, ChatUserInputProps>(
 		ref,
 	) => {
 		const app = useApp()
+		const { settings, setSettings } = useSettings()
 
 		const editorRef = useRef<LexicalEditor | null>(null)
 		const contentEditableRef = useRef<HTMLDivElement>(null)
@@ -82,6 +83,50 @@ const PromptInputWithActions = forwardRef<ChatUserInputRef, ChatUserInputProps>(
 				setDisplayedMentionableKey(addedBlockKey)
 			}
 		}, [addedBlockKey])
+
+		// 添加快捷键监听器
+		useEffect(() => {
+			const handleKeyDown = (event: KeyboardEvent) => {
+				// 检查是否按下了 Cmd + Shift 键 (macOS)
+				if (event.ctrlKey && event.shiftKey) {
+					// 使用 event.key 直接匹配，不使用 toLowerCase()
+					switch (event.key) {
+						case '.':
+						case '>': // Shift + . 在某些键盘布局下可能是 >
+							event.preventDefault()
+							setSettings({
+								...settings,
+								mode: 'write',
+							})
+							break
+						case ',':
+						case '<': // Shift + , 在某些键盘布局下可能是 <
+							event.preventDefault()
+							setSettings({
+								...settings,
+								mode: 'ask',
+							})
+							break
+						case '/':
+						case '?': // Shift + / 在某些键盘布局下可能是 ?
+							event.preventDefault()
+							setSettings({
+								...settings,
+								mode: 'research',
+							})
+							break
+					}
+				}
+			}
+
+			// 添加事件监听器到 document
+			document.addEventListener('keydown', handleKeyDown)
+
+			// 清理函数
+			return () => {
+				document.removeEventListener('keydown', handleKeyDown)
+			}
+		}, [settings, setSettings])
 
 		useImperativeHandle(ref, () => ({
 			focus: () => {
@@ -278,10 +323,11 @@ const PromptInputWithActions = forwardRef<ChatUserInputRef, ChatUserInputProps>(
 
 				<div className="infio-chat-user-input-controls">
 					<div className="infio-chat-user-input-controls__model-select-container">
+						<ModeSelect />
 						<ModelSelect />
-						<ImageUploadButton onUpload={handleUploadImages} />
 					</div>
 					<div className="infio-chat-user-input-controls__buttons">
+						<ImageUploadButton onUpload={handleUploadImages} />
 						<SubmitButton onClick={() => handleSubmit()} />
 					</div>
 				</div>

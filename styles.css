@@ -331,7 +331,7 @@ button:not(.clickable-icon).infio-chat-list-dropdown {
   .infio-chat-user-input-controls__buttons {
     flex-shrink: 0;
     display: flex;
-    gap: var(--size-4-2);
+    gap: var(--size-4-3);
     align-items: center;
   }
 }
@@ -1894,19 +1894,32 @@ select.infio-ai-block-model-select::-ms-expand {
 button.infio-chat-input-model-select {
   background-color: transparent;
   box-shadow: none;
-  border: 0;
-  padding: 0;
+  border: 1;
+  padding: var(--size-2-1) var(--size-2-2);
   font-size: var(--font-smallest);
   font-weight: var(--font-medium);
   color: var(--text-muted);
+  display: flex;
   justify-content: flex-start;
   align-items: center;
   cursor: pointer;
   height: var(--size-4-4);
   max-width: 100%;
+  gap: var(--size-2-2);
+  border-radius: var(--radius-s);
+  transition: all 0.15s ease-in-out;
 
   &:hover {
     color: var(--text-normal);
+    background-color: var(--background-modifier-hover);
+  }
+
+  .infio-chat-input-model-select__mode-icon {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-accent);
   }
 
   .infio-chat-input-model-select__model-name {
@@ -1914,6 +1927,7 @@ button.infio-chat-input-model-select {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex-grow: 1;
   }
 
   .infio-chat-input-model-select__icon {
@@ -1921,6 +1935,7 @@ button.infio-chat-input-model-select {
     display: flex;
     align-items: center;
     justify-content: center;
+    margin-left: auto;
   }
 }
 
@@ -2418,4 +2433,3 @@ button.infio-chat-input-model-select {
   max-width: 80vw;
   max-height: 80vh;
 }
-

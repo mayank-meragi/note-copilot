@@ -120,7 +120,6 @@ const UserMessageView: React.FC<UserMessageViewProps> = ({
 						border: 2px solid var(--background-modifier-border);
 						border-radius: var(--radius-s);
 						padding: calc(var(--size-2-2) + 1px);
-						min-height: 62px;
 						gap: var(--size-2-2);
 						box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 						transition: all 0.15s ease-in-out;
