@@ -1,4 +1,7 @@
 releases:
+  - version: "0.6.15"
+    improvements:
+      -  "update chat view style"
   - version: "0.6.14"
     fixes:
       - "fix search view user select text error"
