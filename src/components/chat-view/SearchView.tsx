@@ -70,10 +70,55 @@ const SearchView = () => {
 	}, [getRAGEngine])
 
 	const handleResultClick = (result: Omit<SelectVector, 'embedding'> & { similarity: number }) => {
-		openMarkdownFile(app, result.path, result.metadata.startLine)
+		// 如果用户正在选择文本，不触发点击事件
+		const selection = window.getSelection()
+		if (selection && selection.toString().length > 0) {
+			return
+		}
+
+		console.debug('🔍 [SearchView] 点击搜索结果:', {
+			id: result.id,
+			path: result.path,
+			startLine: result.metadata?.startLine,
+			endLine: result.metadata?.endLine,
+			content: result.content?.substring(0, 100) + '...',
+			similarity: result.similarity
+		})
+
+		// 检查路径是否存在
+		if (!result.path) {
+			console.error('❌ [SearchView] 文件路径为空')
+			return
+		}
+
+		// 检查文件是否存在于vault中
+		const file = app.vault.getFileByPath(result.path)
+		if (!file) {
+			console.error('❌ [SearchView] 在vault中找不到文件:', result.path)
+().map(f => f.path))
+			return
+		}
+
+		console.debug('✅ [SearchView] 文件存在，准备打开:', {
+			file: file.path,
+			startLine: result.metadata?.startLine
+		})
+
+		try {
+			openMarkdownFile(app, result.path, result.metadata.startLine)
+			console.debug('✅ [SearchView] 成功调用openMarkdownFile')
+		} catch (error) {
+			console.error('❌ [SearchView] 调用openMarkdownFile失败:', error)
+		}
 	}
 
 	const toggleFileExpansion = (filePath: string) => {
+		// 如果用户正在选择文本，不触发点击事件
+		const selection = window.getSelection()
+		if (selection && selection.toString().length > 0) {
+			return
+		}
+
 		const newExpandedFiles = new Set(expandedFiles)
 		if (newExpandedFiles.has(filePath)) {
 			newExpandedFiles.delete(filePath)
@@ -109,7 +154,7 @@ const SearchView = () => {
 					// 移除图片显示，避免布局问题
 					img: () => <span className="obsidian-image-placeholder">[图片]</span>,
 					// 代码块样式
-					code: ({ children, inline, ...props }: { children: React.ReactNode; inline?: boolean; [key: string]: unknown }) => {
+					code: ({ children, inline }: { children: React.ReactNode; inline?: boolean; [key: string]: unknown }) => {
 						if (inline) {
 							return <code className="obsidian-inline-code">{children}</code>
 						}
@@ -203,28 +248,34 @@ const SearchView = () => {
 			<div className="obsidian-search-results">
 				{!isSearching && groupedResults.length > 0 && (
 					<div className="obsidian-results-list">
-						{groupedResults.map((fileGroup, fileIndex) => (
+						{groupedResults.map((fileGroup) => (
 							<div key={fileGroup.path} className="obsidian-file-group">
 								{/* 文件头部 */}
 								<div 
 									className="obsidian-file-header"
 									onClick={() => toggleFileExpansion(fileGroup.path)}
 								>
-									<div className="obsidian-file-header-left">
-										{expandedFiles.has(fileGroup.path) ? (
-											<ChevronDown size={16} className="obsidian-expand-icon" />
-										) : (
-											<ChevronRight size={16} className="obsidian-expand-icon" />
-										)}
-										{/* <span className="obsidian-file-index">{fileIndex + 1}</span> */}
-										<span className="obsidian-file-name">{fileGroup.fileName}</span>
-										{/* <span className="obsidian-file-path">({fileGroup.path})</span> */}
-									</div>
-									<div className="obsidian-file-header-right">
-										{/* <span className="obsidian-file-blocks">{fileGroup.blocks.length} 块</span> */}
-										{/* <span className="obsidian-file-similarity">
-											{fileGroup.maxSimilarity.toFixed(3)}
-										</span> */}
+									<div className="obsidian-file-header-content">
+										<div className="obsidian-file-header-top">
+											<div className="obsidian-file-header-left">
+												{expandedFiles.has(fileGroup.path) ? (
+													<ChevronDown size={16} className="obsidian-expand-icon" />
+												) : (
+													<ChevronRight size={16} className="obsidian-expand-icon" />
+												)}
+												{/* <span className="obsidian-file-index">{fileIndex + 1}</span> */}
+												<span className="obsidian-file-name">{fileGroup.fileName}</span>
+											</div>
+											<div className="obsidian-file-header-right">
+												{/* <span className="obsidian-file-blocks">{fileGroup.blocks.length} 块</span> */}
+												{/* <span className="obsidian-file-similarity">
+													{fileGroup.maxSimilarity.toFixed(3)}
+												</span> */}
+											</div>
+										</div>
+										<div className="obsidian-file-path-row">
+											<span className="obsidian-file-path">{fileGroup.path}</span>
+										</div>
 									</div>
 								</div>
 
@@ -310,15 +361,24 @@ const SearchView = () => {
 					padding: 12px;
 					background-color: var(--background-secondary);
 					cursor: pointer;
-					display: flex;
-					align-items: center;
-					justify-content: space-between;
 					transition: background-color 0.1s ease;
 					border-bottom: 1px solid var(--background-modifier-border);
 				}
 
 				.obsidian-file-header:hover {
 					background-color: var(--background-modifier-hover);
+				}
+
+				.obsidian-file-header-content {
+					display: flex;
+					flex-direction: column;
+					gap: 4px;
+				}
+
+				.obsidian-file-header-top {
+					display: flex;
+					align-items: center;
+					justify-content: space-between;
 				}
 
 				.obsidian-file-header-left {
@@ -334,6 +394,10 @@ const SearchView = () => {
 					align-items: center;
 					gap: 12px;
 					flex-shrink: 0;
+				}
+
+				.obsidian-file-path-row {
+					margin-left: 24px;
 				}
 
 				.obsidian-expand-icon {
@@ -354,6 +418,8 @@ const SearchView = () => {
 					font-size: var(--font-ui-medium);
 					font-weight: 500;
 					flex-shrink: 0;
+					user-select: text;
+					cursor: text;
 				}
 
 				.obsidian-file-path {
@@ -363,7 +429,6 @@ const SearchView = () => {
 					overflow: hidden;
 					text-overflow: ellipsis;
 					white-space: nowrap;
-					margin-left: 4px;
 				}
 
 				.obsidian-file-blocks {
@@ -430,6 +495,8 @@ const SearchView = () => {
 					font-size: var(--font-ui-medium);
 					line-height: 1.4;
 					word-wrap: break-word;
+					user-select: text;
+					cursor: text;
 				}
 
 				/* Markdown 渲染样式 */
@@ -437,6 +504,8 @@ const SearchView = () => {
 					color: var(--text-normal);
 					font-size: var(--font-ui-medium);
 					line-height: 1.4;
+					user-select: text;
+					cursor: text;
 				}
 
 				.obsidian-markdown-content h4,

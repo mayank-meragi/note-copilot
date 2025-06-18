@@ -161,8 +161,22 @@ export function openMarkdownFile(
 	filePath: string,
 	startLine?: number,
 ) {
+	console.debug('🔄 [openMarkdownFile] 开始打开文件:', {
+		filePath,
+		startLine
+	})
+
 	const file = app.vault.getFileByPath(filePath)
-	if (!file) return
+	if (!file) {
+		console.error('❌ [openMarkdownFile] 文件不存在:', filePath)
+		return
+	}
+
+	console.debug('✅ [openMarkdownFile] 找到文件:', {
+		path: file.path,
+		name: file.name,
+		extension: file.extension
+	})
 
 	const existingLeaf = app.workspace
 		.getLeavesOfType('markdown')
@@ -172,16 +186,29 @@ export function openMarkdownFile(
 		)
 
 	if (existingLeaf) {
+		console.debug('🔄 [openMarkdownFile] 找到已存在的标签，切换到该标签')
 		app.workspace.setActiveLeaf(existingLeaf, { focus: true })
 
 		if (startLine && existingLeaf.view instanceof MarkdownView) {
-			existingLeaf.view.setEphemeralState({ line: startLine - 1 }) // -1 because line is 0-indexed
+			console.debug('🔄 [openMarkdownFile] 设置行号:', startLine - 1)
+			try {
+				existingLeaf.view.setEphemeralState({ line: startLine - 1 }) // -1 because line is 0-indexed
+				console.debug('✅ [openMarkdownFile] 成功设置行号')
+			} catch (error) {
+				console.error('❌ [openMarkdownFile] 设置行号失败:', error)
+			}
 		}
 	} else {
-		const leaf = app.workspace.getLeaf('tab')
-		leaf.openFile(file, {
-			eState: startLine ? { line: startLine - 1 } : undefined, // -1 because line is 0-indexed
-		})
+		console.debug('🔄 [openMarkdownFile] 创建新标签打开文件')
+		try {
+			const leaf = app.workspace.getLeaf('tab')
+			leaf.openFile(file, {
+				eState: startLine ? { line: startLine - 1 } : undefined, // -1 because line is 0-indexed
+			})
+			console.debug('✅ [openMarkdownFile] 成功在新标签中打开文件')
+		} catch (error) {
+			console.error('❌ [openMarkdownFile] 在新标签中打开文件失败:', error)
+		}
 	}
 }
 
