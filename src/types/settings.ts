@@ -433,7 +433,7 @@ function migrateSettings(
 			currentVersion < migration.toVersion &&
 			migration.toVersion <= SETTINGS_SCHEMA_VERSION
 		) {
-			console.log(
+			console.debug(
 				`Migrating settings from ${migration.fromVersion} to ${migration.toVersion}`,
 			)
 			currentData = migration.migrate(currentData)

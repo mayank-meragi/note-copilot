@@ -104,13 +104,13 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 				newSettings.chatModelProvider = selectedProvider;
 				newSettings.chatModelId = defaultModels.chat;
 				hasUpdates = true;
-				console.log(t("settings.ModelProvider.chatModelConfigured", { provider: selectedProvider, model: defaultModels.chat }));
+				console.debug(t("settings.ModelProvider.chatModelConfigured", { provider: selectedProvider, model: defaultModels.chat }));
 			}
 			if (defaultModels.autoComplete) {
 				newSettings.applyModelProvider = selectedProvider;
 				newSettings.applyModelId = defaultModels.autoComplete;
 				hasUpdates = true;
-				console.log(t("settings.ModelProvider.autocompleteModelConfigured", { provider: selectedProvider, model: defaultModels.autoComplete }));
+				console.debug(t("settings.ModelProvider.autocompleteModelConfigured", { provider: selectedProvider, model: defaultModels.autoComplete }));
 			}
 		}
 
@@ -122,7 +122,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 				newSettings.embeddingModelProvider = embeddingProvider;
 				newSettings.embeddingModelId = embeddingDefaultModels.embedding;
 				hasUpdates = true;
-				console.log(t("settings.ModelProvider.embeddingModelConfigured", { provider: embeddingProvider, model: embeddingDefaultModels.embedding }));
+				console.debug(t("settings.ModelProvider.embeddingModelConfigured", { provider: embeddingProvider, model: embeddingDefaultModels.embedding }));
 			}
 		}
 
@@ -172,7 +172,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 	};
 
 	const testApiConnection = async (provider: ApiProvider, modelId?: string) => {
-		console.log(`Testing connection for ${provider}...`);
+		console.debug(`Testing connection for ${provider}...`);
 
 		try {
 			// 动态导入LLMManager以避免循环依赖
@@ -231,7 +231,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 
 				// 检查响应是否有效
 				if (response && response.choices && response.choices.length > 0) {
-					console.log(`✅ ${provider} connection test successful:`, response.choices[0]?.message?.content);
+					console.debug(`✅ ${provider} connection test successful:`, response.choices[0]?.message?.content);
 					// ApiKeyComponent expects no return value on success, just no thrown error
 					return;
 				} else {
@@ -290,7 +290,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 		modelId: string,
 		isCustom: boolean = false
 	) => {
-		console.log(`updateChatModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
+		console.debug(`updateChatModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
 		const providerSettingKey = getProviderSettingKey(provider);
 		const providerSettings = settings[providerSettingKey] || {};
 		const currentModels = providerSettings.models || [];
@@ -312,7 +312,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 	};
 
 	const updateApplyModelId = (provider: ApiProvider, modelId: string, isCustom: boolean = false) => {
-		console.log(`updateApplyModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
+		console.debug(`updateApplyModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
 		const providerSettingKey = getProviderSettingKey(provider);
 		const providerSettings = settings[providerSettingKey] || {};
 		const currentModels = providerSettings.models || [];
@@ -334,7 +334,7 @@ const CustomProviderSettings: React.FC<CustomProviderSettingsProps> = ({ plugin,
 	};
 
 	const updateEmbeddingModelId = (provider: ApiProvider, modelId: string, isCustom: boolean = false) => {
-		console.log(`updateEmbeddingModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
+		console.debug(`updateEmbeddingModelId: ${provider} -> ${modelId}, isCustom: ${isCustom}`)
 		const providerSettingKey = getProviderSettingKey(provider);
 		const providerSettings = settings[providerSettingKey] || {};
 		const currentModels = providerSettings.models || [];

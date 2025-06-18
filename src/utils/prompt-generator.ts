@@ -665,7 +665,7 @@ export class PromptGenerator {
 			}
 		}
 		if (isOverThreshold) {
-			console.log("isOverThreshold", isOverThreshold)
+			console.debug("isOverThreshold", isOverThreshold)
 			fileContentsPrompts = files.map((file) => {
 				return `<file_content path="${file.path}">\n(Content omitted due to token limit. Relevant sections will be provided by semantic search below.)\n</file_content>`
 			}).join('\n')
@@ -1017,7 +1017,7 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`,
 		// 首先检查缓存
 		const cachedData = await this.convertDataManager.findBySource(url)
 		if (cachedData) {
-			console.log(`Using cached video conversion for: ${url}`)
+			console.debug(`Using cached video conversion for: ${url}`)
 			return [cachedData.content, cachedData.contentPath]
 		}
 
@@ -1059,7 +1059,7 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`,
 		// 首先检查缓存
 		const cachedData = await this.convertDataManager.findBySource(file.path)
 		if (cachedData) {
-			console.log(`Using cached document conversion for: ${file.path}`)
+			console.debug(`Using cached document conversion for: ${file.path}`)
 			return [cachedData.content, cachedData.contentPath]
 		}
 
@@ -1294,7 +1294,7 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`,
 				content,
 			})
 
-			console.log(`Saved conversion data to cache: ${source}`)
+			console.debug(`Saved conversion data to cache: ${source}`)
 		} catch (error) {
 			console.error('Failed to save conversion data to cache:', error)
 			throw error
@@ -1326,7 +1326,7 @@ ${transcript.map((t) => `${t.offset}: ${t.text}`).join('\n')}`,
 			// 创建图片文件
 			await this.app.vault.createBinary(targetPath, bytes.buffer)
 
-			console.log(`Image saved: ${targetPath}`)
+			console.debug(`Image saved: ${targetPath}`)
 			return targetPath
 		} catch (error) {
 			console.error(`Failed to save image to ${targetPath}:`, error)

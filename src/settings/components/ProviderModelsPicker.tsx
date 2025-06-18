@@ -183,7 +183,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 
 	// 统一处理模型选择和保存
 	const handleModelSelect = (provider: ApiProvider, modelId: string, isCustom?: boolean) => {
-		console.log(`handleModelSelect: ${provider} -> ${modelId}`)
+		console.debug(`handleModelSelect: ${provider} -> ${modelId}`)
 
 		// 检查是否是自定义模型（不在官方模型列表中）
 		// const isCustomModel = !modelIds.includes(modelId);
@@ -197,7 +197,7 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 			const ids = isEmbedding
 				? GetEmbeddingProviderModelIds(modelProvider)
 				: await GetProviderModelIds(modelProvider, settings);
-			console.log(`📝 Fetched ${ids.length} official models for ${modelProvider}:`, ids);
+			console.debug(`📝 Fetched ${ids.length} official models for ${modelProvider}:`, ids);
 			setModelIds(ids);
 		};
 
@@ -207,14 +207,14 @@ export const ComboBoxComponent: React.FC<ComboBoxComponentProps> = ({
 	const combinedModelIds = useMemo(() => {
 		const providerKey = getProviderSettingKey(modelProvider);
 		const providerModels = settings?.[providerKey]?.models;
-		console.log(`🔍 Custom models in settings for ${modelProvider}:`, providerModels || 'none')
+		console.debug(`🔍 Custom models in settings for ${modelProvider}:`, providerModels || 'none')
 		// Ensure providerModels is an array of strings
 		if (!providerModels || !Array.isArray(providerModels)) {
-			console.log(`📋 Using only official models (${modelIds.length}):`, modelIds);
+			console.debug(`📋 Using only official models (${modelIds.length}):`, modelIds);
 			return modelIds;
 		}
 		const additionalModels = providerModels.filter((model): model is string => typeof model === 'string');
-		console.log(`📋 Combined models: ${modelIds.length} official + ${additionalModels.length} custom`);
+		console.debug(`📋 Combined models: ${modelIds.length} official + ${additionalModels.length} custom`);
 		return [...modelIds, ...additionalModels];
 	}, [modelIds, settings, modelProvider]);
 
