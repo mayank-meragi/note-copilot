@@ -95,7 +95,6 @@ const SearchView = () => {
 		const file = app.vault.getFileByPath(result.path)
 		if (!file) {
 			console.error('❌ [SearchView] 在vault中找不到文件:', result.path)
-().map(f => f.path))
 			return
 		}
 

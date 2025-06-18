@@ -1,4 +1,8 @@
 releases:
+  - version: "0.6.14"
+    fixes:
+      - "fix search view user select text error"
+      - "fix model select error"
   - version: "0.6.13"
     features:
       - "fix settings migration"
