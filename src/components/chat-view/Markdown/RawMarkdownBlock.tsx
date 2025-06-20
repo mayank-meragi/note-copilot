@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm'
 
 import { useDarkModeContext } from '../../../contexts/DarkModeContext'
 
-import MermaidBlock from './MermaidBlock'
+import { MemoizedMermaidBlock } from './MermaidBlock'
 import { MemoizedSyntaxHighlighterWrapper } from './SyntaxHighlighterWrapper'
 
 interface RawMarkdownBlockProps {
@@ -34,7 +34,7 @@ export default function RawMarkdownBlock({
 					if (!isInline && language === 'mermaid') {
 						const codeText = String(children || "")
 						return (
-							<MermaidBlock
+							<MemoizedMermaidBlock
 								code={codeText}
 							/>
 						)

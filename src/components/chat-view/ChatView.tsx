@@ -3,7 +3,7 @@ import * as path from 'path'
 import { BaseSerializedNode } from '@lexical/clipboard/clipboard'
 import { useMutation } from '@tanstack/react-query'
 import { CircleStop, History, NotebookPen, Plus, Search, Server, SquareSlash, Undo } from 'lucide-react'
-import { App, Notice } from 'obsidian'
+import { App, Notice, TFile, WorkspaceLeaf } from 'obsidian'
 import {
 	forwardRef,
 	useCallback,
@@ -15,8 +15,9 @@ import {
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 
-import { ApplyViewState } from '../../ApplyView'
+import { ApplyView, ApplyViewState } from '../../ApplyView'
 import { APPLY_VIEW_TYPE, PREVIEW_VIEW_TYPE } from '../../constants'
+import { PreviewView } from '../../PreviewView'
 import { useApp } from '../../contexts/AppContext'
 import { useDiffStrategy } from '../../contexts/DiffStrategyContext'
 import { useLLM } from '../../contexts/LLMContext'
@@ -181,7 +182,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 	const [tab, setTab] = useState<'chat' | 'commands' | 'custom-mode' | 'mcp' | 'search' | 'history'>('chat')
 
 	const [selectedSerializedNodes, setSelectedSerializedNodes] = useState<BaseSerializedNode[]>([])
-	
+
 	// 跟踪正在编辑的消息ID
 	const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
 
@@ -854,6 +855,8 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 
 	useEffect(() => {
 		setFocusedMessageId(inputMessage.id)
+		// 初始化当前活动文件引用
+		currentActiveFileRef.current = app.workspace.getActiveFile()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
@@ -871,20 +874,27 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		updateConversationAsync()
 	}, [currentConversationId, chatMessages, createOrUpdateConversation])
 
+	// 保存当前活动文件的引用，用于比较是否真的发生了变化
+	const currentActiveFileRef = useRef<TFile | null>(null)
+
 	// Updates the currentFile of the focused message (input or chat history)
 	// This happens when active file changes or focused message changes
-	const handleActiveLeafChange = useCallback(() => {
-		// 如果当前活动的是PreviewView或ApplyView，不更新状态以避免不必要的重新渲染
-		// @ts-expect-error Obsidian API type mismatch
-		const activeLeaf = app.workspace.getActiveLeaf()
-		if (activeLeaf?.view && (
-			activeLeaf.view.getViewType() === PREVIEW_VIEW_TYPE ||
-			activeLeaf.view.getViewType() === APPLY_VIEW_TYPE
-		)) {
+	const handleActiveLeafChange = useCallback((leaf: WorkspaceLeaf | null) => {
+		// 过滤掉 ApplyView 和 PreviewView 的切换
+		if ((leaf?.view instanceof ApplyView) || (leaf?.view instanceof PreviewView)) {
 			return
 		}
 
 		const activeFile = app.workspace.getActiveFile()
+		
+		// 🎯 关键优化：只有当活动文件真正发生变化时才更新
+		if (activeFile === currentActiveFileRef.current) {
+			return // 文件没有变化，不需要更新
+		}
+		
+		// 更新文件引用
+		currentActiveFileRef.current = activeFile
+		
 		if (!activeFile) return
 
 		const mentionable: Omit<MentionableCurrentFile, 'id'> = {

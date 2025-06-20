@@ -1,5 +1,5 @@
 import mermaid from "mermaid"
-import { useEffect, useRef, useState } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import styled from "styled-components"
 
 import { PREVIEW_VIEW_TYPE } from "../../../constants"
@@ -76,7 +76,7 @@ interface MermaidBlockProps {
 	code: string
 }
 
-export default function MermaidBlock({ code }: MermaidBlockProps) {
+function MermaidBlock({ code }: MermaidBlockProps) {
 	const containerRef = useRef<HTMLDivElement>(null)
 	const [isLoading, setIsLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -206,7 +206,8 @@ export default function MermaidBlock({ code }: MermaidBlockProps) {
 			
 			if (existingLeaf) {
 				// 如果已存在，关闭现有的然后重新创建以更新内容
-				existingLeaf.detach()
+				// existingLeaf.detach()
+				return
 			}
 			
 			// 创建新的预览 tab
@@ -391,3 +392,5 @@ const SvgContainer = styled.div<SvgContainerProps>`
 		z-index: 10;
 	}
 `
+
+export const MemoizedMermaidBlock = memo(MermaidBlock)
