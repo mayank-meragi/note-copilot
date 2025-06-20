@@ -16,8 +16,7 @@ import {
 import { v4 as uuidv4 } from 'uuid'
 
 import { ApplyView, ApplyViewState } from '../../ApplyView'
-import { APPLY_VIEW_TYPE, PREVIEW_VIEW_TYPE } from '../../constants'
-import { PreviewView } from '../../PreviewView'
+import { APPLY_VIEW_TYPE } from '../../constants'
 import { useApp } from '../../contexts/AppContext'
 import { useDiffStrategy } from '../../contexts/DiffStrategyContext'
 import { useLLM } from '../../contexts/LLMContext'
@@ -37,6 +36,7 @@ import {
 import { useChatHistory } from '../../hooks/use-chat-history'
 import { useCustomModes } from '../../hooks/use-custom-mode'
 import { t } from '../../lang/helpers'
+import { PreviewView } from '../../PreviewView'
 import { ApplyStatus, ToolArgs } from '../../types/apply'
 import { ChatMessage, ChatUserMessage } from '../../types/chat'
 import {
