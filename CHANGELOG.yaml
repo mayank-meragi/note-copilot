@@ -1,4 +1,8 @@
 releases:
+  - version: "0.6.17"
+    fixes:
+      - "fix mermaid block style"
+      - "fix chat view style"						
   - version: "0.6.16"
     fixes:
       -  "fix chat view style"
