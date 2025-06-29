@@ -1,4 +1,7 @@
 releases:
+  - version: "0.6.18"
+    fixes:
+      - "fix mermaid block style, add copy btn"
   - version: "0.6.17"
     fixes:
       - "fix mermaid block style"
