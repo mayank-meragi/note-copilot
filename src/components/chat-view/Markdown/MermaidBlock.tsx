@@ -1,3 +1,4 @@
+import { CopyIcon } from "lucide-react"
 import mermaid from "mermaid"
 import { memo, useEffect, useRef, useState } from "react"
 import styled from "styled-components"
@@ -74,6 +75,42 @@ const OBSIDIAN_LIGHT_THEME = {
 
 interface MermaidBlockProps {
 	code: string
+}
+
+interface MermaidToolbarProps {
+	code: string;
+}
+
+function MermaidToolbar({ code }: MermaidToolbarProps) {
+	const { showCopyFeedback, copyWithFeedback } = useCopyToClipboard()
+
+	const handleCopy = (e: React.MouseEvent) => {
+		e.stopPropagation()
+		// We wrap the code in a markdown block for easy pasting
+		copyWithFeedback("```mermaid\n" + code + "\n```")
+	}
+
+	return (
+		<ToolbarContainer className="mermaid-toolbar">
+			<ToolbarButton className="mermaid-toolbar-btn" onClick={handleCopy} aria-label={t("common:copy_code")}>
+				<CopyIcon size={12} />
+			</ToolbarButton>
+		</ToolbarContainer>
+	)
+}
+
+interface MermaidButtonProps {
+	code: string
+	children: React.ReactNode
+}
+
+function MermaidButton({ code, children }: MermaidButtonProps) {
+	return (
+		<MermaidWrapper>
+			{children}
+			<MermaidToolbar code={code} />
+		</MermaidWrapper>
+	)
 }
 
 function MermaidBlock({ code }: MermaidBlockProps) {
@@ -259,15 +296,78 @@ function MermaidBlock({ code }: MermaidBlockProps) {
 					)}
 				</ErrorContainer>
 			) : (
-				<SvgContainer onClick={handleClick} ref={containerRef} $isLoading={isLoading} />
+				<MermaidButton code={code}>
+					<SvgContainer onClick={handleClick} ref={containerRef} $isLoading={isLoading} />
+				</MermaidButton>
 			)}
 		</MermaidBlockContainer>
 	)
 }
 
-const MermaidBlockContainer = styled.div`
+const MermaidWrapper = styled.div`
 	position: relative;
 	margin: 8px 0;
+
+	&:hover .mermaid-toolbar {
+		opacity: 1;
+	}
+
+	.mermaid-toolbar-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: transparent !important;
+		border: none !important;
+		box-shadow: none !important;
+		color: var(--text-muted);
+		padding: 0 !important;
+		margin: 0 !important;
+		width: 24px !important;
+		height: 24px !important;
+
+		&:hover {
+			background-color: var(--background-modifier-hover) !important;
+		}
+	}
+`
+
+const ToolbarContainer = styled.div`
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	z-index: 10;
+	opacity: 0;
+	transition: opacity 0.2s ease-in-out;
+	background-color: var(--background-secondary);
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	padding: 2px;
+	display: flex;
+	align-items: center;
+
+	&:hover {
+		opacity: 1; /* Keep it visible when hovering over the toolbar itself */
+	}
+`
+
+const ToolbarButton = styled.button`
+	padding: 4px;
+	color: var(--text-muted);
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	border-radius: 4px;
+
+	&:hover {
+		color: var(--text-normal);
+		background-color: var(--background-modifier-hover);
+	}
+`
+
+const MermaidBlockContainer = styled.div`
+	position: relative;
 `
 
 const LoadingMessage = styled.div`

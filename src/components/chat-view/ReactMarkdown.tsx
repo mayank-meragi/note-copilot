@@ -31,8 +31,8 @@ function ReactMarkdown({
 	applyStatus: ApplyStatus
 	onApply: (toolArgs: ToolArgs) => void
 	children: string
-	}) {
-	
+}) {
+
 	const blocks: ParsedMsgBlock[] = useMemo(
 		() => parseMsgBlocks(children),
 		[children],

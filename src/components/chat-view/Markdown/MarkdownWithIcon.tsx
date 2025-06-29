@@ -1,13 +1,13 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import { Check, CircleCheckBig, CircleHelp, CopyIcon, FilePlus2 } from 'lucide-react';
 import { ReactNode, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
 import { useApp } from 'src/contexts/AppContext';
 
 import { t } from '../../../lang/helpers'
 
-function CopyButton({ message }: { message: string }) {
+import RawMarkdownBlock from './RawMarkdownBlock'
+
+export function CopyButton({ message }: { message: string }) {
 	const [copied, setCopied] = useState(false)
 
 	const handleCopy = async () => {
@@ -43,7 +43,7 @@ function CopyButton({ message }: { message: string }) {
 	)
 }
 
-function CreateNewFileButton({ message }: { message: string }) {
+export function CreateNewFileButton({ message }: { message: string }) {
 	const app = useApp()
 	const [created, setCreated] = useState(false)
 
@@ -138,12 +138,10 @@ const MarkdownWithIcons = ({
 		<>
 			<div className={`${className}`}>
 				<span>{iconName && renderIcon()} {renderTitle()}</span>
-				<ReactMarkdown
+				<RawMarkdownBlock
+					content={markdownContent}
 					className={`${className}`}
-					rehypePlugins={[rehypeRaw]}
-				>
-					{markdownContent}
-				</ReactMarkdown>
+				/>
 			</div>
 			{markdownContent && finish && iconName === "attempt_completion" &&
 				<div className="infio-chat-message-actions">
