@@ -16,110 +16,33 @@ export interface ModularMcpServer {
 	apiKeyRequired?: boolean
 	apiKeyName?: string
 	apiKeyDescription?: string
+	requirements?: {
+		nodeVersion?: string
+		description?: string
+	}
 }
 
 export const MODULAR_MCP_SERVERS: Record<string, ModularMcpServer> = {
 	"google-calendar": {
 		name: "google-calendar",
 		displayName: "Google Calendar",
-		description: "Access and manage Google Calendar events",
+		description: "Access and manage Google Calendar events with multi-calendar support, event management, and smart scheduling",
 		enabled: false,
 		config: {
 			type: "stdio",
 			command: "npx",
-			args: ["@modelcontextprotocol/server-google-calendar"],
+			args: ["@cocal/google-calendar-mcp"],
 			timeout: 60,
 			env: {}
 		},
-		installInstructions: "Run: npm install -g @modelcontextprotocol/server-google-calendar",
+		installInstructions: "No installation required - uses npx automatically",
 		apiKeyRequired: true,
-		apiKeyName: "GOOGLE_CALENDAR_API_KEY",
-		apiKeyDescription: "Google Calendar API key from Google Cloud Console"
-	},
-	"weather": {
-		name: "weather",
-		displayName: "Weather Service",
-		description: "Get weather information for locations",
-		enabled: false,
-		config: {
-			type: "stdio",
-			command: "npx",
-			args: ["@modelcontextprotocol/server-weather"],
-			timeout: 30,
-			env: {}
-		},
-		installInstructions: "Run: npm install -g @modelcontextprotocol/server-weather",
-		apiKeyRequired: true,
-		apiKeyName: "WEATHER_API_KEY",
-		apiKeyDescription: "OpenWeatherMap API key"
-	},
-	"github": {
-		name: "github",
-		displayName: "GitHub",
-		description: "Access GitHub repositories and manage issues",
-		enabled: false,
-		config: {
-			type: "stdio",
-			command: "npx",
-			args: ["@modelcontextprotocol/server-github"],
-			timeout: 60,
-			env: {}
-		},
-		installInstructions: "Run: npm install -g @modelcontextprotocol/server-github",
-		apiKeyRequired: true,
-		apiKeyName: "GITHUB_TOKEN",
-		apiKeyDescription: "GitHub Personal Access Token"
-	},
-	"slack": {
-		name: "slack",
-		displayName: "Slack",
-		description: "Send messages and manage Slack workspaces",
-		enabled: false,
-		config: {
-			type: "stdio",
-			command: "npx",
-			args: ["@modelcontextprotocol/server-slack"],
-			timeout: 60,
-			env: {}
-		},
-		installInstructions: "Run: npm install -g @modelcontextprotocol/server-slack",
-		apiKeyRequired: true,
-		apiKeyName: "SLACK_BOT_TOKEN",
-		apiKeyDescription: "Slack Bot User OAuth Token"
-	},
-	"notion": {
-		name: "notion",
-		displayName: "Notion",
-		description: "Access and manage Notion databases and pages",
-		enabled: false,
-		config: {
-			type: "stdio",
-			command: "npx",
-			args: ["@modelcontextprotocol/server-notion"],
-			timeout: 60,
-			env: {}
-		},
-		installInstructions: "Run: npm install -g @modelcontextprotocol/server-notion",
-		apiKeyRequired: true,
-		apiKeyName: "NOTION_API_KEY",
-		apiKeyDescription: "Notion Integration Token"
-	},
-	"jira": {
-		name: "jira",
-		displayName: "Jira",
-		description: "Manage Jira issues and projects",
-		enabled: false,
-		config: {
-			type: "stdio",
-			command: "npx",
-			args: ["@modelcontextprotocol/server-jira"],
-			timeout: 60,
-			env: {}
-		},
-		installInstructions: "Run: npm install -g @modelcontextprotocol/server-jira",
-		apiKeyRequired: true,
-		apiKeyName: "JIRA_API_TOKEN",
-		apiKeyDescription: "Jira API Token"
+		apiKeyName: "GOOGLE_OAUTH_CREDENTIALS",
+		apiKeyDescription: "Path to your Google OAuth credentials JSON file (e.g., /path/to/gcp-oauth.keys.json)",
+		requirements: {
+			nodeVersion: "16.0.0",
+			description: "Requires Node.js 16+ for compatibility"
+		}
 	}
 }
 

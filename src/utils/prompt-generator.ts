@@ -396,7 +396,7 @@ export class PromptGenerator {
 				const mcpHub = await this.getMcpHub?.()
 				let content: string
 				let markdownFilePath = ''
-				if (file.extension !== 'md' && mcpHub?.isBuiltInServerAvailable()) {
+				if (file.extension !== 'md' && mcpHub?.hasModularServers()) {
 					[content, markdownFilePath] = await this.callMcpToolConvertDocument(file, mcpHub)
 				} else {
 					content = await getFileOrFolderContent(
@@ -585,7 +585,7 @@ export class PromptGenerator {
 			// 如果当前文件不是 md 文件且 mcpHub 存在，使用 MCP 工具转换
 			const mcpHub = await this.getMcpHub?.()
 			let currentMarkdownFilePath = ''
-			if (currentFile.file.extension !== 'md' && mcpHub?.isBuiltInServerAvailable()) {
+			if (currentFile.file.extension !== 'md' && mcpHub?.hasModularServers()) {
 				const [mcpCurrFileContent, mcpCurrFileContentPath] = await this.callMcpToolConvertDocument(currentFile.file, mcpHub)
 				currentFileContent = mcpCurrFileContent
 				currentMarkdownFilePath = mcpCurrFileContentPath
@@ -988,7 +988,7 @@ When writing out new markdown blocks, remember not to include "line_number|" at 
 	 */
 	private async getWebsiteContent(url: string, mcpHub: McpHub | null): Promise<[string, string]> {
 
-		const mcpHubAvailable = mcpHub?.isBuiltInServerAvailable()
+		const mcpHubAvailable = mcpHub?.hasModularServers()
 
 		if (mcpHubAvailable && isVideoUrl(url)) {
 			const [md, mdPath] = await this.callMcpToolConvertVideo(url, mcpHub)

@@ -323,6 +323,54 @@ export class McpHub {
 		return [...modularServers, ...standardServers]
 	}
 
+	/**
+	 * Check if any modular servers are available and enabled
+	 */
+	hasModularServers(): boolean {
+		return this.modularServers.size > 0
+	}
+
+	/**
+	 * Test if a modular server is connected and working
+	 */
+	async testModularServerConnection(serverName: string): Promise<{ success: boolean; message: string; toolsCount?: number }> {
+		try {
+			const serverPrefix = 'modular-';
+			const fullServerName = `${serverPrefix}${serverName}`;
+			
+			// Check if server exists in modular servers
+			const servers = this.getAllServers();
+			const targetServer = servers.find(s => s.name === fullServerName);
+			
+			if (!targetServer) {
+				return { success: false, message: 'Server not found in connected servers' };
+			}
+
+			if (targetServer.status !== 'connected') {
+				return { success: false, message: `Server status: ${targetServer.status}` };
+			}
+
+			// Try to fetch tools to verify the server is working
+			const tools = await this.fetchToolsList(fullServerName, 'global');
+			
+			if (tools.length === 0) {
+				return { success: false, message: 'No tools available from server' };
+			}
+
+			return { 
+				success: true, 
+				message: `Connected successfully! Found ${tools.length} tools available.`,
+				toolsCount: tools.length
+			};
+
+		} catch (error) {
+			return { 
+				success: false, 
+				message: `Connection failed: ${error instanceof Error ? error.message : String(error)}` 
+			};
+		}
+	}
+
 	async ensureMcpFileExists(): Promise<void> {
 		const mcpFolderPath = ".infio_json_db/mcp"
 		if (!await this.app.vault.adapter.exists(normalizePath(mcpFolderPath))) {
@@ -615,6 +663,12 @@ export class McpHub {
 	 * @returns The matching connection or undefined if not found
 	 */
 	private findConnection(serverName: string, source: "global" | "project" = "global"): McpConnection | undefined {
+		// First check if this is a modular server
+		if (serverName.startsWith(this.MODULAR_SERVER_PREFIX)) {
+			const modularServerName = serverName.substring(this.MODULAR_SERVER_PREFIX.length)
+			return this.modularServers.get(modularServerName)
+		}
+
 		// If source is specified, only find servers with that source
 		if (source !== undefined) {
 			return this.connections.find((conn) => conn.server.name === serverName && conn.server.source === source)
@@ -1416,6 +1470,51 @@ export class McpHub {
 				},
 			}
 
+			// Debug logging for environment variables
+			console.log(`Connecting to modular server: ${serverName}`)
+			console.log(`Environment variables:`, mergedConfig.env)
+			
+			// Check Node.js version requirements
+			if (modularConfig.requirements?.nodeVersion) {
+				const currentNodeVersion = process.version
+				const requiredVersion = modularConfig.requirements.nodeVersion
+				
+				// Simple version comparison (this could be more sophisticated)
+				const currentMajor = parseInt(currentNodeVersion.slice(1).split('.')[0])
+				const requiredMajor = parseInt(requiredVersion.split('.')[0])
+				
+				if (currentMajor < requiredMajor) {
+					const errorMessage = `Node.js version ${requiredVersion}+ required for ${serverName}. Current version: ${currentNodeVersion}. Please upgrade Node.js.`
+					console.error(errorMessage)
+					throw new Error(errorMessage)
+				}
+			}
+			
+			if (config.apiKey) {
+				console.log(`API key/credentials provided: ${config.apiKey.substring(0, 20)}...`)
+				
+				// For Google Calendar, check if the credentials file exists
+				if (serverName === 'google-calendar' && modularConfig.apiKeyName === 'GOOGLE_OAUTH_CREDENTIALS') {
+					try {
+						const fs = require('fs')
+						if (!fs.existsSync(config.apiKey)) {
+							throw new Error(`Google OAuth credentials file not found: ${config.apiKey}`)
+						}
+						console.log(`Google OAuth credentials file exists: ${config.apiKey}`)
+					} catch (error) {
+						console.error(`Error checking Google OAuth credentials file:`, error)
+						throw new Error(`Invalid Google OAuth credentials path: ${config.apiKey}. Please check the file path in settings.`)
+					}
+				}
+			} else {
+				console.log(`No API key/credentials provided for ${serverName}`)
+				if (modularConfig.apiKeyRequired) {
+					throw new Error(`API key/credentials required for ${serverName} but not provided`)
+				}
+			}
+
+
+
 			// Create MCP client
 			const client = new Client(
 				{
@@ -1442,6 +1541,12 @@ export class McpHub {
 					stderr: "pipe",
 				})
 
+				// Capture stderr output for debugging
+				transport.stderr?.on('data', (data: Buffer) => {
+					const output = data.toString()
+					console.error(`Modular server ${serverName} stderr:`, output)
+				})
+
 				// Set up error handling
 				transport.onerror = async (error) => {
 					console.error(`Transport error for modular server "${serverName}":`, error)
@@ -1458,8 +1563,6 @@ export class McpHub {
 						connection.server.status = "disconnected"
 					}
 				}
-
-				await transport.start()
 			} else {
 				// SSE connection
 				const sseOptions = {
