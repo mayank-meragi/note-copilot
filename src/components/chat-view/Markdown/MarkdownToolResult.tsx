@@ -1,10 +1,41 @@
-import { CheckCheck, ChevronDown, ChevronRight } from 'lucide-react'
+import { CheckCheck, ChevronDown, ChevronRight, Wrench } from 'lucide-react'
 import React, { PropsWithChildren, useEffect, useRef, useState } from 'react'
 
 import { useDarkModeContext } from "../../../contexts/DarkModeContext"
 import { t } from '../../../lang/helpers'
 
 import { MemoizedSyntaxHighlighterWrapper } from "./SyntaxHighlighterWrapper"
+
+// New: ToolUsageInfo component
+function ToolUsageInfo({ content }: { content: string }) {
+	// Try to extract tool name and parameter from the first line
+	const firstLine = content.split('\n')[0] || ''
+	const toolMatch = firstLine.match(/\[([a-zA-Z0-9_]+) for '([^']+)'\]/)
+	const switchModeMatch = firstLine.match(/\[switch_mode to ([^\]]+)\]/)
+	let toolName = ''
+	let toolParam = ''
+	if (toolMatch) {
+		toolName = toolMatch[1]
+		toolParam = toolMatch[2]
+	} else if (switchModeMatch) {
+		toolName = 'switch_mode'
+		toolParam = switchModeMatch[1]
+	}
+	if (!toolName) return null
+	return (
+		<div className="infio-tool-usage-info">
+			<Wrench size={13} style={{ marginRight: 4, verticalAlign: 'middle' }} />
+			<span style={{ fontWeight: 500 }}>
+				{t("Used tool", { tool: toolName })}
+			</span>
+			{toolParam && (
+				<span style={{ color: 'var(--text-muted)', marginLeft: 6 }}>
+					({toolParam})
+				</span>
+			)}
+		</div>
+	)
+}
 
 const processContent = (content: string): { serverName: string; processedContent: string } => {
 	const lines = content.split('\n');
@@ -43,6 +74,8 @@ export default function MarkdownToolResult({
 			<div
 				className={`infio-chat-code-block-response has-filename infio-reasoning-block`}
 			>
+				{/* Tool usage info banner */}
+				<ToolUsageInfo content={content} />
 				<div className={'infio-chat-code-block-response-header'}>
 					<div className={'infio-chat-code-block-response-header-filename'}>
 						<CheckCheck size={10} className="infio-chat-code-block-response-header-icon" />
@@ -72,6 +105,18 @@ export default function MarkdownToolResult({
 				</div>
 				<style>
 					{`
+
+					.infio-tool-usage-info {
+						background: var(--background-secondary-alt);
+						color: var(--text-normal);
+						padding: 4px 10px;
+						border-radius: 6px 6px 0 0;
+						font-size: 13px;
+						margin-bottom: 0px;
+						display: flex;
+						align-items: center;
+						gap: 2px;
+					}
 
 					.infio-chat-code-block-response {
 						position: relative;

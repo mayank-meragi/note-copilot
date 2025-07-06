@@ -47,6 +47,7 @@ export const BUILTIN_TOOLS = [
 			"server_name": "internal"
 		}
 	},
+
 	{
 		"name": "COMPOSIO_SEARCH_DUCK_DUCK_GO_SEARCH",
 		"description": "The duckduckgosearch class utilizes the composio duckduckgo search api to perform searches, focusing on web information and details. it leverages the duckduckgo search engine via the composio duckduckgo search api to retrieve relevant web data based on the provided query.",

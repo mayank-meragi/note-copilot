@@ -258,6 +258,19 @@ export const InfioSettingsSchema = z.object({
 
 	// MCP Servers
 	mcpEnabled: z.boolean().catch(false),
+	mcpServers: z.record(z.object({
+		enabled: z.boolean().catch(false),
+		apiKey: z.string().catch(''),
+		config: z.object({
+			type: z.enum(['stdio', 'sse']),
+			command: z.string().optional(),
+			args: z.array(z.string()).optional(),
+			url: z.string().optional(),
+			env: z.record(z.string()).optional(),
+			timeout: z.number().optional(),
+			headers: z.record(z.string()).optional(),
+		}).optional(),
+	})).catch({}),
 
 	// Chat Model start list
 	collectedChatModels: z.array(z.object({

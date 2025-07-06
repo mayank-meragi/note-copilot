@@ -91,7 +91,7 @@ const ChatHistoryView = ({
 			await deleteConversation(id)
 			onDelete?.(id)
 		} catch (error) {
-			new Notice(String(t('chat.errors.failedToDeleteConversation')))
+			new Notice(t('chat.errors.failedToDeleteConversation'))
 			console.error('Failed to delete conversation', error)
 		}
 	}
@@ -99,12 +99,12 @@ const ChatHistoryView = ({
 	// batch delete selected conversations
 	const handleBatchDelete = async () => {
 		if (selectedConversations.size === 0) {
-			new Notice('请先选择要删除的对话')
+			new Notice(t('chat.history.pleaseSelectToDelete'))
 			return
 		}
 
 		// show confirmation
-		const confirmed = confirm(`确定要删除选中的 ${selectedConversations.size} 个对话吗？此操作不可撤销。`)
+		const confirmed = confirm(t('chat.history.confirmBatchDelete', { count: selectedConversations.size }))
 		if (!confirmed) {
 			return
 		}
@@ -126,10 +126,10 @@ const ChatHistoryView = ({
 
 		// show results
 		if (deletedIds.length > 0) {
-			new Notice(`成功删除 ${deletedIds.length} 个对话`)
+			new Notice(t('chat.history.successfullyDeleted', { count: deletedIds.length }))
 		}
 		if (errors.length > 0) {
-			new Notice(`${errors.length} 个对话删除失败`)
+			new Notice(t('chat.history.deleteFailed', { count: errors.length }))
 		}
 
 		// clear selections
@@ -145,7 +145,7 @@ const ChatHistoryView = ({
 	const handleSaveEdit = async (id: string) => {
 		const titleInput = titleInputRefs.current.get(id)
 		if (!titleInput || !titleInput.value.trim()) {
-			new Notice(String(t('chat.errors.titleRequired')))
+			new Notice(t('chat.errors.titleRequired'))
 			return
 		}
 		
@@ -154,7 +154,7 @@ const ChatHistoryView = ({
 			onUpdateTitle?.(id, titleInput.value.trim())
 			setEditingConversationId(null)
 		} catch (error) {
-			new Notice(String(t('chat.errors.failedToUpdateTitle')))
+			new Notice(t('chat.errors.failedToUpdateTitle'))
 			console.error('Failed to update conversation title', error)
 		}
 	}
@@ -195,10 +195,10 @@ const ChatHistoryView = ({
 					<button
 						onClick={toggleSelectionMode}
 						className={`infio-chat-history-selection-btn ${selectionMode ? 'active' : ''}`}
-						title={selectionMode ? '退出选择模式' : '进入选择模式'}
+						title={selectionMode ? t('chat.history.exitSelectionMode') : t('chat.history.enterSelectionMode')}
 					>
 						<CopyPlus size={16} />
-						{selectionMode ? '取消' : '多选'}
+						{selectionMode ? t('chat.history.cancel') : t('chat.history.multiSelect')}
 					</button>
 				</div>
 			</div>
@@ -206,7 +206,7 @@ const ChatHistoryView = ({
 			{/* description */}
 			<div className="infio-chat-history-tip">
 				{selectionMode 
-					? `选择模式 - 已选择 ${selectedConversations.size} 个对话`
+					? t('chat.history.selectionMode', { count: selectedConversations.size })
 					: String(t('chat.history.description'))
 				}
 			</div>
@@ -222,12 +222,12 @@ const ChatHistoryView = ({
 							{isAllSelected ? (
 								<>
 									<CheckSquare size={16} />
-									取消全选
+									{t('chat.history.unselectAll')}
 								</>
 							) : (
 								<>
 									<Square size={16} />
-									全选
+									{t('chat.history.selectAll')}
 								</>
 							)}
 						</button>
@@ -239,7 +239,7 @@ const ChatHistoryView = ({
 							className="infio-chat-history-batch-delete-btn"
 						>
 							<Trash2 size={16} />
-							批量删除 ({selectedConversations.size})
+							{t('chat.history.batchDelete', { count: selectedConversations.size })}
 						</button>
 					</div>
 				</div>

@@ -1,8 +1,8 @@
-<h1 align="center">Obsidian-Infio-Copilot</h1>
+<h1 align="center">Obsidian-Tangent-Copilot</h1>
 
 **让你的 Obsidian 秒变个人 AI 工作站！**
 
-Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在帮助用户在本地工作流中轻松使用各类强大的 AI 大模型，为知识库提供交互式对话、内联编辑、智能补全、全库检索问答等功能。
+Tangent Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在帮助用户在本地工作流中轻松使用各类强大的 AI 大模型，为知识库提供交互式对话、内联编辑、智能补全、全库检索问答等功能。
 
 <a href="README.md" target="_blank"><b>English</b></a>  |  <a href="README_zh-CN.md" target="_blank"><b>中文</b></a>
 
@@ -66,7 +66,7 @@ Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在�
 ## 开始使用
 
 > **⚠️ 重要提示：安装程序版本要求**
-> Infio-Copilot 需要较新版本的 Obsidian 安装程序。如果您遇到插件无法正常加载的问题：
+> Tangent-Copilot 需要较新版本的 Obsidian 安装程序。如果您遇到插件无法正常加载的问题：
 >
 > 1. 首先，尝试在 `设置 > 通用 > 检查更新` 中正常更新 Obsidian。
 > 2. 如果问题仍然存在，手动更新您的 Obsidian 安装程序：
@@ -77,7 +77,7 @@ Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在�
 
 1. 打开 Obsidian 设置
 2. 导航至"社区插件"并点击"浏览"
-3. 搜索 "Infio Copilot" 并点击安装
+3. 搜索 "Tangent Copilot" 并点击安装
 4. 在社区插件中启用该插件
 5. 在插件设置中配置您的 API 密钥
    - SiliconFlow : [SiliconFlow API Keys](https://cloud.siliconflow.cn/account/ak)
@@ -90,10 +90,10 @@ Infio Copilot 是一款可高度个人定制化的 Obsidian AI 插件，旨在�
    - Groq：[Groq API Keys](https://console.groq.com/keys)
 6. 设置快捷键以快速访问：
    - 转到 设置 > 快捷键
-   - 搜索 "Infio Copilot"
+   - 搜索 "Tangent Copilot"
    - 推荐的快捷键绑定：
-     * Infio Copilot: Infio add selection to chat -> cmd + shift + L
-     * Infio Copilot: Infio Inline Edit -> cmd + shift + K
+     * Tangent Copilot: Tangent add selection to chat -> cmd + shift + L
+     * Tangent Copilot: Tangent Inline Edit -> cmd + shift + K
 ![autocomplte](asserts/doc-set-hotkey.png)
 7. 如果需要 跟文档聊天 , 需要配置 embedding 模型
 	 - 目前之后 SiliconFlow Alibaba Google OpenAI 平台支持嵌入模型

@@ -1,10 +1,10 @@
 {
-	"id": "infio-copilot",
-	"name": "Infio Copilot",
+	"id": "notes-copilot",
+	"name": "Tangent",
 	"version": "0.6.18",
 	"minAppVersion": "0.15.0",
 	"description": "A Cursor-inspired AI assistant for notes that offers smart autocomplete and interactive chat with your selected notes",
-	"author": "Felix.D",
-	"authorUrl": "https://github.com/infiolab",
+	"author": "Mayank Kushal",
+	"authorUrl": "https://github.com/notes-copilot",
 	"isDesktopOnly": true
 }

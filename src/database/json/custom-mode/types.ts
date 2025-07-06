@@ -6,6 +6,7 @@ export const toolGroups = [
 	"read",
 	"edit",
 	"research",
+	"memory",
 	// "browser",
 	// "command",
 	// "mcp",

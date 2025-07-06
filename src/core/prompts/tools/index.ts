@@ -6,6 +6,7 @@ import { FilesSearchSettings } from "../../../types/settings"
 import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
+import { getAssistantMemoryDescription } from "./assistant-memory"
 import { getFetchUrlsContentDescription } from "./fetch-url-content"
 import { getInsertContentDescription } from "./insert-content"
 import { getListFilesDescription } from "./list-files"
@@ -36,6 +37,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 		args.diffStrategy ? args.diffStrategy.getToolDescription({ cwd: args.cwd, toolOptions: args.toolOptions }) : "",
 	search_web: (args): string | undefined => getSearchWebDescription(args),
 	fetch_urls_content: (args): string | undefined => getFetchUrlsContentDescription(args),
+	assistant_memory: (args) => getAssistantMemoryDescription(args),
 }
 
 export function getToolDescriptionsForMode(
@@ -51,6 +53,9 @@ export function getToolDescriptionsForMode(
 	experiments?: Record<string, boolean>,
 ): string {
 	const config = getModeConfig(mode, customModes)
+	console.log('Mode config:', config)
+	console.log('Mode groups:', config.groups)
+	
 	const args: ToolArgs = {
 		cwd,
 		searchSettings,
@@ -66,23 +71,35 @@ export function getToolDescriptionsForMode(
 	// Add tools from mode's groups
 	config.groups.forEach((groupEntry) => {
 		const groupName = getGroupName(groupEntry)
+		console.log('Processing group:', groupName)
 		const toolGroup = TOOL_GROUPS[groupName]
+		console.log('Tool group:', toolGroup)
 		if (toolGroup) {
 			toolGroup.tools.forEach((tool) => {
+				console.log('Checking tool:', tool)
 				if (isToolAllowedForMode(tool, mode, customModes ?? [], experiments ?? {})) {
+					console.log('Adding tool:', tool)
 					tools.add(tool)
+				} else {
+					console.log('Tool not allowed:', tool)
 				}
 			})
 		}
 	})
 
 	// Add always available tools
-	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => tools.add(tool))
+	ALWAYS_AVAILABLE_TOOLS.forEach((tool) => {
+		console.log('Adding always available tool:', tool)
+		tools.add(tool)
+	})
+
+	console.log('Final tools set:', Array.from(tools))
 
 	// Map tool descriptions for allowed tools
 	const descriptions = Array.from(tools).map((toolName) => {
 		const descriptionFn = toolDescriptionMap[toolName]
 		if (!descriptionFn) {
+			console.log('No description function for tool:', toolName)
 			return undefined
 		}
 
@@ -97,6 +114,6 @@ export function getToolDescriptionsForMode(
 
 // Export individual description functions for backward compatibility
 export {
-	getAccessMcpResourceDescription, getAskFollowupQuestionDescription, getAttemptCompletionDescription, getInsertContentDescription, getListFilesDescription, getReadFileDescription, getSearchAndReplaceDescription, getSearchFilesDescription, getSwitchModeDescription, getUseMcpToolDescription, getWriteToFileDescription
+	getAccessMcpResourceDescription, getAskFollowupQuestionDescription, getAttemptCompletionDescription, getAssistantMemoryDescription, getInsertContentDescription, getListFilesDescription, getReadFileDescription, getSearchAndReplaceDescription, getSearchFilesDescription, getSwitchModeDescription, getUseMcpToolDescription, getWriteToFileDescription
 }
 

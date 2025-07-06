@@ -65,6 +65,21 @@ export class SystemPrompt {
 		return content
 	}
 
+	private async loadAssistantMemory(): Promise<string> {
+		const memoryFilePath = 'assistant-memory.md'
+		const memoryFile = this.app.vault.getFileByPath(memoryFilePath)
+		if (!memoryFile) {
+			return ""
+		}
+		try {
+			const content = await this.app.vault.read(memoryFile)
+			return content
+		} catch (error) {
+			console.error('Failed to read assistant memory:', error)
+			return ""
+		}
+	}
+
 	private async generatePrompt(
 		cwd: string,
 		supportsComputerUse: boolean,
@@ -93,12 +108,15 @@ export class SystemPrompt {
 		const modeConfig = getModeBySlug(mode, customModeConfigs) || defaultModes.find((m) => m.slug === mode) || defaultModes[0]
 		const roleDefinition = promptComponent?.roleDefinition || modeConfig.roleDefinition
 
-		const [modesSection, mcpServersSection] = await Promise.all([
+		const [modesSection, mcpServersSection, assistantMemory] = await Promise.all([
 			getModesSection(),
 			modeConfig.groups.some((groupEntry) => getGroupName(groupEntry) === "mcp")
 				? getMcpServersSection(mcpHub, diffStrategy, enableMcpServerCreation)
 				: Promise.resolve(""),
+			this.loadAssistantMemory(),
 		])
+
+		const memorySection = assistantMemory ? `\n## Assistant Memory\n\n${assistantMemory}\n` : ""
 
 		const basePrompt = `${roleDefinition}
 
@@ -141,6 +159,8 @@ ${getRulesSection(
 ${getSystemInfoSection(cwd)}
 
 ${getObjectiveSection(mode)}
+
+${memorySection}
 
 ${await addCustomInstructions(this.app, promptComponent?.customInstructions || modeConfig.customInstructions || "", globalCustomInstructions || "", cwd, mode, { preferredLanguage })}`
 
@@ -192,9 +212,14 @@ ${await addCustomInstructions(this.app, promptComponent?.customInstructions || m
 				mode,
 				{ preferredLanguage },
 			)
+			const assistantMemory = await this.loadAssistantMemory()
+			const memorySection = assistantMemory ? `\n## Assistant Memory\n\n${assistantMemory}\n` : ""
+			
 			return `${roleDefinition}
 
 ${fileCustomSystemPrompt}
+
+${memorySection}
 
 ${customInstructions}`
 		}

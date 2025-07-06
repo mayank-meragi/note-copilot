@@ -55,15 +55,16 @@ export class GeminiProvider implements BaseLLMProvider {
 		let info: ModelInfo = geminiModels[id as GeminiModelId]
 
 		if (id?.endsWith(":thinking")) {
-			id = id.slice(0, -":thinking".length)
 
 			if (geminiModels[id as GeminiModelId]) {
 				info = geminiModels[id as GeminiModelId]
 
+				id = id.slice(0, -":thinking".length)
+
 				return {
 					id,
 					info,
-					thinkingConfig: undefined,
+					thinkingConfig: info.thinkingConfig,
 					maxOutputTokens: info.maxTokens ?? undefined,
 				}
 			}
@@ -101,8 +102,7 @@ export class GeminiProvider implements BaseLLMProvider {
 			const config: GenerateContentConfig = {
 				systemInstruction,
 				httpOptions: this.baseUrl ? { baseUrl: this.baseUrl } : undefined,
-				thinkingConfig,
-				maxOutputTokens: maxOutputTokens ?? request.max_tokens,
+				thinkingConfig: thinkingConfig,
 				temperature: request.temperature ?? 0,
 				topP: request.top_p ?? 1,
 				presencePenalty: request.presence_penalty ?? 0,
@@ -150,6 +150,8 @@ export class GeminiProvider implements BaseLLMProvider {
 		}
 		const { id: modelName, thinkingConfig, maxOutputTokens, info } = this.getModel(model.modelId)
 
+		console.log("thinkingConfig", info, thinkingConfig)
+
 		const systemMessages = request.messages.filter((m) => m.role === 'system')
 		const systemInstruction: string | undefined =
 			systemMessages.length > 0
@@ -160,8 +162,7 @@ export class GeminiProvider implements BaseLLMProvider {
 			const config: GenerateContentConfig = {
 				systemInstruction,
 				httpOptions: this.baseUrl ? { baseUrl: this.baseUrl } : undefined,
-				thinkingConfig,
-				maxOutputTokens: maxOutputTokens ?? request.max_tokens,
+				thinkingConfig: thinkingConfig,
 				temperature: request.temperature ?? 0,
 				topP: request.top_p ?? 1,
 				presencePenalty: request.presence_penalty ?? 0,
@@ -198,8 +199,30 @@ export class GeminiProvider implements BaseLLMProvider {
 		model: string,
 		messageId: string,
 	): AsyncIterable<LLMResponseStreaming> {
-		for await (const chunk of stream) {
-			yield GeminiProvider.parseStreamingResponseChunk(chunk, model, messageId)
+		let lastChunkTime = Date.now();
+		const TIMEOUT_MS = 30000; // 30 seconds
+		let chunkCount = 0;
+		const timeoutCheck = setInterval(() => {
+			if (Date.now() - lastChunkTime > TIMEOUT_MS) {
+				console.warn('[Gemini] Streaming appears stuck: no chunk received for', TIMEOUT_MS / 1000, 'seconds.');
+			}
+		}, 5000);
+		try {
+			for await (const chunk of stream) {
+				lastChunkTime = Date.now();
+				chunkCount++;
+				console.debug(`[Gemini] Received stream chunk #${chunkCount}:`, chunk);
+				yield GeminiProvider.parseStreamingResponseChunk(chunk, model, messageId);
+			}
+			console.info(`[Gemini] Stream ended after ${chunkCount} chunks.`);
+		} catch (err) {
+			console.error('[Gemini] Error during streaming:', err);
+			throw err;
+		} finally {
+			clearInterval(timeoutCheck);
+			if (chunkCount === 0) {
+				console.warn('[Gemini] Stream ended with zero chunks received.');
+			}
 		}
 	}
 
@@ -248,6 +271,16 @@ export class GeminiProvider implements BaseLLMProvider {
 		model: string,
 		messageId: string,
 	): LLMResponseNonStreaming {
+		const parts = response.candidates?.[0]?.content?.parts || []
+		let content = ''
+		let reasoning_content = ''
+		for (const part of parts) {
+			if (part.thought) {
+				reasoning_content += part.text || ''
+			} else {
+				content += part.text || ''
+			}
+		}
 		return {
 			id: messageId,
 			choices: [
@@ -255,7 +288,8 @@ export class GeminiProvider implements BaseLLMProvider {
 					finish_reason:
 						response.candidates?.[0]?.finishReason ?? null,
 					message: {
-						content: response.candidates?.[0]?.content?.parts?.[0]?.text ?? '',
+						content,
+						reasoning_content,
 						role: 'assistant',
 					},
 				},
@@ -280,15 +314,24 @@ export class GeminiProvider implements BaseLLMProvider {
 		messageId: string,
 	): LLMResponseStreaming {
 		const firstCandidate = chunk.candidates?.[0]
-		const textContent = firstCandidate?.content?.parts?.[0]?.text || ''
-		
+		const parts = firstCandidate?.content?.parts || []
+		let content = ''
+		let reasoning_content = ''
+		for (const part of parts) {
+			if (part.thought) {
+				reasoning_content += part.text || ''
+			} else {
+				content += part.text || ''
+			}
+		}
 		return {
 			id: messageId,
 			choices: [
 				{
 					finish_reason: firstCandidate?.finishReason ?? null,
 					delta: {
-						content: textContent,
+						content,
+						reasoning_content,
 					},
 				},
 			],

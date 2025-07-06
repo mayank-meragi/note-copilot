@@ -105,4 +105,11 @@ export type UseMcpToolArgs = {
 	parameters: Record<string, unknown>;
 }
 
-export type ToolArgs = ReadFileToolArgs | WriteToFileToolArgs | InsertContentToolArgs | SearchAndReplaceToolArgs | ListFilesToolArgs | MatchSearchFilesToolArgs | RegexSearchFilesToolArgs | SemanticSearchFilesToolArgs | SearchWebToolArgs | FetchUrlsContentToolArgs | SwitchModeToolArgs | ApplyDiffToolArgs | UseMcpToolArgs;
+export type AssistantMemoryToolArgs = {
+	type: 'assistant_memory';
+	action: 'write';
+	content: string;
+	finish?: boolean;
+}
+
+export type ToolArgs = ReadFileToolArgs | WriteToFileToolArgs | InsertContentToolArgs | SearchAndReplaceToolArgs | ListFilesToolArgs | MatchSearchFilesToolArgs | RegexSearchFilesToolArgs | SemanticSearchFilesToolArgs | SearchWebToolArgs | FetchUrlsContentToolArgs | SwitchModeToolArgs | ApplyDiffToolArgs | UseMcpToolArgs | AssistantMemoryToolArgs;

@@ -141,16 +141,16 @@ export class McpHub {
 	private fileWatchers: Map<string, FSWatcher[]> = new Map()
 	private isDisposed: boolean = false
 	connections: McpConnection[] = []
-	// 添加内置服务器连接
-	builtInConnection: BuiltInMcpConnection | null = null
+	// Modular MCP servers
+	private modularServers: Map<string, McpConnection> = new Map()
 	isConnecting: boolean = false
 	private refCount: number = 0 // Reference counter for active clients
 	private eventRefs: EventRef[] = []; // For managing Obsidian event listeners
 	// private providerRef: any; // TODO: Replace with actual type and initialize properly. Removed for now as it causes issues and its usage is unclear in the current scope.
 	private shellEnv: EnvironmentVariables
 
-	// 内置服务器配置
-	private readonly BUILTIN_SERVER_NAME = "infio-builtin-server"
+	// Modular server configuration
+	private readonly MODULAR_SERVER_PREFIX = "modular-"
 
 	constructor(app: App, plugin: InfioPlugin) {
 		this.app = app
@@ -307,25 +307,19 @@ export class McpHub {
 	getServers(): McpServer[] {
 		// Only return enabled servers
 		const standardServers = this.connections.filter((conn) => !conn.server.disabled).map((conn) => conn.server)
+		const modularServers = Array.from(this.modularServers.values())
+			.filter((conn) => !conn.server.disabled)
+			.map((conn) => conn.server)
 
-		// 添加内置服务器（如果存在且未禁用）
-		if (this.builtInConnection && !this.builtInConnection.server.disabled) {
-			return [this.builtInConnection.server, ...standardServers]
-		}
-
-		return standardServers
+		return [...modularServers, ...standardServers]
 	}
 
 	getAllServers(): McpServer[] {
 		// Return all servers regardless of state
 		const standardServers = this.connections.map((conn) => conn.server)
+		const modularServers = Array.from(this.modularServers.values()).map((conn) => conn.server)
 
-		// 添加内置服务器（如果存在）
-		if (this.builtInConnection) {
-			return [this.builtInConnection.server, ...standardServers]
-		}
-
-		return standardServers
+		return [...modularServers, ...standardServers]
 	}
 
 	async ensureMcpFileExists(): Promise<void> {
@@ -1321,6 +1315,8 @@ export class McpHub {
 				throw new Error("Built-in server is not connected")
 			}
 
+
+
 			// 调用内置 API，设置 10 分钟超时
 			const controller = new AbortController()
 			const timeoutId = setTimeout(() => {
@@ -1378,6 +1374,8 @@ export class McpHub {
 			throw error
 		}
 	}
+
+
 
 	async toggleToolAlwaysAllow(
 		serverName: string,

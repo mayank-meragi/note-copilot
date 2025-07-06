@@ -94,6 +94,11 @@ export type ParsedMsgBlock =
 		parameters: Record<string, unknown>,
 		finish: boolean
 	} | {
+		type: 'assistant_memory'
+		action: string
+		content?: string
+		finish: boolean
+	} | {
 		type: 'tool_result'
 		content: string
 	}
@@ -659,6 +664,48 @@ export function parseMsgBlocks(
 					finish: node.sourceCodeLocation.endTag !== undefined
 				})	
 				lastEndOffset = endOffset
+			} else if (node.nodeName === 'assistant_memory') {
+				console.log('=== PARSING ASSISTANT_MEMORY ===')
+				console.log('Node:', node)
+				console.log('Child nodes:', node.childNodes)
+				
+				if (!node.sourceCodeLocation) {
+					throw new Error('sourceCodeLocation is undefined')
+				}
+				const startOffset = node.sourceCodeLocation.startOffset
+				const endOffset = node.sourceCodeLocation.endOffset
+				if (startOffset > lastEndOffset) {
+					parsedResult.push({
+						type: 'string',
+						content: input.slice(lastEndOffset, startOffset),
+					})
+				}
+
+				let content: string = ''
+
+				for (const childNode of node.childNodes) {
+					console.log('Processing child node:', childNode.nodeName, childNode.childNodes?.[0]?.value)
+					if (childNode.nodeName === 'content' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						content = childNode.childNodes[0].value
+					}
+				}
+
+				console.log('Parsed content:', content)
+
+				// Always accept assistant_memory blocks (no action parameter needed)
+				if (content) {
+					console.log('Adding assistant_memory block to parsed result')
+					parsedResult.push({
+						type: 'assistant_memory',
+						action: 'write', // Default to write action
+						content: content,
+						finish: node.sourceCodeLocation.endTag !== undefined
+					})
+				} else {
+					console.log('No content found, skipping assistant_memory block')
+				}
+				lastEndOffset = endOffset
 			} else if (node.nodeName === 'tool_result') {
 				if (!node.sourceCodeLocation) {
 					throw new Error('sourceCodeLocation is undefined')
@@ -705,6 +752,11 @@ export function parseMsgBlocks(
 		return parsedResult
 	} catch (error) {
 		console.error('Failed to parse infio block', error)
-		throw error
+		console.error('Input that caused error:', input)
+		// Return a simple string block instead of throwing
+		return [{
+			type: 'string',
+			content: input
+		}]
 	}
 }

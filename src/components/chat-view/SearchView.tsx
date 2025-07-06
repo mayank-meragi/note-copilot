@@ -8,11 +8,12 @@ import { useRAG } from '../../contexts/RAGContext'
 import { SelectVector } from '../../database/schema'
 import { Mentionable } from '../../types/mentionable'
 import { openMarkdownFile } from '../../utils/obsidian'
+import { t } from '../../lang/helpers'
 
 import SearchInputWithActions, { SearchInputRef } from './chat-input/SearchInputWithActions'
 import { editorStateToPlainText } from './chat-input/utils/editor-state-to-plain-text'
 
-// 文件分组结果接口
+// File group result interface
 interface FileGroup {
 	path: string
 	fileName: string
@@ -27,9 +28,9 @@ const SearchView = () => {
 	const [searchResults, setSearchResults] = useState<(Omit<SelectVector, 'embedding'> & { similarity: number })[]>([])
 	const [isSearching, setIsSearching] = useState(false)
 	const [hasSearched, setHasSearched] = useState(false)
-	// 展开状态管理 - 默认全部展开
+	// Expand state management - default all expanded
 	const [expandedFiles, setExpandedFiles] = useState<Set<string>>(new Set())
-	// 新增：mentionables 状态管理
+	// Add: mentionables state management
 	const [mentionables, setMentionables] = useState<Mentionable[]>([])
 	const [searchEditorState, setSearchEditorState] = useState<SerializedEditorState | null>(null)
 
@@ -37,7 +38,7 @@ const SearchView = () => {
 		let searchTerm = ''
 		
 		if (editorState) {
-			// 使用成熟的函数从 Lexical 编辑器状态中提取文本内容
+			// Use a mature function to extract text content from Lexical editor state
 			searchTerm = editorStateToPlainText(editorState).trim()
 		}
 		
@@ -54,15 +55,15 @@ const SearchView = () => {
 			const ragEngine = await getRAGEngine()
 			const results = await ragEngine.processQuery({
 				query: searchTerm,
-				limit: 50, // 使用用户选择的限制数量
+				limit: 50, // Use the limit selected by the user
 			})
 			
 			setSearchResults(results)
-			// 默认展开所有文件
+			// Default expand all files
 			// const uniquePaths = new Set(results.map(r => r.path))
 			// setExpandedFiles(new Set(uniquePaths))
 		} catch (error) {
-			console.error('搜索失败:', error)
+			console.error('Search failed:', error)
 			setSearchResults([])
 		} finally {
 			setIsSearching(false)
@@ -70,13 +71,13 @@ const SearchView = () => {
 	}, [getRAGEngine])
 
 	const handleResultClick = (result: Omit<SelectVector, 'embedding'> & { similarity: number }) => {
-		// 如果用户正在选择文本，不触发点击事件
+		// If the user is selecting text, do not trigger the click event
 		const selection = window.getSelection()
 		if (selection && selection.toString().length > 0) {
 			return
 		}
 
-		console.debug('🔍 [SearchView] 点击搜索结果:', {
+		console.debug('🔍 [SearchView] Clicked search result:', {
 			id: result.id,
 			path: result.path,
 			startLine: result.metadata?.startLine,
@@ -85,34 +86,34 @@ const SearchView = () => {
 			similarity: result.similarity
 		})
 
-		// 检查路径是否存在
+		// Check if the path exists
 		if (!result.path) {
-			console.error('❌ [SearchView] 文件路径为空')
+			console.error('❌ [SearchView] File path is empty')
 			return
 		}
 
-		// 检查文件是否存在于vault中
+		// Check if the file exists in the vault
 		const file = app.vault.getFileByPath(result.path)
 		if (!file) {
-			console.error('❌ [SearchView] 在vault中找不到文件:', result.path)
+			console.error('❌ [SearchView] File not found in vault:', result.path)
 			return
 		}
 
-		console.debug('✅ [SearchView] 文件存在，准备打开:', {
+		console.debug('✅ [SearchView] File exists, preparing to open:', {
 			file: file.path,
 			startLine: result.metadata?.startLine
 		})
 
 		try {
 			openMarkdownFile(app, result.path, result.metadata.startLine)
-			console.debug('✅ [SearchView] 成功调用openMarkdownFile')
+			console.debug('✅ [SearchView] Successfully called openMarkdownFile')
 		} catch (error) {
-			console.error('❌ [SearchView] 调用openMarkdownFile失败:', error)
+			console.error('❌ [SearchView] Failed to call openMarkdownFile:', error)
 		}
 	}
 
 	const toggleFileExpansion = (filePath: string) => {
-		// 如果用户正在选择文本，不触发点击事件
+		// If the user is selecting text, do not trigger the click event
 		const selection = window.getSelection()
 		if (selection && selection.toString().length > 0) {
 			return
@@ -127,7 +128,7 @@ const SearchView = () => {
 		setExpandedFiles(newExpandedFiles)
 	}
 
-	// 限制文本显示行数
+	// Limit the number of displayed lines of text
 	const truncateContent = (content: string, maxLines: number = 3) => {
 		const lines = content.split('\n')
 		if (lines.length <= maxLines) {
@@ -136,30 +137,30 @@ const SearchView = () => {
 		return lines.slice(0, maxLines).join('\n') + '...'
 	}
 
-	// 渲染markdown内容
+	// Render markdown content
 	const renderMarkdownContent = (content: string, maxLines: number = 3) => {
 		const truncatedContent = truncateContent(content, maxLines)
 		return (
 			<ReactMarkdown
 				className="obsidian-markdown-content"
 				components={{
-					// 简化渲染，移除一些复杂元素
+					// Simplify rendering, remove some complex elements
 					h1: ({ children }) => <h4>{children}</h4>,
 					h2: ({ children }) => <h4>{children}</h4>,
 					h3: ({ children }) => <h4>{children}</h4>,
 					h4: ({ children }) => <h4>{children}</h4>,
 					h5: ({ children }) => <h5>{children}</h5>,
 					h6: ({ children }) => <h5>{children}</h5>,
-					// 移除图片显示，避免布局问题
+					// Remove image display to avoid layout issues
 					img: () => <span className="obsidian-image-placeholder">[图片]</span>,
-					// 代码块样式
+					// Code block style
 					code: ({ children, inline }: { children: React.ReactNode; inline?: boolean; [key: string]: unknown }) => {
 						if (inline) {
 							return <code className="obsidian-inline-code">{children}</code>
 						}
 						return <pre className="obsidian-code-block"><code>{children}</code></pre>
 					},
-					// 链接样式
+					// Link style
 					a: ({ href, children }) => (
 						<span className="obsidian-link" title={href}>{children}</span>
 					),
@@ -170,11 +171,11 @@ const SearchView = () => {
 		)
 	}
 
-	// 按文件分组并排序
+	// Group and sort by file
 	const groupedResults = useMemo(() => {
 		if (!searchResults.length) return []
 
-		// 按文件路径分组
+		// Group by file path
 		const fileGroups = new Map<string, FileGroup>()
 		
 		searchResults.forEach(result => {
@@ -193,19 +194,19 @@ const SearchView = () => {
 			const group = fileGroups.get(filePath)
 			if (group) {
 				group.blocks.push(result)
-				// 更新最高相似度
+				// Update highest similarity
 				if (result.similarity > group.maxSimilarity) {
 					group.maxSimilarity = result.similarity
 				}
 			}
 		})
 
-		// 对每个文件内的块按相似度排序
+		// Sort blocks within each file by similarity
 		fileGroups.forEach(group => {
 			group.blocks.sort((a, b) => b.similarity - a.similarity)
 		})
 
-		// 将文件按最高相似度排序
+		// Sort files by highest similarity
 		return Array.from(fileGroups.values()).sort((a, b) => b.maxSimilarity - a.maxSimilarity)
 	}, [searchResults])
 
@@ -214,7 +215,7 @@ const SearchView = () => {
 
 	return (
 		<div className="obsidian-search-container">
-			{/* 搜索输入框 */}
+			{/* Search input box */}
 			<div className="obsidian-search-header">
 				<SearchInputWithActions
 					ref={searchInputRef}
@@ -223,33 +224,33 @@ const SearchView = () => {
 					onSubmit={handleSearch}
 					mentionables={mentionables}
 					setMentionables={setMentionables}
-					placeholder="语义搜索（按回车键搜索）..."
+					placeholder={t('search.semanticSearchPlaceholder')}
 					autoFocus={true}
 					disabled={isSearching}
 				/>
 			</div>
 
-			{/* 结果统计 */}
+			{/* Result statistics */}
 			{hasSearched && !isSearching && (
 				<div className="obsidian-search-stats">
-					{totalFiles} 个文件，{totalBlocks} 个块
+					{totalFiles} files, {totalBlocks} blocks
 				</div>
 			)}
 
-			{/* 搜索进度 */}
+			{/* Search progress */}
 			{isSearching && (
 				<div className="obsidian-search-loading">
-					正在搜索...
+					Searching...
 				</div>
 			)}
 
-			{/* 搜索结果 */}
+			{/* Search results */}
 			<div className="obsidian-search-results">
 				{!isSearching && groupedResults.length > 0 && (
 					<div className="obsidian-results-list">
 						{groupedResults.map((fileGroup) => (
 							<div key={fileGroup.path} className="obsidian-file-group">
-								{/* 文件头部 */}
+								{/* File header */}
 								<div 
 									className="obsidian-file-header"
 									onClick={() => toggleFileExpansion(fileGroup.path)}
@@ -278,7 +279,7 @@ const SearchView = () => {
 									</div>
 								</div>
 
-								{/* 文件块列表 */}
+								{/* File block list */}
 								{expandedFiles.has(fileGroup.path) && (
 									<div className="obsidian-file-blocks">
 										{fileGroup.blocks.map((result, blockIndex) => (
@@ -310,12 +311,12 @@ const SearchView = () => {
 				
 				{!isSearching && hasSearched && groupedResults.length === 0 && (
 					<div className="obsidian-no-results">
-						<p>未找到相关结果</p>
+						<p>No results found</p>
 					</div>
 				)}
 			</div>
 
-			{/* 样式 */}
+			{/* Styles */}
 			<style>
 				{`
 				.obsidian-search-container {
@@ -498,7 +499,7 @@ const SearchView = () => {
 					cursor: text;
 				}
 
-				/* Markdown 渲染样式 */
+				/* Markdown rendering styles */
 				.obsidian-markdown-content {
 					color: var(--text-normal);
 					font-size: var(--font-ui-medium);

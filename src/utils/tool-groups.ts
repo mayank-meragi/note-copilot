@@ -12,6 +12,7 @@ export const TOOL_DISPLAY_NAMES = {
 	apply_diff: "apply changes",
 	search_files: "search files",
 	list_files: "list files",
+	assistant_memory: "manage assistant memory",
 	// list_code_definition_names: "list definitions",
 	browser_action: "use a browser",
 	use_mcp_tool: "use mcp tools",
@@ -32,6 +33,9 @@ export const TOOL_GROUPS: Record<string, ToolGroupConfig> = {
 	},
 	research: {
 		tools: ["search_web", "fetch_urls_content"],
+	},
+	memory: {
+		tools: ["assistant_memory"],
 	},
 	// browser: {
 	// 	tools: ["browser_action"],
@@ -55,6 +59,7 @@ export const ALWAYS_AVAILABLE_TOOLS = [
 	"ask_followup_question",
 	"attempt_completion",
 	"switch_mode",
+	"assistant_memory",
 ] as const
 
 // Tool name types for type safety
@@ -74,6 +79,7 @@ export const GROUP_DISPLAY_NAMES: Record<ToolGroup, string> = {
 	read: "Read Files",
 	edit: "Edit Files",
 	research: "Research",
+	memory: "Assistant Memory",
 	browser: "Use Browser",
 	command: "Run Commands",
 	mcp: "Use MCP",

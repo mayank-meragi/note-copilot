@@ -1,5 +1,6 @@
 import { AlertTriangle } from 'lucide-react'
 import React, { Component, ReactNode } from 'react'
+import { t } from '../../lang/helpers'
 
 interface Props {
 	children: ReactNode
@@ -18,18 +19,18 @@ class ErrorBoundary extends Component<Props, State> {
 	}
 
 	static getDerivedStateFromError(error: Error): State {
-		// 更新 state 使下一次渲染能够显示降级后的 UI
+		// Update state so the next render will show the fallback UI
 		return { hasError: true, error }
 	}
 
 	componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-		// 你同样可以将错误日志上报给服务器
+		// You can also log the error to an error reporting service
 		console.error('ErrorBoundary caught an error:', error, errorInfo)
 	}
 
 	render() {
 		if (this.state.hasError) {
-			// 你可以自定义降级后的 UI 并渲染
+			// You can render any custom fallback UI
 			if (this.props.fallback) {
 				return this.props.fallback
 			}
@@ -38,11 +39,11 @@ class ErrorBoundary extends Component<Props, State> {
 				<div className="infio-error-boundary">
 					<div className="infio-error-boundary-content">
 						<AlertTriangle size={24} color="var(--text-error)" />
-						<h3>出现了一个错误</h3>
-						<p>渲染此组件时发生了错误。请尝试刷新页面或重新打开聊天窗口。</p>
+						<h3>{t('errorBoundary.errorOccurred')}</h3>
+						<p>{t('errorBoundary.renderError')}</p>
 						{this.state.error && (
 							<details className="infio-error-details">
-								<summary>错误详情</summary>
+								<summary>{t('errorBoundary.errorDetails')}</summary>
 								<pre>{this.state.error.toString()}</pre>
 							</details>
 						)}
@@ -50,7 +51,7 @@ class ErrorBoundary extends Component<Props, State> {
 							onClick={() => this.setState({ hasError: false, error: undefined })}
 							className="infio-retry-button"
 						>
-							重试
+							{t('errorBoundary.retry')}
 						</button>
 					</div>
 

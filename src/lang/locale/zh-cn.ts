@@ -3,7 +3,7 @@ export default {
 	chat: {
 		stop: "停止",
 		welcome: {
-			title: "欢迎使用 Infio Copilot",
+			title: "欢迎使用 Tangent Copilot",
 			subtitle: "探索不同模式来提升您的生产力"
 		},
 		navigation: {
@@ -31,7 +31,8 @@ export default {
 			changesRejected: "用户拒绝了更改"
 		},
 		search: {
-			noResultsFound: "未找到 '{{query}}' 的结果"
+			noResultsFound: "未找到 '{{query}}' 的结果",
+			semanticSearchPlaceholder: "语义搜索（按回车键搜索）..."
 		},
 		history: {
 			title: "聊天记录",
@@ -48,7 +49,18 @@ export default {
 			save: "保存",
 			cancel: "取消",
 			yesterday: "昨天",
-			daysAgo: "天前"
+			daysAgo: "天前",
+			exitSelectionMode: "退出选择模式",
+			enterSelectionMode: "进入选择模式",
+			multiSelect: "多选",
+			selectionMode: "选择模式 - 已选择 {count} 个对话",
+			unselectAll: "取消全选",
+			selectAll: "全选",
+			batchDelete: "批量删除 ({count})",
+			pleaseSelectToDelete: "请先选择要删除的对话",
+			confirmBatchDelete: "确定要删除选中的 {count} 个对话吗？此操作不可撤销。",
+			successfullyDeleted: "成功删除 {count} 个对话",
+			deleteFailed: "{count} 个对话删除失败",
 		},
 		shortcutInfo: {
 			editInline: "行内编辑",
@@ -186,7 +198,7 @@ export default {
 	},
 	main: {
 		openNewChat: "打开新聊天",
-		openInfioCopilot: '打开 Infio Copilot',
+		openInfioCopilot: '打开 Tangent Copilot',
 		addSelectionToChat: '将选定内容添加到聊天',
 		rebuildVaultIndex: '重建整个 Vault 索引',
 		updateVaultIndex: '更新已修改文件的索引',
@@ -207,7 +219,7 @@ export default {
 		updateFailed: 'Vault 索引更新失败',
 		selectTextFirst: '请先选择一些文本',
 		migrationFailed: '迁移到 JSON 存储失败。请检查控制台以获取详细信息。',
-		reloadingInfio: '因迁移而重新加载 "infio"',
+		reloadingInfio: '因迁移而重新加载 "tangent"',
 	},
 	applyView: {
 		applyingFile: '正在应用: {{file}}',
@@ -487,5 +499,15 @@ export default {
 			toolNoDescription: "无描述",
 			useMcpToolFrom: "使用来自以下的 MCP 工具：",
 		}
-	}
+	},
+	errorBoundary: {
+		errorOccurred: "出现了一个错误",
+		renderError: "渲染此组件时发生了错误。请尝试刷新页面或重新打开聊天窗口。",
+		errorDetails: "错误详情",
+		retry: "重试",
+	},
+	helloInfo: {
+		semanticSearch: "语义搜索",
+		semanticSearchDesc: "使用 RAG 在笔记库中进行语义搜索",
+	},
 };

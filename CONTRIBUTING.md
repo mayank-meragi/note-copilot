@@ -1,6 +1,6 @@
-# Contributing to Obsidian Infio Copilot
+# Contributing to Obsidian Tangent Copilot
 
-We welcome contributions to Infio Copilot This document will guide you through the process of contributing to the project.
+We welcome contributions to Tangent Copilot. This document will guide you through the process of contributing to the project.
 
 ## Development Workflow
 

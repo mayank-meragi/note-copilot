@@ -1,3 +1,4 @@
+import { ThinkingConfig } from '@google/genai'
 import { INFIO_BASE_URL, OPENROUTER_BASE_URL } from '../constants'
 import { ApiProvider } from '../types/llm/model'
 import { InfioSettings } from '../types/settings'
@@ -23,7 +24,8 @@ export interface ModelInfo {
 		readonly inputPrice: number,
 		readonly outputPrice: number,
 		readonly cacheReadsPrice: number,
-	}[]
+	}[],
+	thinkingConfig?: ThinkingConfig
 }
 
 export interface EmbeddingModelInfo {
@@ -267,12 +269,12 @@ async function fetchOpenRouterModels(): Promise<Record<string, ModelInfo>> {
 // Gemini
 // https://ai.google.dev/gemini-api/docs/models/gemini
 export type GeminiModelId = keyof typeof geminiModels
-export const geminiDefaultModelId: GeminiModelId = "gemini-2.5-pro-preview-05-06"
-export const geminiDefaultAutoCompleteModelId: GeminiModelId = "gemini-2.5-flash-preview-05-20"
+export const geminiDefaultModelId: GeminiModelId = "gemini-2.5-flash"
+export const geminiDefaultAutoCompleteModelId: GeminiModelId = "gemini-2.5-flash"
 export const geminiDefaultEmbeddingModelId: keyof typeof geminiEmbeddingModels = "text-embedding-004"
 
 export const geminiModels = {
-	"gemini-2.5-flash-preview-05-20:thinking": {
+	"gemini-2.5-flash:thinking": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
@@ -284,8 +286,12 @@ export const geminiModels = {
 		maxThinkingTokens: 24_576,
 		supportsReasoningBudget: true,
 		requiredReasoningBudget: true,
+		thinkingConfig: {
+			includeThoughts: true,
+			thinkingBudget: 24_576,
+		},
 	},
-	"gemini-2.5-flash-preview-05-20": {
+	"gemini-2.5-flash": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
@@ -295,34 +301,7 @@ export const geminiModels = {
 		cacheReadsPrice: 0.0375,
 		cacheWritesPrice: 1.0,
 	},
-	"gemini-2.5-flash-preview-04-17:thinking": {
-		maxTokens: 65_535,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0.15,
-		outputPrice: 3.5,
-		maxThinkingTokens: 24_576,
-		supportsReasoningBudget: true,
-		requiredReasoningBudget: true,
-	},
-	"gemini-2.5-flash-preview-04-17": {
-		maxTokens: 65_535,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0.15,
-		outputPrice: 0.6,
-	},
-	"gemini-2.5-pro-exp-03-25": {
-		maxTokens: 65_535,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.5-pro-preview-03-25": {
+	"gemini-2.5-pro": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
@@ -346,7 +325,7 @@ export const geminiModels = {
 			},
 		],
 	},
-	"gemini-2.5-pro-preview-05-06": {
+	"gemini-2.5-pro:thinking": {
 		maxTokens: 65_535,
 		contextWindow: 1_048_576,
 		supportsImages: true,
@@ -369,6 +348,10 @@ export const geminiModels = {
 				cacheReadsPrice: 0.625,
 			},
 		],
+		thinkingConfig: {
+			includeThoughts: true,
+			thinkingBudget: 24_576,
+		},
 	},
 	"gemini-2.0-flash-001": {
 		maxTokens: 8192,
@@ -379,110 +362,6 @@ export const geminiModels = {
 		outputPrice: 0.4,
 		cacheReadsPrice: 0.025,
 		cacheWritesPrice: 1.0,
-	},
-	"gemini-2.0-flash-lite-preview-02-05": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-pro-exp-02-05": {
-		maxTokens: 8192,
-		contextWindow: 2_097_152,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-flash-thinking-exp-01-21": {
-		maxTokens: 65_536,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-flash-thinking-exp-1219": {
-		maxTokens: 8192,
-		contextWindow: 32_767,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-2.0-flash-exp": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-1.5-flash-002": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: true,
-		inputPrice: 0.15, // This is the pricing for prompts above 128k tokens.
-		outputPrice: 0.6,
-		cacheReadsPrice: 0.0375,
-		cacheWritesPrice: 1.0,
-		tiers: [
-			{
-				contextWindow: 128_000,
-				inputPrice: 0.075,
-				outputPrice: 0.3,
-				cacheReadsPrice: 0.01875,
-			},
-			{
-				contextWindow: Infinity,
-				inputPrice: 0.15,
-				outputPrice: 0.6,
-				cacheReadsPrice: 0.0375,
-			},
-		],
-	},
-	"gemini-1.5-flash-exp-0827": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-1.5-flash-8b-exp-0827": {
-		maxTokens: 8192,
-		contextWindow: 1_048_576,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-1.5-pro-002": {
-		maxTokens: 8192,
-		contextWindow: 2_097_152,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-1.5-pro-exp-0827": {
-		maxTokens: 8192,
-		contextWindow: 2_097_152,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
-	},
-	"gemini-exp-1206": {
-		maxTokens: 8192,
-		contextWindow: 2_097_152,
-		supportsImages: true,
-		supportsPromptCache: false,
-		inputPrice: 0,
-		outputPrice: 0,
 	},
 } as const satisfies Record<string, ModelInfo>
 

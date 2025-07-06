@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useRef } from 'react'
 
 import { ApplyStatus, ToolArgs } from '../../types/apply'
 import {
@@ -17,6 +17,7 @@ import MarkdownRegexSearchFilesBlock from './Markdown/MarkdownRegexSearchFilesBl
 import MarkdownSearchAndReplace from './Markdown/MarkdownSearchAndReplace'
 import MarkdownSearchWebBlock from './Markdown/MarkdownSearchWebBlock'
 import MarkdownSemanticSearchFilesBlock from './Markdown/MarkdownSemanticSearchFilesBlock'
+import MarkdownAssistantMemoryBlock from './Markdown/MarkdownAssistantMemoryBlock'
 import MarkdownSwitchModeBlock from './Markdown/MarkdownSwitchModeBlock'
 import MarkdownToolResult from './Markdown/MarkdownToolResult'
 import MarkdownWithIcons from './Markdown/MarkdownWithIcon'
@@ -34,9 +35,37 @@ function ReactMarkdown({
 }) {
 
 	const blocks: ParsedMsgBlock[] = useMemo(
-		() => parseMsgBlocks(children),
+		() => {
+			console.log('=== PARSING MESSAGE BLOCKS ===')
+			console.log('Input children:', children)
+			const parsedBlocks = parseMsgBlocks(children)
+			console.log('Parsed blocks:', parsedBlocks)
+			console.log('==========================')
+			return parsedBlocks
+		},
 		[children],
 	)
+
+	// Automatically execute assistant_memory blocks
+	const executedBlocks = useRef<Set<string>>(new Set())
+	
+	useEffect(() => {
+		blocks.forEach((block) => {
+			if (block.type === 'assistant_memory' && block.content) {
+				// Create a unique key for this block to prevent re-execution
+				const blockKey = `${block.content}`
+				if (!executedBlocks.current.has(blockKey)) {
+					console.log('Auto-executing assistant_memory block')
+					executedBlocks.current.add(blockKey)
+					onApply({
+						type: 'assistant_memory',
+						action: 'write',
+						content: block.content,
+					})
+				}
+			}
+		})
+	}, [blocks, onApply])
 
 	return (
 		<>
@@ -202,6 +231,10 @@ function ReactMarkdown({
 						parameters={block.parameters}
 						finish={block.finish}
 					/>
+				) : block.type === 'assistant_memory' ? (
+					<div key={"assistant-memory-" + index} className="infio-markdown">
+						<span style={{ color: '#008000', fontWeight: 'bold' }}>Memory Updated</span>
+					</div>
 				) : block.type === 'tool_result' ? (
 					<MarkdownToolResult
 						key={"tool-result-" + index}

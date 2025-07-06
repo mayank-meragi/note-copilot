@@ -2,7 +2,7 @@ export default {
 	chat: {
 		stop: "Stop",
 		welcome: {
-			title: "Welcome to Infio Copilot",
+			title: "Welcome to Tangent Copilot",
 			subtitle: "Explore different modes to enhance your productivity"
 		},
 		navigation: {
@@ -30,7 +30,8 @@ export default {
 			changesRejected: "User rejected changes"
 		},
 		search: {
-			noResultsFound: "No results found for '{{query}}'"
+			noResultsFound: "No results found for '{{query}}'",
+			semanticSearchPlaceholder: "Semantic search (press Enter to search)..."
 		},
 		history: {
 			title: "Chat History",
@@ -47,7 +48,18 @@ export default {
 			save: "Save",
 			cancel: "Cancel",
 			yesterday: "Yesterday",
-			daysAgo: "days ago"
+			daysAgo: "days ago",
+			exitSelectionMode: "Exit selection mode",
+			enterSelectionMode: "Enter selection mode",
+			multiSelect: "Multi-select",
+			selectionMode: "Selection mode - {count} conversations selected",
+			unselectAll: "Unselect all",
+			selectAll: "Select all",
+			batchDelete: "Batch delete ({count})",
+			pleaseSelectToDelete: "Please select conversations to delete first",
+			confirmBatchDelete: "Are you sure you want to delete the selected {count} conversations? This action cannot be undone.",
+			successfullyDeleted: "Successfully deleted {count} conversations",
+			deleteFailed: "{count} conversations failed to delete",
 		},
 		shortcutInfo: {
 			editInline: "Edit inline",
@@ -184,7 +196,7 @@ export default {
 	},
 	main: {
 		openNewChat: "Open new chat",
-		openInfioCopilot: 'Open infio copilot',
+		openInfioCopilot: 'Open tangent copilot',
 		addSelectionToChat: 'Add selection to chat',
 		rebuildVaultIndex: 'Rebuild entire vault index',
 		updateVaultIndex: 'Update index for modified files',
@@ -205,7 +217,7 @@ export default {
 		updateFailed: 'Vault index update failed',
 		selectTextFirst: 'Please select some text first',
 		migrationFailed: 'Failed to migrate to JSON storage. Please check the console for details.',
-		reloadingInfio: 'Reloading "infio" due to migration',
+		reloadingInfio: 'Reloading "tangent" due to migration',
 	},
 	applyView: {
 		applyingFile: 'Applying: {{file}}',
@@ -485,5 +497,15 @@ export default {
 		parameters: "Parameters",
 		toolNoDescription: "No description",
 		useMcpToolFrom: "Use MCP tool from",
-	}
+	},
+	errorBoundary: {
+		errorOccurred: "An error occurred",
+		renderError: "An error occurred while rendering this component. Please try refreshing the page or reopening the chat window.",
+		errorDetails: "Error details",
+		retry: "Retry",
+	},
+	helloInfo: {
+		semanticSearch: "Semantic Search",
+		semanticSearchDesc: "Use RAG to perform semantic search in your note vault",
+	},
 }

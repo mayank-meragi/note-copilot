@@ -295,6 +295,24 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 
 			const responseMessageId = uuidv4()
 
+			// Insert a 'thinking' message with spinner and empty reasoning
+			setChatMessages([
+				...newChatHistory,
+				{
+					role: 'assistant',
+					applyStatus: ApplyStatus.Idle,
+					content: '<thinking><span style="display:inline-flex;align-items:center;"><svg style="margin-right:6px;vertical-align:middle;" width="16" height="16" viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="#888" strokeWidth="5" strokeDasharray="31.4 31.4" strokeLinecap="round"><animateTransform attributeName="transform" type="rotate" from="0 25 25" to="360 25 25" dur="1s" repeatCount="indefinite"/></circle></svg>Thinking...</span></thinking>',
+					reasoningContent: '',
+					id: responseMessageId,
+					metadata: {
+						usage: undefined,
+						model: undefined,
+					},
+				},
+			])
+
+			let firstContentChunk = true
+
 			try {
 				const abortController = new AbortController()
 				activeStreamAbortControllersRef.current.push(abortController)
@@ -309,20 +327,6 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					type: 'idle',
 				})
 
-				setChatMessages([
-					...compiledMessages,
-					{
-						role: 'assistant',
-						applyStatus: ApplyStatus.Idle,
-						content: '',
-						reasoningContent: '',
-						id: responseMessageId,
-						metadata: {
-							usage: undefined,
-							model: undefined,
-						},
-					},
-				])
 				const stream = await streamResponse(
 					chatModel,
 					{
@@ -343,21 +347,54 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 				for await (const chunk of stream) {
 					const content = chunk.choices[0]?.delta?.content ?? ''
 					const reasoning_content = chunk.choices[0]?.delta?.reasoning_content ?? ''
+					
+					console.log('=== STREAM CHUNK DEBUG ===')
+					console.log('Chunk content:', content)
+					console.log('Chunk reasoning:', reasoning_content)
+					console.log('Full chunk:', chunk)
+					console.log('==========================')
+
 					setChatMessages((prevChatHistory) =>
-						prevChatHistory.map((message) =>
-							message.role === 'assistant' && message.id === responseMessageId
-								? {
+						prevChatHistory.map((message) => {
+							if (message.role === 'assistant' && message.id === responseMessageId) {
+								// On first content chunk, replace the <thinking> block with real content
+								if (firstContentChunk && content) {
+									firstContentChunk = false
+									const newMessage = {
+										...message,
+										content: content,
+										reasoningContent: message.reasoningContent + reasoning_content,
+										metadata: {
+											...message.metadata,
+											usage: chunk.usage ?? message.metadata?.usage,
+											model: chatModel,
+										},
+									}
+									console.log('=== FIRST CONTENT CHUNK ===')
+									console.log('New message content:', newMessage.content)
+									console.log('New message reasoning:', newMessage.reasoningContent)
+									console.log('==========================')
+									return newMessage
+								}
+								// Otherwise, keep updating content and reasoning
+								const updatedMessage = {
 									...message,
-									content: message.content + content,
+									content: firstContentChunk ? message.content : message.content + content,
 									reasoningContent: message.reasoningContent + reasoning_content,
 									metadata: {
 										...message.metadata,
-										usage: chunk.usage ?? message.metadata?.usage, // Keep existing usage if chunk has no usage data
+										usage: chunk.usage ?? message.metadata?.usage,
 										model: chatModel,
 									},
 								}
-								: message,
-						),
+								console.log('=== UPDATED MESSAGE ===')
+								console.log('Updated content:', updatedMessage.content)
+								console.log('Updated reasoning:', updatedMessage.reasoningContent)
+								console.log('==========================')
+								return updatedMessage
+							}
+							return message
+						}),
 					)
 					if (!preventAutoScrollRef.current) {
 						handleScrollToBottom()
@@ -792,6 +829,64 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							mentionables: [],
 						}
 					}
+				} else if (toolArgs.type === 'assistant_memory') {
+					console.log('=== ASSISTANT MEMORY TOOL EXECUTION ===')
+					console.log('Assistant memory tool called:', toolArgs)
+					console.log('Tool args action:', toolArgs.action)
+					console.log('Tool args content:', toolArgs.content)
+					console.log('Content length:', toolArgs.content?.length || 0)
+					
+					// Try different path formats
+					const memoryFilePath = 'assistant-memory.md'
+					const memoryFilePathWithSlash = '/assistant-memory.md'
+					
+					console.log('Trying path:', memoryFilePath)
+					console.log('Trying path with slash:', memoryFilePathWithSlash)
+					
+					let memoryFile = app.vault.getFileByPath(memoryFilePath)
+					if (!memoryFile) {
+						memoryFile = app.vault.getFileByPath(memoryFilePathWithSlash)
+					}
+					
+					console.log('Existing memory file:', memoryFile)
+					console.log('Vault root:', app.vault.getRoot().path)
+					console.log('Vault adapter:', app.vault.adapter)
+					
+					if (toolArgs.action === 'write') {
+						console.log('Writing memory with content:', toolArgs.content)
+						try {
+							if (!memoryFile) {
+								console.log('Creating new memory file with path:', memoryFilePath)
+								memoryFile = await app.vault.create(memoryFilePath, toolArgs.content || '')
+								console.log('Created memory file:', memoryFile)
+								
+								// Verify file was created
+								const verifyFile = app.vault.getFileByPath(memoryFilePath)
+								console.log('Verification - file exists:', !!verifyFile)
+								if (verifyFile) {
+									const content = await app.vault.read(verifyFile)
+									console.log('Verification - file content length:', content.length)
+								}
+							} else {
+								console.log('Updating existing memory file with complete content')
+								await app.vault.modify(memoryFile, toolArgs.content || '')
+								console.log('Updated memory file with complete content')
+							}
+							// For write operations, don't return a returnMsg to avoid triggering another submission
+							return {
+								type: 'assistant_memory',
+								applyMsgId,
+								applyStatus: ApplyStatus.Applied,
+							}
+						} catch (error) {
+							console.error('Error creating/modifying memory file:', error)
+							console.error('Error details:', error)
+							throw new Error(`Failed to write memory file: ${error.message}`)
+						}
+					} else {
+						console.log('Invalid action:', toolArgs.action)
+						throw new Error(`Invalid action: ${toolArgs.action}`)
+					}
 				}
 			} catch (error) {
 				console.error('Failed to apply changes', error)
@@ -939,6 +1034,8 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		}
 	}, [app.workspace, handleActiveLeafChange])
 
+
+
 	useImperativeHandle(ref, () => ({
 		openNewChat: (selectedBlock?: MentionableBlockData) =>
 			handleNewChat(selectedBlock),
@@ -1006,7 +1103,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 		<div className="infio-chat-container">
 			{/* header view */}
 			<div className="infio-chat-header">
-				INFIO
+				TANGENT
 				<div className="infio-chat-header-buttons">
 					<button
 						onClick={() => {
@@ -1014,6 +1111,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							handleNewChat()
 						}}
 						className="infio-chat-list-dropdown"
+						title="New Chat"
 					>
 						<Plus size={18} />
 					</button>
@@ -1026,6 +1124,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							}
 						}}
 						className="infio-chat-list-dropdown"
+						title="History"
 					>
 						<History size={18} color={tab === 'history' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
@@ -1038,6 +1137,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							}
 						}}
 						className="infio-chat-list-dropdown"
+						title="Search"
 					>
 						<Search size={18} color={tab === 'search' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
@@ -1051,6 +1151,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							}
 						}}
 						className="infio-chat-list-dropdown"
+						title="Commands"
 					>
 						<SquareSlash size={18} color={tab === 'commands' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
@@ -1064,6 +1165,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							}
 						}}
 						className="infio-chat-list-dropdown"
+						title="Custom Mode"
 					>
 						<NotebookPen size={18} color={tab === 'custom-mode' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
@@ -1076,6 +1178,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 							}
 						}}
 						className="infio-chat-list-dropdown"
+						title="MCP"
 					>
 						<Server size={18} color={tab === 'mcp' ? 'var(--text-accent)' : 'var(--text-color)'} />
 					</button>
@@ -1105,7 +1208,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 													chatUserInputRefs.current.get(inputMessage.id)?.focus()
 												}}
 												className="infio-chat-edit-cancel-button"
-												title="取消编辑"
+												title="Cancel"
 											>
 												<Undo size={16} />
 											</button>
@@ -1199,7 +1302,7 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 						)}
 						<QueryProgress state={queryProgress} />
 						{submitMutation.isPending && (
-							<button onClick={abortActiveStreams} className="infio-stop-gen-btn">
+							<button onClick={abortActiveStreams} className="infio-stop-gen-btn" title="Stop Generation">
 								<CircleStop size={16} />
 								<div>{t('chat.stop')}</div>
 							</button>

@@ -1,6 +1,6 @@
-<h1 align="center">Infio-Copilot</h1>
+<h1 align="center">Tangent-Copilot</h1>
 
-**Infio-Copilot is a Cursor-inspired AI assistant for Obsidian that offers smart autocomplete and interactive chat with your selected notes**
+**Tangent-Copilot is a Cursor-inspired AI assistant for Obsidian that offers smart autocomplete and interactive chat with your selected notes**
 
 <a href="README.md" target="_blank"><b>English</b></a>  |  <a href="README_zh-CN.md" target="_blank"><b>中文</b></a>
 
@@ -54,7 +54,7 @@ Leverage the power of AI to interact with your entire Obsidian vault, gaining in
 ![rag](asserts/rag.gif)
 
 ## Getting Started
-> **⚠️ Important: Installer Version Requirement**Infio-Copilot requires a recent version of the Obsidian installer. If you experience issues with the plugin not loading properly:
+> **⚠️ Important: Installer Version Requirement**Tangent-Copilot requires a recent version of the Obsidian installer. If you experience issues with the plugin not loading properly:
 >
 > 1. First, try updating Obsidian normally at `Settings > General > Check for updates`.
 > 2. If issues persist, manually update your Obsidian installer:
@@ -65,7 +65,7 @@ Leverage the power of AI to interact with your entire Obsidian vault, gaining in
 
 1. Open Obsidian Settings
 2. Navigate to "Community plugins" and click "Browse"
-3. Search for "Infio Copilot" and click Install
+3. Search for "Tangent Copilot" and click Install
 4. Enable the plugin in Community plugins
 5. Set up your API key in plugin settings
    - SiliconFlow : [SiliconFlow API Keys](https://cloud.siliconflow.cn/account/ak)
@@ -78,10 +78,10 @@ Leverage the power of AI to interact with your entire Obsidian vault, gaining in
    - Groq : [Groq API Keys](https://console.groq.com/keys)
 6. Set up hotkeys for quick access:
    - Go to Settings > Hotkeys
-   - Search for "Infio Copilot"
+   - Search for "Tangent Copilot"
    - Recommended keybindings:
-     * Infio Copilot: Infio add selection to chat -> cmd + shift + L
-     * Infio Copilot: Infio Inline Edit -> cmd + shift + K
+     * Tangent Copilot: Tangent add selection to chat -> cmd + shift + L
+     * Tangent Copilot: Tangent Inline Edit -> cmd + shift + K
 ![autocomplte](asserts/doc-set-hotkey.png)
 7. If you need to chat with documents, you must configure an embedding model.
    - Currently, only SiliconFlow, Alibaba, Google, and OpenAI platforms support embedding models.

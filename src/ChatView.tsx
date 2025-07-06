@@ -42,7 +42,7 @@ export class ChatView extends ItemView {
 	}
 
 	getDisplayText() {
-		return 'Infio chat'
+		return 'Tangent chat'
 	}
 
 	async onOpen() {
