@@ -18,6 +18,7 @@ import { findFilesMatchingPatterns } from '../utils/glob-utils';
 import BasicAutoCompleteSettings from './components/BasicAutoCompleteSettings';
 // import DangerZoneSettings from './components/DangerZoneSettings';
 import CustomProviderSettings from './components/ModelProviderSettings';
+import McpSettings from './components/McpSettings';
 import PostprocessingSettings from './components/PostprocessingSettings';
 import PreprocessingSettings from './components/PreprocessingSettings';
 import PrivacySettings from './components/PrivacySettings';
@@ -42,6 +43,7 @@ export class InfioSettingTab extends PluginSettingTab {
 		this.renderChatBehaviorSection(containerEl)
 		this.renderDeepResearchSection(containerEl)
 		this.renderRAGSection(containerEl)
+		this.renderMcpSection(containerEl)
 		this.renderAutoCompleteSection(containerEl)
 	}
 
@@ -536,6 +538,11 @@ export class InfioSettingTab extends PluginSettingTab {
 						}
 					}),
 			)
+	}
+
+	renderMcpSection(containerEl: HTMLElement): void {
+		new Setting(containerEl).setHeading().setName('MCP Servers');
+		this.renderComponent(containerEl, <McpSettings plugin={this.plugin} onSettingsUpdate={() => this.display()} />);
 	}
 
 	renderAutoCompleteSection(containerEl: HTMLElement): void {

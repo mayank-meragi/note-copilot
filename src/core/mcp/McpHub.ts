@@ -39,6 +39,7 @@ import {
 	McpToolCallResponse,
 } from "./type";
 
+import { MODULAR_MCP_SERVERS } from "./modularServers"
 
 export type McpConnection = {
 	server: McpServer
@@ -168,8 +169,8 @@ export class McpHub {
 		await this.watchMcpSettingsFile();
 		// this.setupWorkspaceWatcher();
 		await this.initializeGlobalMcpServers();
-		// 初始化内置服务器
-		await this.initializeBuiltInServer();
+		// Initialize modular servers
+		await this.initializeModularServers();
 	}
 
 	/**
@@ -964,11 +965,13 @@ export class McpHub {
 		source: "global" | "project" = "global",
 	): Promise<void> {
 		try {
-			// 检查是否为内置服务器
-			if (serverName === this.BUILTIN_SERVER_NAME) {
-				if (this.builtInConnection) {
-					this.builtInConnection.server.disabled = disabled
-					console.log(`Built-in server ${disabled ? 'disabled' : 'enabled'}`)
+			// Check if it's a modular server
+			if (serverName.startsWith(this.MODULAR_SERVER_PREFIX)) {
+				const actualServerName = serverName.replace(this.MODULAR_SERVER_PREFIX, "")
+				const connection = this.modularServers.get(actualServerName)
+				if (connection) {
+					connection.server.disabled = disabled
+					console.log(`Modular server ${actualServerName} ${disabled ? 'disabled' : 'enabled'}`)
 				}
 				return
 			}
@@ -1256,9 +1259,9 @@ export class McpHub {
 		toolArguments?: Record<string, unknown>,
 		source: "global" | "project" = "global",
 	): Promise<McpToolCallResponse> {
-		// 检查是否为内置服务器
-		if (serverName === this.BUILTIN_SERVER_NAME) {
-			return await this.callBuiltInTool(toolName, toolArguments)
+		// Check if it's a modular server
+		if (serverName.startsWith(this.MODULAR_SERVER_PREFIX)) {
+			return await this.callModularTool(serverName, toolName, toolArguments)
 		}
 
 		const connection = this.findConnection(serverName, source)
@@ -1297,177 +1300,214 @@ export class McpHub {
 		)
 	}
 
-	// 调用内置服务器工具
-	private async callBuiltInTool(
+	// Call tool on modular server
+	private async callModularTool(
+		serverName: string,
 		toolName: string,
 		toolArguments?: Record<string, unknown>
 	): Promise<McpToolCallResponse> {
 		try {
-			if (!this.builtInConnection) {
-				throw new Error("Built-in server is not initialized")
+			const actualServerName = serverName.replace(this.MODULAR_SERVER_PREFIX, "")
+			const connection = this.modularServers.get(actualServerName)
+
+			if (!connection) {
+				throw new Error(`Modular server ${actualServerName} not found`)
 			}
 
-			if (this.builtInConnection.server.disabled) {
-				throw new Error("Built-in server is disabled and cannot be used")
+			if (connection.server.disabled) {
+				throw new Error(`Modular server ${actualServerName} is disabled`)
 			}
 
-			if (this.builtInConnection.server.status !== "connected") {
-				throw new Error("Built-in server is not connected")
+			if (connection.server.status !== "connected") {
+				throw new Error(`Modular server ${actualServerName} is not connected`)
 			}
 
-
-
-			// 调用内置 API，设置 10 分钟超时
-			const controller = new AbortController()
-			const timeoutId = setTimeout(() => {
-				controller.abort()
-			}, 10 * 60 * 1000) // 10 分钟超时
-
+			// Get timeout from config
+			let timeout = 60 * 1000
 			try {
-				const response = await fetch(`${INFIO_BASE_URL}/mcp/tools/call`, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						'Authorization': `Bearer ${this.plugin.settings.infioProvider.apiKey}`,
-					},
-					body: JSON.stringify({
+				const parsedConfig = JSON.parse(connection.server.config)
+				timeout = (parsedConfig.timeout ?? 60) * 1000
+			} catch (error) {
+				console.error("Failed to parse modular server config for timeout:", error)
+			}
+
+			// Call the tool
+			const result = await connection.client.request(
+				{
+					method: "tools/call",
+					params: {
 						name: toolName,
 						arguments: toolArguments || {},
-					}),
-					signal: controller.signal,
-				})
-
-				clearTimeout(timeoutId)
-
-				if (!response.ok) {
-					throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-				}
-
-				const result = await response.json()
-
-				// 接口已经返回了 MCP 格式的内容数组，直接使用
-				return {
-					content: Array.isArray(result) ? result : [result],
-					isError: false,
-				}
-			} catch (error) {
-				clearTimeout(timeoutId)
-				console.error(`Failed to call built-in tool ${toolName}:`, error)
-				// 特殊处理超时错误
-				let errorMessage: string
-				if (error instanceof Error && error.name === 'AbortError') {
-					errorMessage = `请求超时：工具 ${toolName} 执行时间超过 10 分钟`
-				} else {
-					errorMessage = `Error calling built-in tool: ${error instanceof Error ? error.message : String(error)}`
-				}
-
-				return {
-					content: [{
-						type: "text",
-						text: errorMessage
-					}],
-					isError: true,
-				}
-			}
+					},
+				},
+				CallToolResultSchema,
+				{
+					timeout,
+				},
+			)
+			
+			return result as McpToolCallResponse
 		} catch (error) {
-			console.error(`Failed to call built-in tool ${toolName}:`, error)
+			console.error(`Failed to call modular tool ${toolName}:`, error)
 			throw error
 		}
 	}
 
-
-
-	async toggleToolAlwaysAllow(
-		serverName: string,
-		source: "global" | "project" = "global",
-		toolName: string,
-		shouldAllow: boolean,
-	): Promise<void> {
+	// Update modular servers based on settings changes
+	public async updateModularServers(): Promise<void> {
 		try {
-			// 检查是否为内置服务器
-			if (serverName === this.BUILTIN_SERVER_NAME) {
-				if (this.builtInConnection) {
-					// 更新内置服务器工具的 alwaysAllow 状态
-					const tool = this.builtInConnection.server.tools?.find(t => t.name === toolName)
-					if (tool) {
-						tool.alwaysAllow = shouldAllow
-						console.log(`Built-in tool ${toolName} ${shouldAllow ? 'always allowed' : 'permission required'}`)
+			// Disconnect all current modular servers
+			for (const [name, connection] of this.modularServers.entries()) {
+				try {
+					await connection.transport.close()
+					await connection.client.close()
+				} catch (error) {
+					console.error(`Failed to close modular server ${name}:`, error)
+				}
+			}
+			this.modularServers.clear()
+
+			// Reinitialize modular servers
+			await this.initializeModularServers()
+		} catch (error) {
+			console.error("Failed to update modular servers:", error)
+		}
+	}
+
+	// Initialize modular servers
+	private async initializeModularServers(): Promise<void> {
+		try {
+			console.log("Initializing modular servers...")
+
+			// Get enabled modular servers from settings
+			const enabledServers = Object.entries(this.plugin.settings.mcpServers || {})
+				.filter(([_, config]) => config.enabled)
+				.map(([name, config]) => ({ name, config }))
+
+			for (const { name, config } of enabledServers) {
+				try {
+					await this.connectToModularServer(name, config)
+				} catch (error) {
+					console.error(`Failed to initialize modular server ${name}:`, error)
+				}
+			}
+
+			console.log(`Initialized ${enabledServers.length} modular servers`)
+		} catch (error) {
+			console.error("Failed to initialize modular servers:", error)
+		}
+	}
+
+	// Connect to a modular server
+	private async connectToModularServer(serverName: string, config: any): Promise<void> {
+		try {
+			// Get the modular server configuration
+			const modularConfig = MODULAR_MCP_SERVERS[serverName]
+			if (!modularConfig) {
+				throw new Error(`Unknown modular server: ${serverName}`)
+			}
+
+			// Merge configuration with API key
+			const mergedConfig = {
+				...modularConfig.config,
+				env: {
+					...modularConfig.config.env,
+					...(config.apiKey && modularConfig.apiKeyName ? { [modularConfig.apiKeyName]: config.apiKey } : {}),
+				},
+			}
+
+			// Create MCP client
+			const client = new Client(
+				{
+					name: "Note-Copilot",
+					version: "1.0.0",
+				},
+				{
+					capabilities: {},
+				},
+			)
+
+			let transport: StdioClientTransport | SSEClientTransport
+
+			if (mergedConfig.type === "stdio") {
+				transport = new StdioClientTransport({
+					command: mergedConfig.command || "npx",
+					args: mergedConfig.args || [],
+					cwd: ".",
+					env: {
+						...mergedConfig.env,
+						...(this.shellEnv.PATH ? { PATH: this.shellEnv.PATH } : {}),
+						...(this.shellEnv.HOME ? { HOME: this.shellEnv.HOME } : {}),
+					},
+					stderr: "pipe",
+				})
+
+				// Set up error handling
+				transport.onerror = async (error) => {
+					console.error(`Transport error for modular server "${serverName}":`, error)
+					const connection = this.modularServers.get(serverName)
+					if (connection) {
+						connection.server.status = "disconnected"
+						this.appendErrorMessage(connection, error instanceof Error ? error.message : String(error))
 					}
 				}
-				return
-			}
 
-			// Find the connection with matching name and source
-			const connection = this.findConnection(serverName, source)
-
-			if (!connection) {
-				throw new Error(`Server ${serverName} with source ${source} not found`)
-			}
-
-			// Determine the correct config path based on the source
-			let configPath: string
-			if (source === "project") {
-				// Get project MCP config path
-				const projectMcpPath = normalizePath(".infio_json_db/mcp/mcp.json")
-				if (!await this.app.vault.adapter.exists(projectMcpPath)) {
-					throw new Error("Project MCP configuration file not found")
+				transport.onclose = async () => {
+					const connection = this.modularServers.get(serverName)
+					if (connection) {
+						connection.server.status = "disconnected"
+					}
 				}
-				configPath = projectMcpPath
+
+				await transport.start()
 			} else {
-				// Get global MCP settings path
-				configPath = await this.getMcpSettingsFilePath()
-			}
+				// SSE connection
+				const sseOptions = {
+					requestInit: {
+						headers: mergedConfig.headers,
+					},
+				}
+				transport = new SSEClientTransport(new URL(mergedConfig.url!), sseOptions)
 
-			// Normalize path for cross-platform compatibility
-			// Use a consistent path format for both reading and writing
-			// const normalizedPath = configPath
-
-			// Read the appropriate config file
-			const content = await this.app.vault.adapter.read(configPath)
-			const config = JSON.parse(content)
-
-			// Initialize mcpServers if it doesn't exist
-			if (!config.mcpServers) {
-				config.mcpServers = {}
-			}
-
-			// Initialize server config if it doesn't exist
-			if (!config.mcpServers[serverName]) {
-				config.mcpServers[serverName] = {
-					type: "stdio",
-					command: "node",
-					args: [], // Default to an empty array; can be set later if needed
+				transport.onerror = async (error) => {
+					console.error(`Transport error for modular server "${serverName}":`, error)
+					const connection = this.modularServers.get(serverName)
+					if (connection) {
+						connection.server.status = "disconnected"
+						this.appendErrorMessage(connection, error instanceof Error ? error.message : String(error))
+					}
 				}
 			}
 
-			// Initialize alwaysAllow if it doesn't exist
-			if (!config.mcpServers[serverName].alwaysAllow) {
-				config.mcpServers[serverName].alwaysAllow = []
+			const connection: McpConnection = {
+				server: {
+					name: `${this.MODULAR_SERVER_PREFIX}${serverName}`,
+					config: JSON.stringify(mergedConfig),
+					status: "connecting",
+					disabled: false,
+					source: "global",
+					errorHistory: [],
+				},
+				client,
+				transport,
 			}
 
-			const alwaysAllow = config.mcpServers[serverName].alwaysAllow
-			const toolIndex = alwaysAllow.indexOf(toolName)
+			this.modularServers.set(serverName, connection)
 
-			if (shouldAllow && toolIndex === -1) {
-				// Add tool to always allow list
-				alwaysAllow.push(toolName)
-			} else if (!shouldAllow && toolIndex !== -1) {
-				// Remove tool from always allow list
-				alwaysAllow.splice(toolIndex, 1)
-			}
+			// Connect
+			await client.connect(transport)
+			connection.server.status = "connected"
+			connection.server.error = ""
 
-			// Write updated config back to file
-			await this.app.vault.adapter.write(configPath, JSON.stringify(config, null, 2))
+			// Fetch tools and resources
+			connection.server.tools = await this.fetchToolsList(`${this.MODULAR_SERVER_PREFIX}${serverName}`, "global")
+			connection.server.resources = await this.fetchResourcesList(`${this.MODULAR_SERVER_PREFIX}${serverName}`, "global")
+			connection.server.resourceTemplates = await this.fetchResourceTemplatesList(`${this.MODULAR_SERVER_PREFIX}${serverName}`, "global")
 
-			// Update the tools list to reflect the change
-			if (connection) {
-				// Explicitly pass the source to ensure we're updating the correct server's tools
-				connection.server.tools = await this.fetchToolsList(serverName, source)
-				// await this.notifyWebviewOfServerChanges()
-			}
+			console.log(`Modular server ${serverName} connected successfully`)
 		} catch (error) {
-			this.showErrorMessage(`Failed to update always allow settings for tool ${toolName}`, error)
-			throw error // Re-throw to ensure the error is properly handled
+			console.error(`Failed to connect to modular server ${serverName}:`, error)
+			throw error
 		}
 	}
 
@@ -1480,6 +1520,8 @@ export class McpHub {
 		console.log("McpHub: Disposing...")
 		this.isDisposed = true
 		this.removeAllFileWatchers()
+		
+		// Close standard connections
 		for (const connection of this.connections) {
 			try {
 				await this.deleteConnection(connection.server.name, connection.server.source)
@@ -1489,115 +1531,20 @@ export class McpHub {
 		}
 		this.connections = []
 
-		// 清理内置服务器连接
-		this.builtInConnection = null
+		// Close modular server connections
+		for (const [name, connection] of this.modularServers.entries()) {
+			try {
+				await connection.transport.close()
+				await connection.client.close()
+			} catch (error) {
+				console.error(`Failed to close modular server ${name}:`, error)
+			}
+		}
+		this.modularServers.clear()
 
 		this.eventRefs.forEach((ref) => this.app.vault.offref(ref))
 		this.eventRefs = []
 	}
 
-	// 初始化内置服务器
-	private async initializeBuiltInServer(): Promise<void> {
-		try {
-			console.log("Initializing built-in server...")
 
-			// 获取工具列表
-			const tools = await this.fetchBuiltInTools()
-
-			// 创建内置服务器连接
-			this.builtInConnection = {
-				server: {
-					name: this.BUILTIN_SERVER_NAME,
-					config: JSON.stringify({ type: "builtin" }),
-					status: "connected",
-					disabled: false,
-					source: "global",
-					tools: tools,
-					resources: [], // 内置服务器暂不支持资源
-					resourceTemplates: [], // 内置服务器暂不支持资源模板
-				}
-			}
-
-			console.log(`Built-in server initialized with ${tools.length} tools`)
-		} catch (error) {
-			console.error("Failed to initialize built-in server:", error)
-			this.builtInConnection = {
-				server: {
-					name: this.BUILTIN_SERVER_NAME,
-					config: JSON.stringify({ type: "builtin" }),
-					status: "disconnected",
-					disabled: false,
-					source: "global",
-					error: error instanceof Error ? error.message : String(error),
-					tools: [],
-					resources: [],
-					resourceTemplates: [],
-				}
-			}
-		}
-	}
-
-	// 从内置 API 获取工具列表
-	private async fetchBuiltInTools(): Promise<McpTool[]> {
-		try {
-			const response = await fetch(`${INFIO_BASE_URL}/mcp/tools/list`, {
-				headers: {
-					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${this.plugin.settings.infioProvider.apiKey}`,
-				},
-			})
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-			}
-
-			const tools: BuiltInToolResponse[] = await response.json()
-
-			// 转换为 McpTool 格式
-			return tools.map((tool) => ({
-				name: tool.name,
-				description: tool.description,
-				inputSchema: tool.inputSchema,
-				alwaysAllow: false, // 默认不自动允许
-			}))
-		} catch (error) {
-			console.error("Failed to fetch built-in tools:", error)
-			throw error
-		}
-	}
-
-	/**
-	 * 检查内置服务器是否可用
-	 * @returns true 如果内置服务器已连接且未被禁用，否则返回 false
-	 */
-	public isBuiltInServerAvailable(): boolean {
-		return !!(
-			this.builtInConnection &&
-			this.builtInConnection.server.status === "connected" &&
-			!this.builtInConnection.server.disabled
-		)
-	}
-
-	/**
-	 * 获取内置服务器的详细状态信息
-	 * @returns 包含内置服务器状态信息的对象，如果不存在则返回 null
-	 */
-	public getBuiltInServerStatus(): {
-		exists: boolean
-		status: "connecting" | "connected" | "disconnected"
-		disabled: boolean
-		toolsCount: number
-		error?: string
-	} | null {
-		if (!this.builtInConnection) {
-			return null
-		}
-
-		return {
-			exists: true,
-			status: this.builtInConnection.server.status,
-			disabled: this.builtInConnection.server.disabled,
-			toolsCount: this.builtInConnection.server.tools?.length || 0,
-			error: this.builtInConnection.server.error,
-		}
-	}
 }

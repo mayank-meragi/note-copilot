@@ -119,6 +119,9 @@ export default class InfioPlugin extends Plugin {
 				this.mcpHub.dispose()
 				this.mcpHub = null
 				this.mcpHubInitPromise = null
+			} else if (this.settings.mcpEnabled && this.mcpHub) {
+				// Update modular servers when MCP settings change
+				void this.mcpHub.updateModularServers()
 			}
 		});
 
