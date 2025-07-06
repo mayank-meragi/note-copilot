@@ -46,6 +46,7 @@ import {
 	MentionableCurrentFile,
 } from '../../types/mentionable'
 import { ApplyEditToFile, SearchAndReplace } from '../../utils/apply'
+import { fetchTasksFromVault, formatFetchTasksResult, TaskFilter } from '../../utils/fetch-tasks'
 import { listFilesAndFolders } from '../../utils/glob-utils'
 import {
 	getMentionableKey,
@@ -347,12 +348,6 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 				for await (const chunk of stream) {
 					const content = chunk.choices[0]?.delta?.content ?? ''
 					const reasoning_content = chunk.choices[0]?.delta?.reasoning_content ?? ''
-					
-					console.log('=== STREAM CHUNK DEBUG ===')
-					console.log('Chunk content:', content)
-					console.log('Chunk reasoning:', reasoning_content)
-					console.log('Full chunk:', chunk)
-					console.log('==========================')
 
 					setChatMessages((prevChatHistory) =>
 						prevChatHistory.map((message) => {
@@ -370,10 +365,6 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 											model: chatModel,
 										},
 									}
-									console.log('=== FIRST CONTENT CHUNK ===')
-									console.log('New message content:', newMessage.content)
-									console.log('New message reasoning:', newMessage.reasoningContent)
-									console.log('==========================')
 									return newMessage
 								}
 								// Otherwise, keep updating content and reasoning
@@ -387,10 +378,6 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 										model: chatModel,
 									},
 								}
-								console.log('=== UPDATED MESSAGE ===')
-								console.log('Updated content:', updatedMessage.content)
-								console.log('Updated reasoning:', updatedMessage.reasoningContent)
-								console.log('==========================')
 								return updatedMessage
 							}
 							return message
@@ -886,6 +873,66 @@ const Chat = forwardRef<ChatRef, ChatProps>((props, ref) => {
 					} else {
 						console.log('Invalid action:', toolArgs.action)
 						throw new Error(`Invalid action: ${toolArgs.action}`)
+					}
+				} else if (toolArgs.type === 'fetch_tasks') {
+					console.log('=== FETCH TASKS TOOL EXECUTION ===')
+					console.log('Tool args:', toolArgs)
+					
+					try {
+						// Extract filters from tool args and trim whitespace
+						const filters: TaskFilter = {}
+						
+						if (toolArgs.status?.trim()) {
+							const status = toolArgs.status.trim()
+							if (status === 'completed' || status === 'incomplete' || status === 'all') {
+								filters.status = status
+							}
+						}
+						
+						if (toolArgs.completion?.trim()) {
+							filters.completion = toolArgs.completion.trim()
+						}
+						
+						if (toolArgs.due?.trim()) {
+							filters.due = toolArgs.due.trim()
+						}
+						
+						if (toolArgs.created?.trim()) {
+							filters.created = toolArgs.created.trim()
+						}
+						
+						if (toolArgs.start?.trim()) {
+							filters.start = toolArgs.start.trim()
+						}
+						
+						if (toolArgs.scheduled?.trim()) {
+							filters.scheduled = toolArgs.scheduled.trim()
+						}
+						
+						// Use the utility function to fetch tasks
+						const result = await fetchTasksFromVault(app, toolArgs.source, Object.keys(filters).length > 0 ? filters : undefined)
+						
+						// Format the result for display
+						const formattedContent = formatFetchTasksResult(result)
+						
+						console.log('=== FETCH TASKS TOOL COMPLETED ===')
+						
+						return {
+							type: 'fetch_tasks',
+							applyMsgId,
+							applyStatus: ApplyStatus.Applied,
+							returnMsg: {
+								role: 'user',
+								applyStatus: ApplyStatus.Idle,
+								content: null,
+								promptContent: formattedContent,
+								id: uuidv4(),
+								mentionables: [],
+							}
+						}
+					} catch (error) {
+						console.error('Error in fetch_tasks tool:', error)
+						throw error
 					}
 				}
 			} catch (error) {

@@ -117,6 +117,7 @@ export default {
 			readFile: "Read file: {path}",
 			listFiles: "List files: {path}",
 			fetchUrlsContent: "Fetch URLs Content",
+			fetchTasks: "Fetch Tasks",
 			fetching: "Fetching...",
 			copied: "Copied",
 			copy: "Copy",

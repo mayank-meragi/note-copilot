@@ -21,6 +21,7 @@ export const TOOL_DISPLAY_NAMES = {
 	attempt_completion: "complete tasks",
 	switch_mode: "switch modes",
 	// new_task: "create new task",
+	fetch_tasks: "fetch tasks",
 } as const
 
 // Define available tool groups
@@ -60,6 +61,7 @@ export const ALWAYS_AVAILABLE_TOOLS = [
 	"attempt_completion",
 	"switch_mode",
 	"assistant_memory",
+	"fetch_tasks",
 ] as const
 
 // Tool name types for type safety

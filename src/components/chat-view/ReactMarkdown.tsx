@@ -46,7 +46,7 @@ function ReactMarkdown({
 		[children],
 	)
 
-	// Automatically execute assistant_memory blocks
+	// Automatically execute assistant_memory and fetch_tasks blocks
 	const executedBlocks = useRef<Set<string>>(new Set())
 	
 	useEffect(() => {
@@ -61,6 +61,41 @@ function ReactMarkdown({
 						type: 'assistant_memory',
 						action: 'write',
 						content: block.content,
+					})
+				}
+			} else if (block.type === 'fetch_tasks') {
+				// Create a unique key for this block to prevent re-execution
+				const blockKey = `fetch_tasks_${block.source || 'all'}_${block.status || 'all'}_${block.completion || ''}_${block.due || ''}_${block.created || ''}_${block.start || ''}_${block.scheduled || ''}`
+				if (!executedBlocks.current.has(blockKey)) {
+					console.log('Auto-executing fetch_tasks block with filters:', {
+						source: block.source,
+						status: block.status,
+						completion: block.completion,
+						due: block.due,
+						created: block.created,
+						start: block.start,
+						scheduled: block.scheduled
+					})
+					executedBlocks.current.add(blockKey)
+					// Validate status value
+					let status: 'completed' | 'incomplete' | 'all' | undefined = undefined
+					if (block.status) {
+						const trimmedStatus = block.status.trim()
+						if (trimmedStatus === 'completed' || trimmedStatus === 'incomplete' || trimmedStatus === 'all') {
+							status = trimmedStatus
+						}
+					}
+					
+					onApply({
+						type: 'fetch_tasks',
+						source: block.source,
+						status: status,
+						completion: block.completion,
+						due: block.due,
+						created: block.created,
+						start: block.start,
+						scheduled: block.scheduled,
+						finish: true
 					})
 				}
 			}
@@ -240,6 +275,9 @@ function ReactMarkdown({
 						key={"tool-result-" + index}
 						content={block.content}
 					/>
+				) : block.type === 'fetch_tasks' ? (
+					// fetch_tasks blocks are auto-executed, so we don't render them
+					null
 				) : (
 					<RawMarkdownBlock 
 						key={"markdown-" + index} 

@@ -93,10 +93,20 @@ export type ParsedMsgBlock =
 		tool_name: string
 		parameters: Record<string, unknown>,
 		finish: boolean
-	} | {
+	} 		| {
 		type: 'assistant_memory'
 		action: string
 		content?: string
+		finish: boolean
+	} | {
+		type: 'fetch_tasks'
+		source?: string
+		status?: string
+		completion?: string
+		due?: string
+		created?: string
+		start?: string
+		scheduled?: string
 		finish: boolean
 	} | {
 		type: 'tool_result'
@@ -705,6 +715,71 @@ export function parseMsgBlocks(
 				} else {
 					console.log('No content found, skipping assistant_memory block')
 				}
+				lastEndOffset = endOffset
+			} else if (node.nodeName === 'fetch_tasks') {
+				console.log('=== PARSING FETCH_TASKS ===')
+				console.log('Node:', node)
+				console.log('Child nodes:', node.childNodes)
+				
+				if (!node.sourceCodeLocation) {
+					throw new Error('sourceCodeLocation is undefined')
+				}
+				const startOffset = node.sourceCodeLocation.startOffset
+				const endOffset = node.sourceCodeLocation.endOffset
+				if (startOffset > lastEndOffset) {
+					parsedResult.push({
+						type: 'string',
+						content: input.slice(lastEndOffset, startOffset),
+					})
+				}
+
+				let source: string | undefined
+				let status: string | undefined
+				let completion: string | undefined
+				let due: string | undefined
+				let created: string | undefined
+				let start: string | undefined
+				let scheduled: string | undefined
+
+				for (const childNode of node.childNodes) {
+					console.log('Processing fetch_tasks child node:', childNode.nodeName, childNode.childNodes?.[0]?.value)
+					if (childNode.nodeName === 'source' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						source = childNode.childNodes[0].value?.trim()
+					} else if (childNode.nodeName === 'status' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						status = childNode.childNodes[0].value?.trim()
+					} else if (childNode.nodeName === 'completion' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						completion = childNode.childNodes[0].value?.trim()
+					} else if (childNode.nodeName === 'due' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						due = childNode.childNodes[0].value?.trim()
+					} else if (childNode.nodeName === 'created' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						created = childNode.childNodes[0].value?.trim()
+					} else if (childNode.nodeName === 'start' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						start = childNode.childNodes[0].value?.trim()
+					} else if (childNode.nodeName === 'scheduled' && childNode.childNodes && childNode.childNodes.length > 0) {
+						// @ts-ignore
+						scheduled = childNode.childNodes[0].value?.trim()
+					}
+				}
+
+				console.log('Parsed fetch_tasks:', { source, status, completion, due, created, start, scheduled })
+
+				parsedResult.push({
+					type: 'fetch_tasks',
+					source: source,
+					status: status,
+					completion: completion,
+					due: due,
+					created: created,
+					start: start,
+					scheduled: scheduled,
+					finish: node.sourceCodeLocation.endTag !== undefined
+				})
 				lastEndOffset = endOffset
 			} else if (node.nodeName === 'tool_result') {
 				if (!node.sourceCodeLocation) {

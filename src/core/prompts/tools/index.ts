@@ -7,6 +7,7 @@ import { getAccessMcpResourceDescription } from "./access-mcp-resource"
 import { getAskFollowupQuestionDescription } from "./ask-followup-question"
 import { getAttemptCompletionDescription } from "./attempt-completion"
 import { getAssistantMemoryDescription } from "./assistant-memory"
+import { getFetchTasksDescription } from "./fetch-tasks"
 import { getFetchUrlsContentDescription } from "./fetch-url-content"
 import { getInsertContentDescription } from "./insert-content"
 import { getListFilesDescription } from "./list-files"
@@ -38,6 +39,7 @@ const toolDescriptionMap: Record<string, (args: ToolArgs) => string | undefined>
 	search_web: (args): string | undefined => getSearchWebDescription(args),
 	fetch_urls_content: (args): string | undefined => getFetchUrlsContentDescription(args),
 	assistant_memory: (args) => getAssistantMemoryDescription(args),
+	fetch_tasks: () => getFetchTasksDescription(),
 }
 
 export function getToolDescriptionsForMode(

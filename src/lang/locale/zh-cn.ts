@@ -118,6 +118,7 @@ export default {
 			readFile: "读取文件：{path}",
 			listFiles: "列出文件：{path}",
 			fetchUrlsContent: "获取 URL 内容",
+			fetchTasks: "获取任务",
 			fetching: "正在获取...",
 			copied: "已复制",
 			copy: "复制",

@@ -112,4 +112,16 @@ export type AssistantMemoryToolArgs = {
 	finish?: boolean;
 }
 
-export type ToolArgs = ReadFileToolArgs | WriteToFileToolArgs | InsertContentToolArgs | SearchAndReplaceToolArgs | ListFilesToolArgs | MatchSearchFilesToolArgs | RegexSearchFilesToolArgs | SemanticSearchFilesToolArgs | SearchWebToolArgs | FetchUrlsContentToolArgs | SwitchModeToolArgs | ApplyDiffToolArgs | UseMcpToolArgs | AssistantMemoryToolArgs;
+export type FetchTasksToolArgs = {
+	type: 'fetch_tasks';
+	source?: string;
+	status?: 'completed' | 'incomplete' | 'all';
+	completion?: string;
+	due?: string;
+	created?: string;
+	start?: string;
+	scheduled?: string;
+	finish?: boolean;
+}
+
+export type ToolArgs = ReadFileToolArgs | WriteToFileToolArgs | InsertContentToolArgs | SearchAndReplaceToolArgs | ListFilesToolArgs | MatchSearchFilesToolArgs | RegexSearchFilesToolArgs | SemanticSearchFilesToolArgs | SearchWebToolArgs | FetchUrlsContentToolArgs | SwitchModeToolArgs | ApplyDiffToolArgs | UseMcpToolArgs | AssistantMemoryToolArgs | FetchTasksToolArgs;
